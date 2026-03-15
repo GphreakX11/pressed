@@ -1,8 +1,10 @@
 import commonWords from './clean-words.json';
+import blocklist from './blocklist.json';
 
 export type Puzzle = {
   sourceLetters: string[];
   validWords: string[];
+  bonusWords: string[];
 };
 
 // Compute all valid 6-letter root words from the common dictionary
@@ -39,20 +41,34 @@ function isValidAnagram(word: string, sourceLetters: string[]): boolean {
 export function getRandomPuzzle(): Puzzle {
   let rootLetters: string[] = [];
   let validWords: string[] = [];
+  let bonusWords: string[] = [];
 
   // Randomly pick a 6-letter root word and evaluate it.
-  // We randomly select from ROOT_WORDS until we find one that generates >= 10 words.
+  // We randomly select from ROOT_WORDS until we find one that generates >= 10 REQUIRED words.
   while (validWords.length < 10) {
     const rootWord = ROOT_WORDS[Math.floor(Math.random() * ROOT_WORDS.length)];
     rootLetters = rootWord.split('');
     
     // Filter against the common words dictionary instead of the massive Scrabble dictionary.
-    validWords = commonWords.filter((word: string) => {
+    const allValidFound = commonWords.filter((word: string) => {
       return isValidAnagram(word, rootLetters);
     }).map((w: string) => w.toUpperCase());
     
     // De-duplicate in case of any overlaps
-    validWords = Array.from(new Set(validWords));
+    const deduplicated = Array.from(new Set(allValidFound));
+    
+    // Sift out the generic blocklist words into a bonus array
+    validWords = [];
+    bonusWords = [];
+    const blockListUpper = blocklist.map(w => w.toUpperCase());
+    
+    for (const w of deduplicated) {
+      if (blockListUpper.includes(w)) {
+        bonusWords.push(w);
+      } else {
+        validWords.push(w);
+      }
+    }
   }
 
   // Create a scrambled copy of the root letters for the user to solve
@@ -64,6 +80,7 @@ export function getRandomPuzzle(): Puzzle {
 
   return {
     sourceLetters: scrambled.map(c => c.toUpperCase()),
-    validWords
+    validWords,
+    bonusWords
   };
 }

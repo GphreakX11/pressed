@@ -13,6 +13,7 @@ export default function GameBoard() {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [foundWords, setFoundWords] = useState<string[]>([]);
+  const [foundBonusWords, setFoundBonusWords] = useState<string[]>([]);
   
   const [inputState, setInputState] = useState<{
     currentInput: { char: string; sourceIndex: number }[];
@@ -39,6 +40,7 @@ export default function GameBoard() {
     setEndTime(Date.now() + 150000);
     setScore(0);
     setFoundWords([]);
+    setFoundBonusWords([]);
     setInputState({
       currentInput: [],
       availableSlots: [...newPuzzle.sourceLetters]
@@ -176,8 +178,16 @@ export default function GameBoard() {
       const wordChars = prev.currentInput.map(o => o.char);
       const word = wordChars.join("");
       
-      if (puzzle.validWords.includes(word) && !foundWords.includes(word)) {
-        setFoundWords(fw => [...fw, word]);
+      const isMainWord = puzzle.validWords.includes(word) && !foundWords.includes(word);
+      const isBonusWord = puzzle.bonusWords?.includes(word) && !foundBonusWords.includes(word);
+      
+      if (isMainWord || isBonusWord) {
+        if (isMainWord) {
+          setFoundWords(fw => [...fw, word]);
+        } else {
+          setFoundBonusWords(fw => [...fw, word]);
+        }
+        
         setScore(s => s + (word.length * 10));
         
         const newSlots = [...prev.availableSlots];
@@ -251,6 +261,15 @@ export default function GameBoard() {
           </div>
           
         </div>
+
+        {/* Bonus Words Indicator */}
+        {foundBonusWords.length > 0 && (
+          <div className="text-center w-full px-4 mb-2">
+            <div className="text-xs text-green-400 font-bold bg-green-900/30 py-1 px-2 rounded border border-green-500/30">
+              Bonus Words Found: {foundBonusWords.join(", ")}
+            </div>
+          </div>
+        )}
 
         <div className="flex-1 w-full px-4 py-2 mt-2 ml-2 overflow-y-auto">
           <div className="flex flex-row flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 content-start pb-4">

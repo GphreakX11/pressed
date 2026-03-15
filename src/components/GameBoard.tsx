@@ -1,64 +1,77 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { Puzzle, getRandomPuzzle } from "@/lib/puzzles";
 
-const INITIAL_LETTERS = ["N", "R", "U", "I", "F", "A"];
-const LEVEL_WORDS = [
-  "FAN", "FAR", "FIN", "FIR", "FUN", "FUR", "RAN", "RUN", "URN",
-  "FAIR", "RAIN", "RUIN",
-  "FURAN",
-  "UNFAIR"
-];
-
-// Group by length
-const wordsByLength: Record<number, string[]> = {
-  3: [],
-  4: [],
-  5: [],
-  6: [],
-};
-LEVEL_WORDS.forEach(w => {
-  if (wordsByLength[w.length]) {
-    wordsByLength[w.length].push(w);
-  }
-});
-
-type LetterObj = {
-  char: string;
-  sourceIndex: number;
-};
+// Retro font via Next/Google fonts is possible but for simplicity and guaranteeing zero-config, we'll use system fonts that look digital
+// We'll rely on Tailwind utility classes and some custom inline styles if needed for the digital LED look.
 
 export default function GameBoard() {
+  const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [timeLeft, setTimeLeft] = useState(150);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [foundWords, setFoundWords] = useState<string[]>([]);
   
-  const [currentInput, setCurrentInput] = useState<LetterObj[]>([]);
-  const [availableSlots, setAvailableSlots] = useState<(string | null)[]>([...INITIAL_LETTERS]);
+  const [inputState, setInputState] = useState<{
+    currentInput: { char: string; sourceIndex: number }[];
+    availableSlots: (string | null)[];
+  }>({ currentInput: [], availableSlots: [] });
+
   const [gameOver, setGameOver] = useState(false);
   const [shakeInput, setShakeInput] = useState(false);
 
-  useEffect(() => {
-    // load high score
-    const saved = localStorage.getItem('pressedHighScore');
-    if (saved) setHighScore(parseInt(saved, 10));
+  // We need to order the validWords by length, then alphabet so building the grid columns looks correct
+  const sortedWords = useMemo(() => {
+    if (!puzzle) return [];
+    return [...puzzle.validWords].sort((a, b) => {
+      if (a.length !== b.length) return a.length - b.length;
+      return a.localeCompare(b);
+    });
+  }, [puzzle]);
+
+  const startNewGame = useCallback(() => {
+    const newPuzzle = getRandomPuzzle();
+    setPuzzle(newPuzzle);
+    setTimeLeft(150);
+    setScore(0);
+    setFoundWords([]);
+    setInputState({
+      currentInput: [],
+      availableSlots: [...newPuzzle.sourceLetters]
+    });
+    setGameOver(false);
+    setShakeInput(false);
   }, []);
 
   useEffect(() => {
+    const saved = localStorage.getItem('pressedHighScore');
+    if (saved) setHighScore(parseInt(saved, 10));
+    startNewGame();
+  }, [startNewGame]);
+
+  useEffect(() => {
+    if (!puzzle || gameOver) return;
     if (timeLeft <= 0) {
       setGameOver(true);
-      if (score > highScore) {
-        setHighScore(score);
-        localStorage.setItem('pressedHighScore', score.toString());
-      }
+      setScore(s => {
+        let finalScore = s;
+        setHighScore(h => {
+          if (finalScore > h) {
+            localStorage.setItem('pressedHighScore', finalScore.toString());
+            return finalScore;
+          }
+          return h;
+        });
+        return s;
+      });
       return;
     }
     const timer = setInterval(() => {
       setTimeLeft(t => t - 1);
     }, 1000);
     return () => clearInterval(timer);
-  }, [timeLeft, score, highScore]);
+  }, [timeLeft, gameOver, puzzle]);
 
   const formatTime = (seconds: number) => {
     if (seconds < 0) return "0:00";
@@ -67,214 +80,236 @@ export default function GameBoard() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  const handleLetterClick = (char: string, index: number) => {
-    if (gameOver) return;
-    const newSlots = [...availableSlots];
-    newSlots[index] = null;
-    setAvailableSlots(newSlots);
-    setCurrentInput([...currentInput, { char, sourceIndex: index }]);
-  };
-
-  const handleUndo = () => {
-    if (gameOver || currentInput.length === 0) return;
-    const newInput = [...currentInput];
-    const letterObj = newInput.pop()!;
-    setCurrentInput(newInput);
-    
-    const newSlots = [...availableSlots];
-    newSlots[letterObj.sourceIndex] = letterObj.char;
-    setAvailableSlots(newSlots);
-  };
-
-  const handleMix = () => {
-    if (gameOver) return;
-    const remaining = availableSlots.filter(c => c !== null) as string[];
-    remaining.sort(() => Math.random() - 0.5);
-    
-    const newSlots = [...availableSlots];
-    let rIndex = 0;
-    for (let i = 0; i < newSlots.length; i++) {
-        if (newSlots[i] !== null) {
-           newSlots[i] = remaining[rIndex++];
-        }
+  const handleLetterClick = (char: string, index: number, e?: React.PointerEvent) => {
+    if (e) {
+      e.preventDefault();
+      // stop propagation if needed to prevent ghost clicks
     }
-    setAvailableSlots(newSlots);
+    if (gameOver) return;
+    setInputState(prev => {
+      const newSlots = [...prev.availableSlots];
+      newSlots[index] = null;
+      return {
+        currentInput: [...prev.currentInput, { char, sourceIndex: index }],
+        availableSlots: newSlots
+      };
+    });
   };
 
-  const handleEnter = () => {
-    if (gameOver || currentInput.length === 0) return;
-    const word = currentInput.map(o => o.char).join("");
-    
-    if (LEVEL_WORDS.includes(word) && !foundWords.includes(word)) {
-      setFoundWords([...foundWords, word]);
-      setScore(s => s + (word.length * 10));
-      // Restore pool
-      const newSlots = [...availableSlots];
-      currentInput.forEach(o => {
-        newSlots[o.sourceIndex] = o.char;
-      });
-      setAvailableSlots(newSlots);
-      setCurrentInput([]);
-    } else {
-      // Invalid word or already found
-      setShakeInput(true);
-      setTimeout(() => setShakeInput(false), 400);
+  const handleUndo = (e?: React.PointerEvent) => {
+    if (e) e.preventDefault();
+    if (gameOver) return;
+    setInputState(prev => {
+      if (prev.currentInput.length === 0) return prev;
+      const newInput = [...prev.currentInput];
+      const letterObj = newInput.pop()!;
+      const newSlots = [...prev.availableSlots];
+      newSlots[letterObj.sourceIndex] = letterObj.char;
+      return {
+        currentInput: newInput,
+        availableSlots: newSlots
+      };
+    });
+  };
+
+  const handleMix = (e?: React.PointerEvent) => {
+    if (e) e.preventDefault();
+    if (gameOver) return;
+    setInputState(prev => {
+      const remaining = prev.availableSlots.filter(c => c !== null) as string[];
+      if (remaining.length < 2) return prev;
       
-      // Auto undo all letters on invalid/already found, taking them back to pool
-      // Wait, in real TextTwist usually invalid words do this, or they just flash and you have to manually undo.
-      // Let's manually undo them to the pool after the shake.
-      setTimeout(() => {
-        const newSlots = [...availableSlots];
-        currentInput.forEach(o => {
+      remaining.sort(() => Math.random() - 0.5);
+      
+      const newSlots = [...prev.availableSlots];
+      let rIndex = 0;
+      for (let i = 0; i < newSlots.length; i++) {
+          if (newSlots[i] !== null) {
+             newSlots[i] = remaining[rIndex++];
+          }
+      }
+      return {
+        currentInput: prev.currentInput,
+        availableSlots: newSlots
+      };
+    });
+  };
+
+  const handleEnter = (e?: React.PointerEvent) => {
+    if (e) e.preventDefault();
+    if (gameOver || !puzzle) return;
+    
+    setInputState(prev => {
+      if (prev.currentInput.length === 0) return prev;
+      const word = prev.currentInput.map(o => o.char).join("");
+      
+      if (puzzle.validWords.includes(word) && !foundWords.includes(word)) {
+        setFoundWords(fw => [...fw, word]);
+        setScore(s => s + (word.length * 10));
+        
+        const newSlots = [...prev.availableSlots];
+        prev.currentInput.forEach(o => {
           newSlots[o.sourceIndex] = o.char;
         });
-        setAvailableSlots(newSlots);
-        setCurrentInput([]);
-      }, 400);
-    }
+        
+        return {
+          currentInput: [],
+          availableSlots: newSlots
+        };
+      } else {
+        // Invalid word
+        setShakeInput(true);
+        setTimeout(() => setShakeInput(false), 300);
+        
+        setTimeout(() => {
+          setInputState(curr => {
+            const returnedSlots = [...curr.availableSlots];
+            curr.currentInput.forEach(o => {
+              returnedSlots[o.sourceIndex] = o.char;
+            });
+            return { currentInput: [], availableSlots: returnedSlots };
+          });
+        }, 300);
+
+        return prev;
+      }
+    });
   };
 
-  // Keyboard support could be cool, but prompt didn't explicitly ask for it. Let's keep it simple first.
+  if (!puzzle) return null;
 
   return (
-    <div className="min-h-screen bg-blue-950 text-white flex flex-col items-center justify-between p-4 selection:bg-transparent font-mono">
+    <div className="fixed inset-0 bg-[#0d148c] flex flex-col items-center select-none font-sans overflow-hidden">
       
-      {/* Top Bar */}
-      <div className="w-full max-w-2xl flex justify-between items-center bg-blue-900 border-4 border-blue-400 p-4 rounded-lg shadow-[0_0_15px_rgba(96,165,250,0.5)]">
-        <div className="flex flex-col items-center flex-1">
-          <span className="text-blue-300 text-sm md:text-md uppercase tracking-widest mb-1 font-sans font-bold">Score</span>
-          <span className="text-3xl md:text-4xl font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">
-            {score.toString().padStart(4, '0')}
-          </span>
-        </div>
-        <div className="flex flex-col items-center flex-1 border-x border-blue-700">
-          <span className="text-blue-300 text-sm md:text-md uppercase tracking-widest mb-1 font-sans font-bold">Time</span>
-          <span className={`text-4xl md:text-5xl font-bold ${timeLeft <= 10 ? 'text-red-500 animate-pulse drop-shadow-[0_0_8px_rgba(239,68,68,0.8)]' : 'text-green-400 drop-shadow-[0_0_8px_rgba(74,222,128,0.8)]'}`}>
-            {formatTime(timeLeft)}
-          </span>
-        </div>
-        <div className="flex flex-col items-center flex-1">
-          <span className="text-blue-300 text-sm md:text-md uppercase tracking-widest mb-1 font-sans font-bold">Best</span>
-          <span className="text-3xl md:text-4xl font-bold text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.8)]">
-            {highScore.toString().padStart(4, '0')}
-          </span>
-        </div>
-      </div>
-
-      {/* Word Grid Middle */}
-      <div className="flex-1 w-full max-w-2xl my-6 bg-blue-900/40 border border-blue-700 rounded-lg p-6 flex justify-center gap-6 md:gap-12 overflow-y-auto shadow-inner">
-        {[3, 4, 5, 6].map(len => (
-          wordsByLength[len] && wordsByLength[len].length > 0 && (
-            <div key={len} className="flex flex-col gap-2">
-              <h3 className="text-blue-400 text-center text-xs md:text-sm mb-2 font-bold uppercase tracking-widest border-b border-blue-700 pb-1">{len} Ltrs</h3>
-              {wordsByLength[len].map(word => {
-                const isFound = foundWords.includes(word);
-                return (
-                  <div key={word} className="flex gap-1 justify-center">
-                    {word.split('').map((char, i) => (
-                      <div 
-                        key={i} 
-                        className={`w-8 h-8 md:w-10 md:h-10 border-2 flex items-center justify-center text-lg md:text-xl font-bold transition-all duration-500 ${
-                          isFound 
-                            ? 'bg-blue-600 border-blue-400 text-white shadow-[0_0_10px_rgba(96,165,250,0.5)] rotate-y-360' 
-                            : 'bg-blue-950/80 border-blue-800 text-transparent'
-                        }`}
-                      >
-                        {isFound ? char : ''}
-                      </div>
-                    ))}
-                  </div>
-                )
-              })}
+      <div className="w-full max-w-md h-full flex flex-col">
+        {/* Top Bar / Scoreboard */}
+        <div className="px-4 pt-6 pb-2 flex justify-between items-end">
+          
+          <div className="flex flex-col items-center">
+            <span className="text-white text-xs font-bold mb-1">Score</span>
+            <div className="bg-black border border-gray-600 px-2 py-1 min-w-[60px] text-right">
+              <span className="text-red-600 font-mono text-xl tracking-widest">{score.toString()}</span>
             </div>
-          )
-        ))}
-      </div>
+          </div>
 
-      {/* Input Area Bottom */}
-      <div className="w-full max-w-2xl flex flex-col items-center gap-4 bg-blue-900/60 p-4 md:p-6 rounded-lg border border-blue-500 shadow-xl">
-        
-        {/* Current Input Row */}
-        <div className={`flex gap-2 justify-center h-14 md:h-16 w-full ${shakeInput ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}>
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div 
-              key={`input-${i}`} 
-              className={`w-12 h-14 md:w-14 md:h-16 border-2 flex items-center justify-center text-2xl md:text-3xl font-bold transition-all duration-200 ${
-                currentInput[i] 
-                  ? 'bg-yellow-400 text-black border-yellow-200 shadow-[0_0_15px_rgba(250,204,21,0.5)] scale-105' 
-                  : 'bg-blue-950/50 border-blue-800 text-transparent'
-              }`}
-            >
-              {currentInput[i]?.char || ''}
+          <div className="flex flex-col items-center pb-2">
+            <div className="bg-black border-2 border-white/30 rounded-md px-3 py-1 mt-2">
+              <span className={`font-mono text-3xl tracking-widest ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-orange-500'}`}>
+                {formatTime(timeLeft)}
+              </span>
             </div>
-          ))}
-        </div>
+          </div>
 
-        {/* Source Scrambled Letters Row */}
-        <div className="flex gap-2 justify-center h-14 md:h-16 w-full">
-          {availableSlots.map((char, i) => {
-            return char ? (
-              <button
-                key={`avail-${i}-${char}`}
-                onClick={() => handleLetterClick(char, i)}
-                disabled={gameOver}
-                className="w-12 h-14 md:w-14 md:h-16 bg-blue-500 border-2 border-blue-300 text-white flex items-center justify-center text-2xl md:text-3xl font-bold rounded-sm shadow-[0_4px_0_rgba(29,78,216,1)] active:shadow-none active:translate-y-1 hover:bg-blue-400 disabled:opacity-50 disabled:cursor-not-allowed transition-all transform hover:scale-105"
-              >
-                {char}
-              </button>
-            ) : (
-               <div key={`empty-${i}`} className="w-12 h-14 md:w-14 md:h-16 bg-blue-950/30 border border-blue-900 rounded-sm" />
-            );
-          })}
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex gap-3 justify-center w-full mt-2">
-          <button 
-            onClick={handleMix}
-            disabled={gameOver || availableSlots.filter(s => s!==null).length < 2}
-            className="flex-1 max-w-[140px] bg-yellow-400 border-2 border-yellow-200 text-black font-bold py-3 px-2 md:px-6 rounded-lg shadow-[0_4px_0_rgb(161,161,170)] active:shadow-none active:translate-y-1 hover:bg-yellow-300 hover:shadow-[0_0_15px_rgba(250,204,21,0.6)] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider transition-all font-sans text-sm md:text-base"
-          >
-            Mix
-          </button>
-          <button 
-            onClick={handleEnter}
-            disabled={gameOver || currentInput.length === 0}
-            className="flex-1 max-w-[140px] bg-yellow-400 border-2 border-yellow-200 text-black font-bold py-3 px-2 md:px-6 rounded-lg shadow-[0_4px_0_rgb(161,161,170)] active:shadow-none active:translate-y-1 hover:bg-yellow-300 hover:shadow-[0_0_15px_rgba(250,204,21,0.6)] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider transition-all font-sans text-sm md:text-base"
-          >
-            Enter
-          </button>
-          <button 
-            onClick={handleUndo}
-            disabled={gameOver || currentInput.length === 0}
-            className="flex-1 max-w-[140px] bg-yellow-400 border-2 border-yellow-200 text-black font-bold py-3 px-2 md:px-6 rounded-lg shadow-[0_4px_0_rgb(161,161,170)] active:shadow-none active:translate-y-1 hover:bg-yellow-300 hover:shadow-[0_0_15px_rgba(250,204,21,0.6)] disabled:opacity-50 disabled:cursor-not-allowed uppercase tracking-wider transition-all font-sans text-sm md:text-base"
-          >
-            Undo
-          </button>
-        </div>
-
-      </div>
-
-      {gameOver && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 backdrop-blur-sm">
-          <div className="bg-blue-900 border-4 border-yellow-400 p-8 rounded-xl flex flex-col items-center max-w-sm w-full mx-4 shadow-[0_0_30px_rgba(250,204,21,0.4)]">
-            <h2 className="text-4xl font-bold text-yellow-400 mb-4 animate-pulse uppercase">Time's Up!</h2>
-            <div className="bg-blue-950 p-6 rounded-lg w-full mb-6 text-center border border-blue-700">
-              <p className="text-sm font-sans text-blue-300 uppercase tracking-widest mb-1">Final Score</p>
-              <p className="text-5xl font-bold text-white mb-2">{score}</p>
-              <div className="w-full h-px bg-blue-800 my-4" />
-              <p className="text-sm font-sans text-blue-300 uppercase tracking-widest mb-1">Words Found</p>
-              <p className="text-2xl text-green-400 font-bold">{foundWords.length} <span className="text-blue-500 text-xl">/ {LEVEL_WORDS.length}</span></p>
+          <div className="flex flex-col items-center">
+            <span className="text-white text-xs font-bold mb-1">High Score</span>
+            <div className="bg-black border border-gray-600 px-2 py-1 min-w-[60px] text-right">
+              <span className="text-red-600 font-mono text-xl tracking-widest">{highScore.toString()}</span>
             </div>
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full bg-yellow-400 border-2 border-yellow-200 text-black font-bold py-4 px-6 rounded-lg shadow-[0_4px_0_rgb(161,161,170)] active:shadow-none active:translate-y-1 hover:bg-yellow-300 uppercase tracking-wider transition-all text-xl"
-            >
-              Play Again
-            </button>
+          </div>
+          
+        </div>
+
+        <div className="flex-1 w-full px-4 py-2 mt-4 ml-2 max-h-[50vh]">
+          <div className="flex flex-col flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 h-[280px] sm:h-[350px] content-start">
+            {sortedWords.map((word, idx) => {
+              const isFound = foundWords.includes(word);
+              const isMissed = gameOver && !isFound;
+              return (
+                <div key={idx} className="flex gap-[2px] mb-1">
+                  {word.split('').map((char, i) => (
+                    <div 
+                      key={i} 
+                      className={`w-[18px] h-[18px] sm:w-[22px] sm:h-[22px] md:w-[26px] md:h-[26px] border flex items-center justify-center text-[10px] sm:text-xs font-bold ${
+                        isFound 
+                          ? 'bg-white border-gray-300 text-black' 
+                          : isMissed
+                          ? 'bg-red-900 border-red-700 text-red-200'
+                          : 'bg-white border-gray-300 text-transparent'
+                      }`}
+                    >
+                      {isFound || isMissed ? char.toUpperCase() : ''}
+                    </div>
+                  ))}
+                </div>
+              )
+            })}
           </div>
         </div>
-      )}
+
+        {/* Bottom Input Area */}
+         <div className="w-full mt-auto pb-8 px-4 flex flex-col items-center gap-6 select-none touch-none">
+          
+          {gameOver ? (
+             <div className="w-full flex flex-col items-center gap-4 bg-black/20 p-4 rounded-xl border border-white/10 animate-[slideUp_0.3s_ease-out]">
+                <h2 className="text-3xl font-bold text-orange-500 tracking-widest">TIME'S UP</h2>
+                <button 
+                  onPointerDown={startNewGame}
+                  className="w-full max-w-[200px] bg-[#e6de22] border-2 border-black text-black font-extrabold py-3 px-6 rounded shadow-[0_3px_0_rgba(0,0,0,0.5)] active:translate-y-[3px] active:shadow-none text-lg select-none touch-manipulation"
+                >
+                  PLAY AGAIN
+                </button>
+             </div>
+          ) : (
+            <>
+              {/* Current Input Slots */}
+              <div className={`flex justify-center gap-[4px] sm:gap-[6px] w-full h-12 sm:h-14 ${shakeInput ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}>
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div 
+                    key={`input-${i}`} 
+                    className={`w-12 h-12 sm:w-14 sm:h-14 border-2 flex items-center justify-center text-3xl font-bold rounded-sm select-none touch-none ${
+                      inputState.currentInput[i] 
+                        ? 'bg-white text-[#4a1c22] border-gray-300 shadow-md' 
+                        : 'bg-white border-gray-300 text-transparent'
+                    }`}
+                  >
+                    {inputState.currentInput[i]?.char || ''}
+                  </div>
+                ))}
+              </div>
+
+              {/* Source Letters */}
+              <div className="flex justify-center gap-[4px] sm:gap-[6px] w-full mt-2 h-[52px] sm:h-[60px]">
+                {inputState.availableSlots.map((char, i) => {
+                  return char ? (
+                    <button
+                      key={`avail-${i}-${char}`}
+                      onPointerDown={(e) => handleLetterClick(char, i, e)}
+                      className="w-[52px] h-[52px] sm:w-[60px] sm:h-[60px] bg-[#e6e6e6] border-b-4 border-r-2 border-[#b0b0b0] text-[#4a1c22] flex items-center justify-center text-3xl sm:text-4xl font-extrabold rounded shadow-md active:translate-y-[4px] active:border-b-0 active:border-r-0 active:mt-[4px] touch-manipulation select-none"
+                    >
+                      {char}
+                    </button>
+                  ) : (
+                    <div key={`empty-${i}`} className="w-[52px] h-[52px] sm:w-[60px] sm:h-[60px]" />
+                  );
+                })}
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex justify-center gap-2 sm:gap-4 w-full mt-4 h-12">
+                <button 
+                  onPointerDown={handleMix}
+                  className="flex-1 bg-[#d8db14] border-2 border-black text-black font-extrabold rounded shadow-[0_3px_0_rgba(0,0,0,0.5)] active:translate-y-[3px] active:shadow-none text-base sm:text-lg tracking-wider touch-none select-none"
+                >
+                  MIX
+                </button>
+                <button 
+                  onPointerDown={handleEnter}
+                  className="flex-1 bg-[#d8db14] border-2 border-black text-black font-extrabold rounded shadow-[0_3px_0_rgba(0,0,0,0.5)] active:translate-y-[3px] active:shadow-none text-base sm:text-lg tracking-wider touch-none select-none"
+                >
+                  ENTER
+                </button>
+                <button 
+                  onPointerDown={handleUndo}
+                  className="flex-1 bg-[#d8db14] border-2 border-black text-black font-extrabold rounded shadow-[0_3px_0_rgba(0,0,0,0.5)] active:translate-y-[3px] active:shadow-none text-base sm:text-lg tracking-wider touch-none select-none"
+                >
+                  UNDO
+                </button>
+              </div>
+            </>
+          )}
+
+        </div>
+      </div>
     </div>
   );
 }

@@ -43,19 +43,23 @@ function isValidAnagram(word: string, sourceLetters: string[]): boolean {
 }
 
 export function getRandomPuzzle(): Puzzle {
-  // Pick a random set of 6 source letters
-  const sourceLetters = SOURCE_PUZZLES[Math.floor(Math.random() * SOURCE_PUZZLES.length)];
+  // Pick a random set of 6 source letters (the root)
+  const rootLetters = SOURCE_PUZZLES[Math.floor(Math.random() * SOURCE_PUZZLES.length)];
   
-  // Mathematically derive *all* true valid English words from the dictionary
+  // Mathematically derive *all* true valid English words from the dictionary using the root letters
   const validWords = dictionaryWords.filter(word => {
-    return isValidAnagram(word, sourceLetters);
+    return isValidAnagram(word, rootLetters);
   }).map(w => w.toUpperCase()); // Ensure they are returned uppercase for the UI
 
-  // Since `an-array-of-english-words` is very exhaustive, sometimes it includes incredibly obscure 3-letter words. 
-  // But this strictly guarantees no hallucinations ("INFRU" evaluates to false) and includes every possible permutation.
+  // Create a scrambled copy of the root letters for the user to solve
+  let scrambled = [...rootLetters];
+  for (let i = scrambled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
+  }
 
   return {
-    sourceLetters,
+    sourceLetters: scrambled,
     validWords
   };
 }

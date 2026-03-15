@@ -20,6 +20,7 @@ export default function GameBoard() {
 
   const [gameOver, setGameOver] = useState(false);
   const [shakeInput, setShakeInput] = useState(false);
+  const [successAnim, setSuccessAnim] = useState<{ active: boolean; word: string[] }>({ active: false, word: [] });
 
   // We need to order the validWords by length, then alphabet so building the grid columns looks correct
   const sortedWords = useMemo(() => {
@@ -42,6 +43,7 @@ export default function GameBoard() {
     });
     setGameOver(false);
     setShakeInput(false);
+    setSuccessAnim({ active: false, word: [] });
   }, []);
 
   useEffect(() => {
@@ -86,6 +88,12 @@ export default function GameBoard() {
       // stop propagation if needed to prevent ghost clicks
     }
     if (gameOver) return;
+    
+    // If user types while success animation is happening, abort success display instantly
+    if (successAnim.active) {
+       setSuccessAnim({ active: false, word: [] });
+    }
+
     setInputState(prev => {
       const newSlots = [...prev.availableSlots];
       newSlots[index] = null;
@@ -99,6 +107,8 @@ export default function GameBoard() {
   const handleUndo = (e?: React.PointerEvent) => {
     if (e) e.preventDefault();
     if (gameOver) return;
+    if (successAnim.active) setSuccessAnim({ active: false, word: [] });
+
     setInputState(prev => {
       if (prev.currentInput.length === 0) return prev;
       const newInput = [...prev.currentInput];
@@ -115,6 +125,8 @@ export default function GameBoard() {
   const handleMix = (e?: React.PointerEvent) => {
     if (e) e.preventDefault();
     if (gameOver) return;
+    if (successAnim.active) setSuccessAnim({ active: false, word: [] });
+
     setInputState(prev => {
       const remaining = prev.availableSlots.filter(c => c !== null) as string[];
       if (remaining.length < 2) return prev;
@@ -141,7 +153,8 @@ export default function GameBoard() {
     
     setInputState(prev => {
       if (prev.currentInput.length === 0) return prev;
-      const word = prev.currentInput.map(o => o.char).join("");
+      const wordChars = prev.currentInput.map(o => o.char);
+      const word = wordChars.join("");
       
       if (puzzle.validWords.includes(word) && !foundWords.includes(word)) {
         setFoundWords(fw => [...fw, word]);
@@ -152,6 +165,16 @@ export default function GameBoard() {
           newSlots[o.sourceIndex] = o.char;
         });
         
+        // Trigger non-blocking visual success animation
+        setSuccessAnim({ active: true, word: wordChars });
+        setTimeout(() => {
+          setSuccessAnim(curr => {
+            // Only erase if another word wasn't typed immediately over top of it
+            if (curr.word.join("") === word) return { active: false, word: [] };
+            return curr;
+          });
+        }, 300);
+
         return {
           currentInput: [],
           availableSlots: newSlots
@@ -209,8 +232,8 @@ export default function GameBoard() {
           
         </div>
 
-        <div className="flex-1 w-full px-4 py-2 mt-4 ml-2 max-h-[50vh]">
-          <div className="flex flex-col flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 h-[280px] sm:h-[350px] content-start">
+        <div className="flex-1 w-full px-4 py-2 mt-2 ml-2 overflow-y-auto">
+          <div className="flex flex-row flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 content-start pb-4">
             {sortedWords.map((word, idx) => {
               const isFound = foundWords.includes(word);
               const isMissed = gameOver && !isFound;
@@ -237,7 +260,7 @@ export default function GameBoard() {
         </div>
 
         {/* Bottom Input Area */}
-         <div className="w-full mt-auto pb-8 px-4 flex flex-col items-center gap-6 select-none touch-none">
+         <div className="w-full mt-auto pb-8 pt-4 px-4 flex flex-col items-center gap-6 border-t border-white/10 select-none touch-none bg-[#0d148c]">
           
           {gameOver ? (
              <div className="w-full flex flex-col items-center gap-4 bg-black/20 p-4 rounded-xl border border-white/10 animate-[slideUp_0.3s_ease-out]">
@@ -253,18 +276,27 @@ export default function GameBoard() {
             <>
               {/* Current Input Slots */}
               <div className={`flex justify-center gap-[4px] sm:gap-[6px] w-full h-12 sm:h-14 ${shakeInput ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}>
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div 
-                    key={`input-${i}`} 
-                    className={`w-12 h-12 sm:w-14 sm:h-14 border-2 flex items-center justify-center text-3xl font-bold rounded-sm select-none touch-none ${
-                      inputState.currentInput[i] 
-                        ? 'bg-white text-[#4a1c22] border-gray-300 shadow-md' 
-                        : 'bg-white border-gray-300 text-transparent'
-                    }`}
-                  >
-                    {inputState.currentInput[i]?.char || ''}
-                  </div>
-                ))}
+                {Array.from({ length: 6 }).map((_, i) => {
+                  // Determine if we should show the success animation char or the real active input char
+                  const isSuccessActive = successAnim.active && inputState.currentInput.length === 0;
+                  const charToShow = isSuccessActive ? successAnim.word[i] : inputState.currentInput[i]?.char || '';
+                  const isActiveCell = isSuccessActive ? !!successAnim.word[i] : !!inputState.currentInput[i];
+                  
+                  return (
+                    <div 
+                      key={`input-${i}`} 
+                      className={`w-12 h-12 sm:w-14 sm:h-14 border-2 flex items-center justify-center text-3xl font-bold rounded-sm select-none touch-none transition-all duration-75 ${
+                        isActiveCell && !isSuccessActive
+                          ? 'bg-white text-[#4a1c22] border-gray-300 shadow-md' 
+                          : isActiveCell && isSuccessActive
+                          ? 'bg-green-100 border-green-400 text-green-900 ring-4 ring-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)] scale-105'
+                          : 'bg-white border-gray-300 text-transparent'
+                      }`}
+                    >
+                      {charToShow}
+                    </div>
+                  )
+                })}
               </div>
 
               {/* Source Letters */}

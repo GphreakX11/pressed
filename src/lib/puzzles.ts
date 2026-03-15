@@ -1,10 +1,12 @@
 import commonWords from './clean-words.json';
 import blocklist from './blocklist.json';
+import sowpods from './sowpods-static.json';
 
 export type Puzzle = {
   sourceLetters: string[];
   validWords: string[];
   bonusWords: string[];
+  bingoWord: string;
 };
 
 // Compute all valid 6-letter root words from the common dictionary
@@ -40,6 +42,7 @@ function isValidAnagram(word: string, sourceLetters: string[]): boolean {
 
 export function getRandomPuzzle(): Puzzle {
   let rootLetters: string[] = [];
+  let rootWordObj: string = "";
   let validWords: string[] = [];
   let bonusWords: string[] = [];
 
@@ -47,6 +50,7 @@ export function getRandomPuzzle(): Puzzle {
   // We randomly select from ROOT_WORDS until we find one that generates >= 10 REQUIRED words.
   while (validWords.length < 10) {
     const rootWord = ROOT_WORDS[Math.floor(Math.random() * ROOT_WORDS.length)];
+    rootWordObj = rootWord;
     rootLetters = rootWord.split('');
     
     // Filter against the common words dictionary instead of the massive Scrabble dictionary.
@@ -71,6 +75,20 @@ export function getRandomPuzzle(): Puzzle {
     }
   }
 
+  // EXHAUSTIVE SOWPODS FALLBACK
+  // Any legally playable word in the entire english scrabble dictionary 
+  // that was NOT already caught by our curated 10k list above gets
+  // indiscriminately added to the Bonus Words pool.
+  const allSowpodsValid = sowpods.filter((word: string) => {
+    return isValidAnagram(word, rootLetters);
+  }).map((w: string) => w.toUpperCase());
+  
+  for (const sowWord of allSowpodsValid) {
+    if (!validWords.includes(sowWord) && !bonusWords.includes(sowWord)) {
+       bonusWords.push(sowWord);
+    }
+  }
+
   // Create a scrambled copy of the root letters for the user to solve
   let scrambled = [...rootLetters];
   for (let i = scrambled.length - 1; i > 0; i--) {
@@ -81,6 +99,7 @@ export function getRandomPuzzle(): Puzzle {
   return {
     sourceLetters: scrambled.map(c => c.toUpperCase()),
     validWords,
-    bonusWords
+    bonusWords,
+    bingoWord: rootWordObj.toUpperCase()
   };
 }

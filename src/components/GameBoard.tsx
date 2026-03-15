@@ -9,6 +9,7 @@ import { Puzzle, getRandomPuzzle } from "@/lib/puzzles";
 export default function GameBoard() {
   const [puzzle, setPuzzle] = useState<Puzzle | null>(null);
   const [timeLeft, setTimeLeft] = useState(150);
+  const [endTime, setEndTime] = useState<number | null>(null);
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [foundWords, setFoundWords] = useState<string[]>([]);
@@ -35,6 +36,7 @@ export default function GameBoard() {
     const newPuzzle = getRandomPuzzle();
     setPuzzle(newPuzzle);
     setTimeLeft(150);
+    setEndTime(Date.now() + 150000);
     setScore(0);
     setFoundWords([]);
     setInputState({
@@ -53,27 +55,45 @@ export default function GameBoard() {
   }, [startNewGame]);
 
   useEffect(() => {
-    if (!puzzle || gameOver) return;
-    if (timeLeft <= 0) {
-      setGameOver(true);
-      setScore(s => {
-        let finalScore = s;
-        setHighScore(h => {
-          if (finalScore > h) {
-            localStorage.setItem('pressedHighScore', finalScore.toString());
-            return finalScore;
-          }
-          return h;
+    if (!puzzle || gameOver || !endTime) return;
+
+    const checkTime = () => {
+      const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+      setTimeLeft(remaining);
+
+      if (remaining <= 0) {
+        setGameOver(true);
+        setScore(s => {
+          const finalScore = s;
+          setHighScore(h => {
+            if (finalScore > h) {
+              localStorage.setItem('pressedHighScore', finalScore.toString());
+              return finalScore;
+            }
+            return h;
+          });
+          return s;
         });
-        return s;
-      });
-      return;
-    }
-    const timer = setInterval(() => {
-      setTimeLeft(t => t - 1);
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft, gameOver, puzzle]);
+      }
+    };
+
+    checkTime(); // Execute immediately once per render cycle
+
+    const timer = setInterval(checkTime, 1000);
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        checkTime();
+      }
+    };
+    
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(timer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [endTime, gameOver, puzzle]);
 
   const formatTime = (seconds: number) => {
     if (seconds < 0) return "0:00";

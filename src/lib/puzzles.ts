@@ -1,18 +1,12 @@
-import dictionaryWords from 'an-array-of-english-words';
+import commonWords from './clean-words.json';
 
 export type Puzzle = {
   sourceLetters: string[];
   validWords: string[];
 };
 
-// We keep a curated list of reliable 6-letter source arrays
-const SOURCE_PUZZLES: string[][] = [
-  ["N", "R", "U", "I", "F", "A"], // UNFAIR
-  ["T", "S", "E", "A", "M", "R"], // MASTER
-  ["P", "L", "A", "N", "E", "T"], // PLANET
-  ["P", "R", "I", "N", "G", "S"], // SPRING
-  ["K", "E", "R", "A", "B", "S"]  // BAKERS
-];
+// Compute all valid 6-letter root words from the common dictionary
+const ROOT_WORDS = commonWords.filter((w: string) => w.length === 6);
 
 /**
  * Helper function to check if a dictionary word can be formed 
@@ -43,13 +37,23 @@ function isValidAnagram(word: string, sourceLetters: string[]): boolean {
 }
 
 export function getRandomPuzzle(): Puzzle {
-  // Pick a random set of 6 source letters (the root)
-  const rootLetters = SOURCE_PUZZLES[Math.floor(Math.random() * SOURCE_PUZZLES.length)];
-  
-  // Mathematically derive *all* true valid English words from the dictionary using the root letters
-  const validWords = dictionaryWords.filter(word => {
-    return isValidAnagram(word, rootLetters);
-  }).map(w => w.toUpperCase()); // Ensure they are returned uppercase for the UI
+  let rootLetters: string[] = [];
+  let validWords: string[] = [];
+
+  // Randomly pick a 6-letter root word and evaluate it.
+  // We randomly select from ROOT_WORDS until we find one that generates >= 10 words.
+  while (validWords.length < 10) {
+    const rootWord = ROOT_WORDS[Math.floor(Math.random() * ROOT_WORDS.length)];
+    rootLetters = rootWord.split('');
+    
+    // Filter against the common words dictionary instead of the massive Scrabble dictionary.
+    validWords = commonWords.filter((word: string) => {
+      return isValidAnagram(word, rootLetters);
+    }).map((w: string) => w.toUpperCase());
+    
+    // De-duplicate in case of any overlaps
+    validWords = Array.from(new Set(validWords));
+  }
 
   // Create a scrambled copy of the root letters for the user to solve
   let scrambled = [...rootLetters];
@@ -59,7 +63,7 @@ export function getRandomPuzzle(): Puzzle {
   }
 
   return {
-    sourceLetters: scrambled,
+    sourceLetters: scrambled.map(c => c.toUpperCase()),
     validWords
   };
 }

@@ -34,16 +34,34 @@ export default function GameBoard() {
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
 
   const [shakeInput, setShakeInput] = useState(false);
-  const [successAnim, setSuccessAnim] = useState<{ active: boolean; word: string[] }>({ active: false, word: [] });
+  const [successAnim, setSuccessAnim] = useState<{ active: boolean; word: string[]; type: 'base' | 'bonus' }>({ active: false, word: [], type: 'base' });
+  const [bonusToast, setBonusToast] = useState<{ id: number; points: number } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+  
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    try {
+      audioRef.current = new Audio('/sounds/bonus.mp3');
+    } catch(e) {}
+  }, []);
 
-  // We need to order the validWords by length, then alphabet so building the grid columns looks correct
-  const sortedWords = useMemo(() => {
-    if (!puzzle) return [];
-    return [...puzzle.validWords].sort((a, b) => {
-      if (a.length !== b.length) return a.length - b.length;
-      return a.localeCompare(b);
-    });
+  // Group words into vertical columns by length
+  const groupedWords = useMemo(() => {
+    if (!puzzle) return {} as Record<number, string[]>;
+    
+    const groups: Record<number, string[]> = {};
+    for (const word of puzzle.validWords) {
+      const len = word.length;
+      if (!groups[len]) groups[len] = [];
+      groups[len].push(word);
+    }
+    
+    // Sort each column alphabetically natively
+    for (const len in groups) {
+      groups[len].sort((a, b) => a.localeCompare(b));
+    }
+    
+    return groups;
   }, [puzzle]);
 
   const handleQuitGame = useCallback(() => {
@@ -93,7 +111,8 @@ export default function GameBoard() {
     setGameOver(false);
     setShowWelcome(false);
     setShakeInput(false);
-    setSuccessAnim({ active: false, word: [] });
+    setSuccessAnim({ active: false, word: [], type: 'base' });
+    setBonusToast(null);
     setToastMessage(null);
   }, [difficulty]);
 
@@ -151,7 +170,7 @@ export default function GameBoard() {
     
     // If user types while success animation is happening, abort success display instantly
     if (successAnim.active) {
-       setSuccessAnim({ active: false, word: [] });
+       setSuccessAnim({ active: false, word: [], type: 'base' });
     }
 
     setInputState(prev => {
@@ -167,7 +186,7 @@ export default function GameBoard() {
   const handleUndo = (e?: React.PointerEvent) => {
     if (e) e.preventDefault();
     if (gameOver) return;
-    if (successAnim.active) setSuccessAnim({ active: false, word: [] });
+    if (successAnim.active) setSuccessAnim({ active: false, word: [], type: 'base' });
 
     setInputState(prev => {
       if (prev.currentInput.length === 0) return prev;
@@ -185,7 +204,7 @@ export default function GameBoard() {
   const handleMix = (e?: React.PointerEvent) => {
     if (e) e.preventDefault();
     if (gameOver) return;
-    if (successAnim.active) setSuccessAnim({ active: false, word: [] });
+    if (successAnim.active) setSuccessAnim({ active: false, word: [], type: 'base' });
 
     setInputState(prev => {
       const remaining = prev.availableSlots.filter(c => c !== null) as string[];
@@ -253,19 +272,33 @@ export default function GameBoard() {
         }
         
         const difficultyMultiplier = difficulty === 'hard' ? 1.5 : 1;
-        setScore(s => s + Math.floor(word.length * 10 * difficultyMultiplier));
+        const pts = Math.floor(word.length * 10 * difficultyMultiplier);
+        setScore(s => s + pts);
         
         const newSlots = [...prev.availableSlots];
         prev.currentInput.forEach(o => {
           newSlots[o.sourceIndex] = o.char;
         });
         
+        const isBonus = !isMainWord && isBonusWord;
+        
         // Trigger non-blocking visual success animation
-        setSuccessAnim({ active: true, word: wordChars });
+        setSuccessAnim({ active: true, word: wordChars, type: isBonus ? 'bonus' : 'base' });
+        
+        if (isBonus) {
+           setBonusToast({ id: Date.now(), points: pts });
+           try {
+             if (audioRef.current) {
+               audioRef.current.currentTime = 0;
+               audioRef.current.play().catch(() => {});
+             }
+           } catch(e) {}
+        }
+        
         setTimeout(() => {
           setSuccessAnim(curr => {
             // Only erase if another word wasn't typed immediately over top of it
-            if (curr.word.join("") === word) return { active: false, word: [] };
+            if (curr.word.join("") === word) return { active: false, word: [], type: 'base' };
             return curr;
           });
         }, 300);
@@ -406,36 +439,40 @@ export default function GameBoard() {
           </div>
         )}
 
-        <div className="flex-1 w-full px-4 py-2 mt-2 ml-2 overflow-y-auto">
-          <div className="flex flex-row flex-wrap gap-x-3 sm:gap-x-4 gap-y-1 content-start pb-4">
-            {sortedWords.map((word, idx) => {
-              const isFound = foundWords.includes(word);
-              const isMissed = gameOver && !isFound;
-              // Hint logic for easy
-              const isBingoWord = word === puzzle.bingoWord;
-              const isEasyHint = difficulty === 'easy' && isBingoWord && !isFound && !gameOver;
+        <div className="flex-1 w-full px-4 py-2 mt-2 overflow-y-auto w-full max-w-sm self-center">
+          <div className="flex flex-row justify-around w-full gap-2 sm:gap-4 pb-4">
+            {Object.entries(groupedWords).map(([len, words]) => (
+              <div key={len} className="flex flex-col gap-y-2 text-center">
+                {words.map((word, idx) => {
+                  const isFound = foundWords.includes(word);
+                  const isMissed = gameOver && !isFound;
+                  // Hint logic for easy
+                  const isBingoWord = word === puzzle.bingoWord;
+                  const isEasyHint = difficulty === 'easy' && isBingoWord && !isFound && !gameOver;
 
-              return (
-                <div key={idx} className="flex gap-[2px] mb-1">
-                  {word.split('').map((char, i) => (
-                    <div 
-                      key={i} 
-                      className={`w-[18px] h-[18px] sm:w-[22px] sm:h-[22px] md:w-[26px] md:h-[26px] border flex items-center justify-center text-[10px] sm:text-xs font-bold ${
-                        isFound 
-                          ? 'bg-white border-gray-300 text-black' 
-                          : isMissed
-                          ? 'bg-red-900 border-red-700 text-red-200'
-                          : isEasyHint && i === 0
-                          ? 'bg-blue-900 border-blue-500 text-blue-200'
-                          : 'bg-white border-gray-300 text-transparent'
-                      }`}
-                    >
-                      {isFound || isMissed || (isEasyHint && i === 0) ? char.toUpperCase() : ''}
+                  return (
+                    <div key={idx} className="flex gap-[2px] justify-center">
+                      {word.split('').map((char, i) => (
+                        <div 
+                          key={i} 
+                          className={`w-[16px] h-[20px] sm:w-[20px] sm:h-[24px] md:w-[24px] md:h-[28px] border flex items-center justify-center text-[10px] sm:text-[11px] font-bold shadow-sm ${
+                            isFound 
+                              ? 'bg-white border-gray-300 text-black' 
+                              : isMissed
+                              ? 'bg-red-900 border-red-700 text-red-200'
+                              : isEasyHint && i === 0
+                              ? 'bg-blue-900 border-blue-500 text-blue-200'
+                              : 'bg-white border-gray-300 text-transparent'
+                          }`}
+                        >
+                          {isFound || isMissed || (isEasyHint && i === 0) ? char.toUpperCase() : ''}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )
-            })}
+                  )
+                })}
+              </div>
+            ))}
           </div>
         </div>
 
@@ -472,7 +509,14 @@ export default function GameBoard() {
                 </div>
              </div>
           ) : (
-            <>
+            <div className="w-full relative flex flex-col items-center">
+              {/* Floating Bonus Toast Overlay */}
+              {bonusToast && (
+                <div key={`toast-${bonusToast.id}`} className="absolute -top-[30px] z-50 pointer-events-none animate-floatUpFade flex flex-col items-center drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">
+                  <span className="text-yellow-400 font-extrabold text-2xl tracking-widest italic">+{bonusToast.points} BONUS!</span>
+                </div>
+              )}
+              
               {/* Current Input Slots */}
               <div className={`flex justify-center gap-[4px] sm:gap-[6px] w-full h-12 sm:h-14 ${shakeInput ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}>
                 {Array.from({ length: 6 }).map((_, i) => {
@@ -484,11 +528,13 @@ export default function GameBoard() {
                   return (
                     <div 
                       key={`input-${i}`} 
-                      className={`w-12 h-12 sm:w-14 sm:h-14 border-2 flex items-center justify-center text-3xl font-bold rounded-sm select-none touch-none transition-all duration-75 ${
+                      className={`w-12 h-12 sm:w-14 sm:h-14 border-2 flex items-center justify-center text-3xl font-bold rounded-sm select-none touch-none transition-all duration-75 relative ${
                         isActiveCell && !isSuccessActive
                           ? 'bg-white text-[#4a1c22] border-gray-300 shadow-md' 
-                          : isActiveCell && isSuccessActive
+                          : isActiveCell && isSuccessActive && successAnim.type === 'base'
                           ? 'bg-green-100 border-green-400 text-green-900 ring-4 ring-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)] scale-105'
+                          : isActiveCell && isSuccessActive && successAnim.type === 'bonus'
+                          ? 'bg-yellow-100 border-yellow-400 text-yellow-900 ring-4 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.6)] scale-105'
                           : 'bg-white border-gray-300 text-transparent'
                       }`}
                     >
@@ -536,7 +582,7 @@ export default function GameBoard() {
                   UNDO
                 </button>
               </div>
-            </>
+            </div>
           )}
 
         </div>

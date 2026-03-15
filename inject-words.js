@@ -3,9 +3,10 @@ const path = require('path');
 
 const missingWords = [
   'nod', 'doze', 'taco', 'wifi', 'app', 'blog', 'nerd', 'bro', 'bot', 'tech', 'sync',
-  'mac', 'pac', 'zip', 'gif', 'bot', 'sec', 'dev', 'sys', 'dir', 'bin', 'var', 'cfg', 'log', 'api', 'url', 'uri',
+  'mac', 'pac', 'zip', 'gif', 'sec', 'dev', 'sys', 'dir', 'bin', 'var', 'cfg', 'log', 'api', 'url', 'uri',
   'ssh', 'ssl', 'tls', 'tcp', 'udp', 'dns', 'ftp', 'sql', 'css', 'html', 'xml', 'json', 'csv', 'yaml', 'toml',
-  'npm', 'npx', 'yarn', 'git', 'svn', 'hg', 'cvs', 'tar', 'gz', 'bz2', 'xz', 'rar', 'exe', 'dll', 'so'
+  'npm', 'npx', 'yarn', 'git', 'svn', 'hg', 'cvs', 'tar', 'gz', 'bz2', 'xz', 'rar', 'exe', 'dll', 'so',
+  'pore', 'pores', 'soze', 'awol'
 ];
 
 const inputFilePath = path.join(__dirname, 'src', 'lib', 'clean-words.json');

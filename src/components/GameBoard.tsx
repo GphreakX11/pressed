@@ -339,9 +339,10 @@ export default function GameBoard() {
   }, []);
 
   useEffect(() => {
-    if (!puzzle || gameOver || !endTime || showWelcome || isTimeFrozen) return;
+    if (!puzzle || gameOver || !endTime || showWelcome) return;
 
     const checkTime = () => {
+      if (isTimeFrozen) return;
       const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
       setTimeLeft(remaining);
 
@@ -367,7 +368,7 @@ export default function GameBoard() {
       clearInterval(timer);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [endTime, gameOver, puzzle, showWelcome, endGame]);
+  }, [endTime, gameOver, puzzle, showWelcome, endGame, isTimeFrozen]);
 
   const formatTime = (seconds: number) => {
     if (seconds < 0) return "0:00";
@@ -561,13 +562,17 @@ export default function GameBoard() {
           } else if (next === 10) {
             // Time Freeze
             setIsTimeFrozen(true);
-            setEndTime(e => e ? e + 5000 : e);
             setTimeout(() => {
               setTimeout(() => setToastMessage("TIME FREEZE! (5s)"), 400);
               playSound('jackpot', 5);
             }, 400);
+            
+            // Wait exactly 5 seconds, then definitively add 5000ms to the endTime to "refund" the frozen time.
             setTimeout(() => {
-              if (!gameOverRef.current) setIsTimeFrozen(false);
+              if (!gameOverRef.current) {
+                setEndTime(e => e ? e + 5000 : e);
+                setIsTimeFrozen(false);
+              }
             }, 5000);
           }
           return next;

@@ -18,8 +18,8 @@ export default function GameBoard() {
   const [highScore, setHighScore] = useState(0);
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [foundBonusWords, setFoundBonusWords] = useState<string[]>([]);
-  const [wordsSubmitted, setWordsSubmitted] = useState(0);
   
+
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [isDailyMode, setIsDailyMode] = useState(false);
   const [stats, setStats] = useState<PlayerStats | null>(null);
@@ -66,6 +66,11 @@ export default function GameBoard() {
   const [gameOver, setGameOver] = useState(false);
   const gameOverRef = useRef(false);
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
+
+  // Track words submitted with a ref so endGame closure always has the latest value
+  const [wordsSubmitted, setWordsSubmitted] = useState(0);
+  const wordsSubmittedRef = useRef(0);
+  useEffect(() => { wordsSubmittedRef.current = wordsSubmitted; }, [wordsSubmitted]);
 
   const [shakeInput, setShakeInput] = useState(false);
   const [successAnim, setSuccessAnim] = useState<{ active: boolean; word: string[]; type: 'base' | 'bonus' }>({ active: false, word: [], type: 'base' });
@@ -251,7 +256,7 @@ export default function GameBoard() {
     const currentStats = loadStats();
     const oldTitle = getTitle(currentStats.gamesWon).title;
 
-    recordGameResult(false, score, wordsSubmitted, wordsCorrect, gridSeen, gridFilled);
+    recordGameResult(false, score, wordsSubmittedRef.current, wordsCorrect, gridSeen, gridFilled);
     
     // Check for rank up
     const newStats = loadStats();
@@ -261,6 +266,9 @@ export default function GameBoard() {
     }
     
     setStats(newStats);
+    // Reset submitted count for the next game
+    setWordsSubmitted(0);
+    wordsSubmittedRef.current = 0;
     setGameOver(true);
     setShowWelcome(true);
     setShowQuitConfirm(false);
@@ -324,7 +332,7 @@ export default function GameBoard() {
       const currentStats = loadStats();
       const oldTitle = getTitle(currentStats.gamesWon).title;
 
-      recordGameResult(won, finalScore, wordsSubmitted, wordsCorrect, gridSeen, gridFilled);
+      recordGameResult(won, finalScore, wordsSubmittedRef.current, wordsCorrect, gridSeen, gridFilled);
       
       // Check for rank up
       const newStats = loadStats();
@@ -334,6 +342,9 @@ export default function GameBoard() {
       }
       
       setStats(newStats);
+      // Reset submitted count for the next game
+      setWordsSubmitted(0);
+      wordsSubmittedRef.current = 0;
 
       // Leaderboard Qualification Check
       if (finalScore > 0) {

@@ -235,6 +235,12 @@ export default function GameBoard() {
     setJuiceToast(null);
     setToastMessage(null);
     
+    // The Cut-off: Stop lobby music when game starts
+    if (bgmRef.current) {
+      bgmRef.current.pause();
+      bgmRef.current.currentTime = 0;
+    }
+    
     // Safety fallback: if they bypassed the gate somehow, init audio on first game start
     if (!isAudioEnabled) initializeAudio();
   }, [difficulty, isAudioEnabled, initializeAudio]);
@@ -396,6 +402,7 @@ export default function GameBoard() {
           }
         }
         
+        // Update: Set lastWordTime.current = now; ONLY after the check is complete.
         lastWordTime.current = now;
         const newCount = comboEarned ? comboCount + 1 : 0;
         setComboCount(newCount);
@@ -515,15 +522,18 @@ export default function GameBoard() {
       <div className="fixed inset-0 bg-pink-50 flex flex-col items-center justify-center font-sans p-4">
         
         {!isAudioEnabled ? (
-          <div className="bg-white p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-6 shadow-2xl z-10 text-center animate-[slideUp_0.3s_ease-out]">
-            <img src="/apex-logo.png" alt="Apex Anagrams" className="w-[80%] max-w-[240px] drop-shadow-lg" />
+          <div className="bg-white p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-4 shadow-2xl z-10 text-center animate-[slideUp_0.3s_ease-out]">
+            <div className="flex flex-col items-center mb-2">
+              <img src="/apex-branding-full.png" alt="Apex Anagrams" className="w-[100%] max-w-[280px] drop-shadow-lg mb-1" />
+              <h1 className="text-3xl font-black text-[#8B0000] tracking-tighter uppercase italic">Apex Anagrams</h1>
+            </div>
             
-            <div className="flex flex-col gap-2 my-4">
+            <div className="flex flex-col gap-2 my-2">
               {stats.gamesPlayed === 0 ? (
-                <p className="text-pink-900 font-bold">Welcome to Apex Anagrams.<br/>Ready to test your speed?</p>
+                <p className="text-pink-900 font-bold">Welcome to the Speed Dictionary.<br/>Ready to test your limits?</p>
               ) : (
                 <>
-                  <p className="text-pink-900 font-bold mb-2">Welcome Back!</p>
+                  <p className="text-pink-900 font-bold mb-1">Welcome Back!</p>
                   <span className="text-xl font-black text-[#d4af37] uppercase tracking-widest">{rankInfo.title}</span>
                   <span className="text-pink-600 font-bold">Current Streak: {stats.currentStreak} 🔥</span>
                 </>
@@ -534,15 +544,18 @@ export default function GameBoard() {
               onPointerDown={() => initializeAudio()} 
               className="w-full bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-4 rounded shadow-md active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-xl tracking-widest select-none touch-manipulation"
             >
-              PLAY
+              ENTER LOBBY
             </button>
-            <p className="text-[10px] text-pink-400 font-bold uppercase tracking-widest mt-2">Enables Audio & Gameplay</p>
+            <p className="text-[10px] text-pink-400 font-bold uppercase tracking-widest mt-1">Enables Audio & Gameplay</p>
           </div>
         ) : (
-          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-6 shadow-2xl z-10 animate-[slideUp_0.2s_ease-out]">
-            <img src="/apex-logo.png" alt="Apex Anagrams" className="w-[70%] max-w-[200px] drop-shadow-md mb-2" />
+          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-4 shadow-2xl z-10 animate-[slideUp_0.2s_ease-out]">
+            <div className="flex flex-col items-center mb-2">
+              <img src="/apex-branding-full.png" alt="Apex Anagrams" className="w-[90%] max-w-[240px] drop-shadow-md mb-1" />
+              <h1 className="text-2xl font-black text-[#8B0000] tracking-tighter uppercase italic">Apex Anagrams</h1>
+            </div>
             
-            <div className="w-full flex flex-col items-center border border-pink-200 bg-pink-50 rounded-lg p-3 shadow-inner">
+            <div className="w-full flex flex-col items-center border border-pink-200 bg-pink-50 rounded-lg p-3 shadow-inner mb-2">
              <span className="text-[10px] text-pink-600 font-bold uppercase tracking-widest mb-1">Rank</span>
              <span className="text-xl font-black text-pink-900 drop-shadow-sm uppercase">{rankInfo.title}</span>
              {rankInfo.next ? (

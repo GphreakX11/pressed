@@ -94,6 +94,19 @@ function getPuzzleWithRng(rng: () => number): Puzzle {
         validWords.push(w);
       }
     }
+    
+    // Hard cap the main grid to 14 words to prevent mobile scroll overflow
+    if (validWords.length > 0) {
+      const bingoWord = rootWordObj.toUpperCase();
+      const nonBingoWords = validWords.filter(w => w !== bingoWord);
+      
+      // Select bingo word first, then top 13 most common
+      const cappedGrid = [bingoWord, ...nonBingoWords.slice(0, 13)];
+      const overflowBonus = nonBingoWords.slice(13);
+      
+      validWords = cappedGrid;
+      bonusWords.push(...overflowBonus);
+    }
   }
 
   // EXHAUSTIVE SOWPODS FALLBACK

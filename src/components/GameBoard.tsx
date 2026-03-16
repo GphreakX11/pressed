@@ -24,7 +24,7 @@ export default function GameBoard() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
 
-  const [lastWordTime, setLastWordTime] = useState<number | null>(null);
+  const lastWordTime = useRef<number>(0);
   const [comboCount, setComboCount] = useState(0);
   const [timeBonus, setTimeBonus] = useState(0);
 
@@ -47,24 +47,61 @@ export default function GameBoard() {
   const [jackpotBlast, setJackpotBlast] = useState<{ id: number, active: boolean, count: number } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  const [isAudioEnabled, setIsAudioEnabled] = useState(false);
+  const [isMuted, setIsMuted] = useState(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
+  const bgmRef = useRef<HTMLAudioElement | null>(null);
+
   useEffect(() => {
-    // Initialize Web Audio API
+    // Load mute preference
+    const savedMute = localStorage.getItem('apexMutePreference');
+    const initialMute = savedMute === 'true';
+    if (savedMute) setIsMuted(initialMute);
+
+    bgmRef.current = new Audio('/music.mp3');
+    bgmRef.current.loop = true;
+    bgmRef.current.volume = 0.2;
+  }, []);
+
+  const initializeAudio = useCallback(() => {
+    if (audioContextRef.current) return;
     try {
       const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
       audioContextRef.current = new AudioContext();
+      if (audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume();
+      }
+      setIsAudioEnabled(true);
+      if (bgmRef.current && !isMuted) {
+        bgmRef.current.play().catch(error => console.log('BGM Play Error:', error));
+      }
     } catch(e) {
       console.error("Web Audio API not supported:", e);
     }
-  }, []);
+  }, [isMuted]);
 
-  const playChime = useCallback((count: number) => {
+  const toggleMute = useCallback(() => {
+    setIsMuted(prev => {
+      const next = !prev;
+      localStorage.setItem('apexMutePreference', next.toString());
+      if (audioContextRef.current) {
+        if (next) audioContextRef.current.suspend();
+        else audioContextRef.current.resume();
+      }
+      if (bgmRef.current) {
+        if (next) bgmRef.current.pause();
+        else if (isAudioEnabled) bgmRef.current.play().catch(e => console.log('BGM Play Error:', e));
+      }
+      return next;
+    });
+  }, [isAudioEnabled]);
+
+  const playSound = useCallback((type: 'pop' | 'coin' | 'jackpot', count: number = 0) => {
+    if (!audioContextRef.current || !isAudioEnabled || isMuted) return;
+    
     try {
-      if (!audioContextRef.current) return;
-      
-      // Resume context if suspended (browser auto-play policy)
-      if (audioContextRef.current.state === 'suspended') {
+      if (audioContextRef.current.state === 'suspended' && !isMuted) {
         audioContextRef.current.resume();
       }
 
@@ -72,36 +109,61 @@ export default function GameBoard() {
       const osc = ctx.createOscillator();
       const gainNode = ctx.createGain();
 
-      // Configure oscillator (A high, bell-like ping)
-      osc.type = 'sine';
-      
-      // Base frequency 800Hz, pitching up cleanly by ~40Hz per combo count 
-      const baseFreq = 800;
-      osc.frequency.setValueAtTime(baseFreq + (count * 40), ctx.currentTime);
-
-      // Configure gain envelope (quick attack, 500ms exponential decay)
-      gainNode.gain.setValueAtTime(0, ctx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05); // attack
-      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5); // release
-
-      osc.connect(gainNode);
-      gainNode.connect(ctx.destination);
-
-      osc.start();
-      osc.stop(ctx.currentTime + 0.5);
+      if (type === 'pop') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(400, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
+        
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+      } 
+      else if (type === 'coin') {
+        osc.type = 'square';
+        osc.frequency.setValueAtTime(987.77, ctx.currentTime); // B5
+        osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.1); // E6
+        
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.02);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+      }
+      else if (type === 'jackpot') {
+        osc.type = 'sine';
+        const baseFreq = 800;
+        osc.frequency.setValueAtTime(baseFreq + (count * 40), ctx.currentTime);
+  
+        gainNode.gain.setValueAtTime(0, ctx.currentTime);
+        gainNode.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.05);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
+  
+        osc.connect(gainNode);
+        gainNode.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.5);
+      }
     } catch (err) {
-      console.warn("Audio chime failed to play:", err);
+      console.warn(`Audio ${type} failed to play:`, err);
     }
-  }, []);
+  }, [isAudioEnabled, isMuted]);
 
-  // Speed Combo Indicator Hook strictly controls 3-second active window
+  // Speed Combo Indicator Hook strictly controls 5-second active window
   useEffect(() => {
-    if (!lastWordTime || comboCount === 0 || gameOver) return;
+    if (comboCount === 0 || gameOver) return;
     
     // Safety check in case the effect runs slightly late
     const now = Date.now();
-    const timeElapsed = now - lastWordTime;
-    const remainingTime = 3000 - timeElapsed;
+    const timeElapsed = now - lastWordTime.current;
+    const remainingTime = 5000 - timeElapsed;
     
     if (remainingTime <= 0) {
       setComboCount(0);
@@ -113,7 +175,7 @@ export default function GameBoard() {
     }, remainingTime);
     
     return () => clearTimeout(timer);
-  }, [lastWordTime, comboCount, gameOver]);
+  }, [comboCount, gameOver]);
 
   // Rolling display score animation
   useEffect(() => {
@@ -201,7 +263,7 @@ export default function GameBoard() {
     setDisplayScore(0);
     setTimeBonus(0);
     setComboCount(0);
-    setLastWordTime(null);
+    lastWordTime.current = 0;
     setFoundWords([]);
     setFoundBonusWords([]);
     setInputState({
@@ -215,7 +277,10 @@ export default function GameBoard() {
     setBonusToast(null);
     setJuiceToast(null);
     setToastMessage(null);
-  }, [difficulty]);
+    
+    // Safety fallback: if they bypassed the gate somehow, init audio on first game start
+    if (!isAudioEnabled) initializeAudio();
+  }, [difficulty, isAudioEnabled, initializeAudio]);
 
   useEffect(() => {
     const saved = localStorage.getItem('pressedHighScore');
@@ -362,13 +427,13 @@ export default function GameBoard() {
       if (isMainWord || isBonusWord) {
         console.log('--- SUBMIT CLICKED ---');
         const now = Date.now();
-        console.log('Current Time:', now, 'Last Word:', lastWordTime);
+        console.log('Current Time:', now, 'Last Word:', lastWordTime.current);
 
         let comboEarned = false;
-        if (lastWordTime !== null) {
-          const timeDiff = now - lastWordTime;
+        if (lastWordTime.current !== 0) {
+          const timeDiff = now - lastWordTime.current;
           console.log('Time Difference:', timeDiff);
-          if (timeDiff <= 3000) {
+          if (timeDiff <= 5000) {
             console.log('✅ STREAK ACHIEVED! Triggering UI and 1.5x Math');
             comboEarned = true;
           }
@@ -376,7 +441,7 @@ export default function GameBoard() {
         
         const newCount = comboEarned ? comboCount + 1 : 0;
         setComboCount(newCount);
-        setLastWordTime(now);
+        lastWordTime.current = Date.now();
 
         const difficultyMultiplier = difficulty === 'hard' ? 1.5 : 1;
         const currentMultiplier = comboEarned ? 1.5 : 1;
@@ -417,11 +482,12 @@ export default function GameBoard() {
           const blastId = Date.now();
           setJackpotBlast({ id: blastId, active: true, count: newCount });
           setTimeout(() => setJackpotBlast(curr => curr?.id === blastId ? null : curr), 800);
-        }
-
-        if (isBonus || comboEarned) {
-           if (isBonus) setBonusToast({ id: Date.now(), points: pts });
-           playChime(newCount);
+          playSound('jackpot', newCount);
+        } else if (isBonus) {
+          setBonusToast({ id: Date.now(), points: pts });
+          playSound('coin');
+        } else {
+          playSound('pop');
         }
         
         setTimeout(() => {
@@ -465,7 +531,7 @@ export default function GameBoard() {
 
   const generateShareGrid = () => {
     if (!puzzle) return;
-    let gridStr = `Pressed For Words - Daily - Score: ${score}\n\n`;
+    let gridStr = `Apex Anagrams - Daily - Score: ${score}\n\n`;
     Object.entries(groupedWords).forEach(([len, words]) => {
       let row = "";
       words.forEach(w => {
@@ -490,10 +556,36 @@ export default function GameBoard() {
 
     return (
       <div className="fixed inset-0 bg-pink-50 flex flex-col items-center justify-center font-sans p-4">
-        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-6 shadow-2xl">
-          <h1 className="text-4xl font-extrabold text-[#d4af37] tracking-widest text-center drop-shadow-[0_2px_4px_rgba(212,175,55,0.4)]">PRESSED</h1>
-          
-          <div className="w-full flex flex-col items-center border border-pink-200 bg-pink-50 rounded-lg p-3 shadow-inner">
+        
+        {!isAudioEnabled ? (
+          <div className="bg-white p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-6 shadow-2xl z-10 text-center animate-[slideUp_0.3s_ease-out]">
+            <img src="/apex-logo.png" alt="Apex Anagrams" className="w-[80%] max-w-[240px] drop-shadow-lg" />
+            
+            <div className="flex flex-col gap-2 my-4">
+              {stats.gamesPlayed === 0 ? (
+                <p className="text-pink-900 font-bold">Welcome to Apex Anagrams.<br/>Ready to test your speed?</p>
+              ) : (
+                <>
+                  <p className="text-pink-900 font-bold mb-2">Welcome Back!</p>
+                  <span className="text-xl font-black text-[#d4af37] uppercase tracking-widest">{rankInfo.title}</span>
+                  <span className="text-pink-600 font-bold">Current Streak: {stats.currentStreak} 🔥</span>
+                </>
+              )}
+            </div>
+
+            <button 
+              onPointerDown={() => initializeAudio()} 
+              className="w-full bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-4 rounded shadow-md active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-xl tracking-widest select-none touch-manipulation"
+            >
+              PLAY
+            </button>
+            <p className="text-[10px] text-pink-400 font-bold uppercase tracking-widest mt-2">Enables Audio & Gameplay</p>
+          </div>
+        ) : (
+          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-6 shadow-2xl z-10 animate-[slideUp_0.2s_ease-out]">
+            <img src="/apex-logo.png" alt="Apex Anagrams" className="w-[70%] max-w-[200px] drop-shadow-md mb-2" />
+            
+            <div className="w-full flex flex-col items-center border border-pink-200 bg-pink-50 rounded-lg p-3 shadow-inner">
              <span className="text-[10px] text-pink-600 font-bold uppercase tracking-widest mb-1">Rank</span>
              <span className="text-xl font-black text-pink-900 drop-shadow-sm uppercase">{rankInfo.title}</span>
              {rankInfo.next ? (
@@ -508,9 +600,10 @@ export default function GameBoard() {
                </div>
              ) : (
                 <div className="text-xs text-[#d4af37] font-bold mt-1">MAX RANK MAX XP</div>
-             )}
-          </div>
-          <div className="w-full bg-pink-50 rounded-xl p-4 flex gap-[2px] justify-between border border-pink-100 shadow-inner">
+              )}
+            </div>
+            
+            <div className="w-full bg-pink-50 rounded-xl p-4 flex gap-[2px] justify-between border border-pink-100 shadow-inner">
             <div className="flex flex-col items-center flex-1">
               <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Streak</span>
               <span className="text-pink-900 text-3xl font-mono relative">{stats.currentStreak} <span className="absolute -right-5 top-0 text-orange-400 text-sm animate-pulse">🔥</span></span>
@@ -524,13 +617,15 @@ export default function GameBoard() {
               <span className="text-pink-900 text-3xl font-mono">{avgScore}</span>
             </div>
           </div>
-          <div className="flex flex-col gap-3 w-full mt-2">
-            <button onPointerDown={() => startNewGame('normal', true)} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
-            <button onPointerDown={() => startNewGame('easy')} className="bg-green-500 border-b-4 border-r-2 border-green-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY EASY <span className="text-green-100 block text-xs tracking-normal mt-1 opacity-80">(3m 30s + Hint)</span></button>
-            <button onPointerDown={() => startNewGame('normal')} className="bg-blue-500 border-b-4 border-r-2 border-blue-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY NORMAL <span className="text-blue-100 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
-            <button onPointerDown={() => startNewGame('hard')} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(1m 30s + 1.5x Pts)</span></button>
+            <div className="flex flex-col gap-3 w-full mt-2">
+              <button onPointerDown={() => startNewGame('normal', true)} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
+              <button onPointerDown={() => startNewGame('easy')} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m 30s + Hint)</span></button>
+              <button onPointerDown={() => startNewGame('normal')} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY NORMAL <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
+              <button onPointerDown={() => startNewGame('hard')} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(1m 30s + 1.5x Pts)</span></button>
+            </div>
           </div>
-        </div>
+        )}
+
       </div>
     );
   }
@@ -602,6 +697,15 @@ export default function GameBoard() {
             className="absolute top-2 left-4 text-pink-500 active:text-pink-700 text-[10px] font-bold tracking-widest bg-pink-100 px-2 py-1 flex items-center gap-1 rounded border border-pink-200 shadow-sm touch-manipulation"
           >
             <span className="text-red-400 font-extrabold">✖</span> ABANDON
+          </button>
+
+          {/* Persistent Mute Toggle */}
+          <button 
+            onPointerDown={toggleMute}
+            className="absolute top-2 right-4 text-pink-500 active:text-pink-700 text-lg font-bold bg-pink-100 w-8 h-8 flex items-center justify-center rounded-full border border-pink-200 shadow-sm touch-manipulation"
+            aria-label={isMuted ? "Unmute Sound" : "Mute Sound"}
+          >
+            {isMuted ? "🔇" : "🔊"}
           </button>
           
           <div className="flex flex-col items-center mt-2 relative">

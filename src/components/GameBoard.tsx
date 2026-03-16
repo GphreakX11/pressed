@@ -881,6 +881,7 @@ export default function GameBoard() {
 
   if (showWelcome && stats) {
     const winPct = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
+    const globalAccuracy = stats.totalWordsSubmitted ? Math.round(((stats.totalWordsCorrect || 0) / stats.totalWordsSubmitted) * 100) : 0;
     const rankInfo = getTitle(stats.gamesWon);
     
     // Calculate progress as a percentage between current rank threshold and next rank threshold
@@ -1089,16 +1090,20 @@ export default function GameBoard() {
             <div className="w-full bg-pink-50 rounded-xl p-4 flex gap-[2px] justify-between border border-pink-100 shadow-inner">
             <div className="flex flex-col items-center flex-1">
               <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Daily Streak</span>
-              <span className="text-pink-900 text-3xl font-mono relative">{stats.currentStreak} <span className="absolute -right-5 top-0 text-orange-400 text-sm animate-pulse">🔥</span></span>
+              <span className="text-pink-900 text-2xl font-mono relative">{stats.currentStreak} <span className="absolute -right-4 top-0 text-orange-400 text-xs animate-pulse">🔥</span></span>
             </div>
             <div className="flex flex-col items-center flex-1 border-l border-pink-200">
               <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Win %</span>
-              <span className="text-pink-900 text-3xl font-mono">{winPct}</span>
+              <span className="text-pink-900 text-2xl font-mono">{winPct}%</span>
             </div>
-            <div className="flex flex-col items-center flex-1 border-l border-pink-200 relative cursor-pointer active:opacity-80 touch-manipulation" onPointerDown={() => setShowLeaderboard(true)}>
+            <div className="flex flex-col items-center flex-1 border-l border-pink-200">
+              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Accuracy</span>
+              <span className="text-pink-900 text-2xl font-mono">{globalAccuracy}%</span>
+            </div>
+            <div className="flex flex-col items-center flex-[1.2] border-l border-pink-200 relative cursor-pointer active:opacity-80 touch-manipulation" onPointerDown={() => setShowLeaderboard(true)}>
               <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Leaderboard</span>
-              <span className="text-pink-900 text-3xl font-mono absolute -top-1 -right-1 opacity-20">🏆</span>
-              <div className="mt-1 bg-white border border-[#d4af37] text-yellow-600 text-[8px] font-black px-2 py-1 rounded shadow-sm tracking-widest uppercase">View Top 10</div>
+              <span className="text-pink-900 text-2xl font-mono absolute -top-1 right-0 opacity-20">🏆</span>
+              <div className="mt-1 bg-white border border-[#d4af37] text-yellow-600 text-[8px] font-black px-1 py-1 rounded shadow-sm tracking-widest uppercase">View Top 10</div>
             </div>
           </div>
             <div className="flex flex-col gap-3 w-full mt-1">
@@ -1407,7 +1412,7 @@ export default function GameBoard() {
                     <div className="flex flex-col items-center flex-1 border-r border-pink-200">
                       <span className="text-[10px] uppercase font-black tracking-widest text-blue-500 mb-1">Accuracy</span>
                       <span className="text-xl font-black text-blue-900">
-                        {stats.totalWordsSubmitted ? Math.round(((stats.totalWordsCorrect || 0) / stats.totalWordsSubmitted) * 100) : 0}%
+                        {wordsSubmitted > 0 ? Math.round(((foundWords.length + foundBonusWords.length) / wordsSubmitted) * 100) : 0}%
                       </span>
                     </div>
                     <div className="flex flex-col items-center flex-1">

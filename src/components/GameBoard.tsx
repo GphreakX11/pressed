@@ -49,9 +49,10 @@ export default function GameBoard() {
 
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const audioContextRef = useRef<AudioContext | null>(null);
-
   const bgmRef = useRef<HTMLAudioElement | null>(null);
+  const baseDingRef = useRef<HTMLAudioElement | null>(null);
+  const bonusChimeRef = useRef<HTMLAudioElement | null>(null);
+  const streakJackpotRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     // Load mute preference
@@ -62,33 +63,29 @@ export default function GameBoard() {
     bgmRef.current = new Audio('/music.mp3');
     bgmRef.current.loop = true;
     bgmRef.current.volume = 0.2;
+
+    baseDingRef.current = new Audio('/base_ding.mp3');
+    baseDingRef.current.volume = 0.6;
+
+    bonusChimeRef.current = new Audio('/bonus_chime.mp3');
+    bonusChimeRef.current.volume = 0.6;
+
+    streakJackpotRef.current = new Audio('/streak_jackpot.mp3');
+    streakJackpotRef.current.volume = 0.6;
   }, []);
 
   const initializeAudio = useCallback(() => {
-    if (audioContextRef.current) return;
-    try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      audioContextRef.current = new AudioContext();
-      if (audioContextRef.current.state === 'suspended') {
-        audioContextRef.current.resume();
-      }
-      setIsAudioEnabled(true);
-      if (bgmRef.current && !isMuted) {
-        bgmRef.current.play().catch(error => console.log('BGM Play Error:', error));
-      }
-    } catch(e) {
-      console.error("Web Audio API not supported:", e);
+    if (isAudioEnabled) return;
+    setIsAudioEnabled(true);
+    if (bgmRef.current && !isMuted) {
+      bgmRef.current.play().catch(error => console.log('BGM Play Error:', error));
     }
-  }, [isMuted]);
+  }, [isAudioEnabled, isMuted]);
 
   const toggleMute = useCallback(() => {
     setIsMuted(prev => {
       const next = !prev;
       localStorage.setItem('apexMutePreference', next.toString());
-      if (audioContextRef.current) {
-        if (next) audioContextRef.current.suspend();
-        else audioContextRef.current.resume();
-      }
       if (bgmRef.current) {
         if (next) bgmRef.current.pause();
         else if (isAudioEnabled) bgmRef.current.play().catch(e => console.log('BGM Play Error:', e));
@@ -98,58 +95,18 @@ export default function GameBoard() {
   }, [isAudioEnabled]);
 
   const playSound = useCallback((type: 'pop' | 'coin' | 'jackpot', count: number = 0) => {
-    if (!audioContextRef.current || !isAudioEnabled || isMuted) return;
+    if (!isAudioEnabled || isMuted) return;
     
     try {
-      if (audioContextRef.current.state === 'suspended' && !isMuted) {
-        audioContextRef.current.resume();
-      }
+      let soundToPlay: HTMLAudioElement | null = null;
+      if (type === 'pop') soundToPlay = baseDingRef.current;
+      else if (type === 'coin') soundToPlay = bonusChimeRef.current;
+      else if (type === 'jackpot') soundToPlay = streakJackpotRef.current;
 
-      const ctx = audioContextRef.current;
-      const osc = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-
-      if (type === 'pop') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(600, ctx.currentTime + 0.1);
-        
-        gainNode.gain.setValueAtTime(0, ctx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
-        
-        osc.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.1);
-      } 
-      else if (type === 'coin') {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(987.77, ctx.currentTime); // B5
-        osc.frequency.setValueAtTime(1318.51, ctx.currentTime + 0.1); // E6
-        
-        gainNode.gain.setValueAtTime(0, ctx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.15, ctx.currentTime + 0.02);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-        
-        osc.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.3);
-      }
-      else if (type === 'jackpot') {
-        osc.type = 'sine';
-        const baseFreq = 800;
-        osc.frequency.setValueAtTime(baseFreq + (count * 40), ctx.currentTime);
-  
-        gainNode.gain.setValueAtTime(0, ctx.currentTime);
-        gainNode.gain.linearRampToValueAtTime(0.4, ctx.currentTime + 0.05);
-        gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5);
-  
-        osc.connect(gainNode);
-        gainNode.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.5);
+      if (soundToPlay) {
+        // Reset playback for rapid-fire
+        soundToPlay.currentTime = 0;
+        soundToPlay.play().catch(e => console.log(`Audio ${type} failed:`, e));
       }
     } catch (err) {
       console.warn(`Audio ${type} failed to play:`, err);
@@ -430,7 +387,7 @@ export default function GameBoard() {
         console.log('Current Time:', now, 'Last Word:', lastWordTime.current);
 
         let comboEarned = false;
-        if (lastWordTime.current !== 0) {
+        if (lastWordTime.current > 0) {
           const timeDiff = now - lastWordTime.current;
           console.log('Time Difference:', timeDiff);
           if (timeDiff <= 5000) {
@@ -439,9 +396,9 @@ export default function GameBoard() {
           }
         }
         
+        lastWordTime.current = now;
         const newCount = comboEarned ? comboCount + 1 : 0;
         setComboCount(newCount);
-        lastWordTime.current = Date.now();
 
         const difficultyMultiplier = difficulty === 'hard' ? 1.5 : 1;
         const currentMultiplier = comboEarned ? 1.5 : 1;

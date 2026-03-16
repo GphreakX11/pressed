@@ -80,6 +80,7 @@ export default function GameBoard() {
   // Precision Streak & UI States
   const [accuracyStreak, setAccuracyStreak] = useState(0);
   const [isTimeFrozen, setIsTimeFrozen] = useState(false);
+  const freezeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
   const [slamOverlay, setSlamOverlay] = useState<{ text: string, type: 'gold' | 'ice' } | null>(null);
   const [overdriveToast, setOverdriveToast] = useState<{ id: number } | null>(null);
@@ -279,6 +280,13 @@ export default function GameBoard() {
   const endGame = useCallback((won: boolean, additionalScore: number = 0) => {
     if (gameOverRef.current) return;
     setGameOver(true);
+    
+    // Clear any dangling freeze refund timer so it doesn't fire on the victory screen
+    if (freezeTimeoutRef.current) {
+      clearTimeout(freezeTimeoutRef.current);
+      freezeTimeoutRef.current = null;
+    }
+    
     setScore(s => {
       const finalScore = s + additionalScore;
       setHighScore(h => {
@@ -417,7 +425,13 @@ export default function GameBoard() {
     setTimeBonus(0);
     setComboCount(0);
     setAccuracyStreak(0);
+    
+    if (freezeTimeoutRef.current) {
+      clearTimeout(freezeTimeoutRef.current);
+      freezeTimeoutRef.current = null;
+    }
     setIsTimeFrozen(false);
+    
     setShowHowToPlay(false);
     lastWordTime.current = 0;
     setFoundWords([]);
@@ -665,12 +679,17 @@ export default function GameBoard() {
               playSound('jackpot', 5);
             }, 400);
 
+            if (freezeTimeoutRef.current) {
+              clearTimeout(freezeTimeoutRef.current);
+            }
+
             // Freeze for exactly 10 seconds, then refund the time into endTime
-            setTimeout(() => {
+            freezeTimeoutRef.current = setTimeout(() => {
               if (!gameOverRef.current) {
                 setEndTime(e => e ? e + 10000 : e);
                 setIsTimeFrozen(false);
               }
+              freezeTimeoutRef.current = null;
             }, 10000);
           } else if (next === 10) {
             // 10-Word Streak → Clarity Bonus (reveal longest unfound word)

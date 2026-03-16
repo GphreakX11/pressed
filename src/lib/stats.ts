@@ -5,6 +5,7 @@ export interface PlayerStats {
   maxStreak: number;
   totalScore: number;
   lastPlayedDate: number | null; // Timestamp
+  lifetimePoints?: number;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -14,6 +15,7 @@ const DEFAULT_STATS: PlayerStats = {
   maxStreak: 0,
   totalScore: 0,
   lastPlayedDate: null,
+  lifetimePoints: 0,
 };
 
 const STATS_KEY = 'pressedPlayerStats';
@@ -26,6 +28,9 @@ export function loadStats(): PlayerStats {
     if (!saved) return DEFAULT_STATS;
 
     const stats: PlayerStats = JSON.parse(saved);
+    if (stats.lifetimePoints === undefined) {
+      stats.lifetimePoints = stats.totalScore || 0;
+    }
     const now = new Date();
     
     // Check streak logic based on calendar days, not strict 24h
@@ -62,6 +67,7 @@ export function recordGameResult(won: boolean, score: number) {
   
   stats.gamesPlayed += 1;
   stats.totalScore += score;
+  stats.lifetimePoints = (stats.lifetimePoints || 0) + score;
   
   if (won) {
     stats.gamesWon += 1;

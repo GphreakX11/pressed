@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Puzzle, getRandomPuzzle } from "@/lib/puzzles";
+import { Puzzle, getRandomPuzzle, getDailyPuzzle } from "@/lib/puzzles";
 import { PlayerStats, loadStats, recordGameResult } from "@/lib/stats";
 import Sparkles from './Sparkles';
 
@@ -13,14 +13,20 @@ export default function GameBoard() {
   const [timeLeft, setTimeLeft] = useState(150);
   const [endTime, setEndTime] = useState<number | null>(null);
   const [score, setScore] = useState(0);
+  const [displayScore, setDisplayScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [foundBonusWords, setFoundBonusWords] = useState<string[]>([]);
   
   const [difficulty, setDifficulty] = useState<'easy'|'normal'|'hard'>('normal');
+  const [isDailyMode, setIsDailyMode] = useState(false);
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+
+  const [lastWordTime, setLastWordTime] = useState<number | null>(null);
+  const [comboMultiplier, setComboMultiplier] = useState(1);
+  const [timeBonus, setTimeBonus] = useState(0);
 
   const foundWordsRef = useRef<string[]>([]);
   useEffect(() => { foundWordsRef.current = foundWords; }, [foundWords]);
@@ -45,6 +51,47 @@ export default function GameBoard() {
       audioRef.current = new Audio('/sounds/bonus.mp3');
     } catch(e) {}
   }, []);
+
+  // Speed Combo Reset Hook securely prevents infinite loops
+  useEffect(() => {
+    if (!lastWordTime || comboMultiplier === 1 || gameOver) return;
+    
+    const now = Date.now();
+    const timeElapsed = now - lastWordTime;
+    const remainingTime = 3000 - timeElapsed;
+    
+    if (remainingTime <= 0) {
+      setComboMultiplier(1);
+      return;
+    }
+    
+    const timer = setTimeout(() => {
+      setComboMultiplier(1);
+    }, remainingTime);
+    
+    return () => clearTimeout(timer);
+  }, [lastWordTime, comboMultiplier, gameOver]);
+
+  // Rolling display score animation
+  useEffect(() => {
+    if (displayScore !== score) {
+      const step = Math.max(1, Math.ceil((score - displayScore) / 10));
+      const timer = setTimeout(() => {
+        setDisplayScore(prev => Math.min(score, prev + step));
+      }, 30);
+      return () => clearTimeout(timer);
+    }
+  }, [score, displayScore]);
+
+  // Fast visual tick down of remaining time upon win
+  useEffect(() => {
+    if (gameOver && timeBonus > 0 && timeLeft > 0) {
+      const timer = setTimeout(() => {
+        setTimeLeft(prev => Math.max(0, prev - 1));
+      }, 30);
+      return () => clearTimeout(timer);
+    }
+  }, [gameOver, timeBonus, timeLeft]);
 
   // Group words into vertical columns by length
   const groupedWords = useMemo(() => {
@@ -73,11 +120,11 @@ export default function GameBoard() {
     setShowQuitConfirm(false);
   }, [score]);
 
-  const endGame = useCallback((won: boolean) => {
+  const endGame = useCallback((won: boolean, additionalScore: number = 0) => {
     if (gameOverRef.current) return;
     setGameOver(true);
     setScore(s => {
-      const finalScore = s;
+      const finalScore = s + additionalScore;
       setHighScore(h => {
         if (finalScore > h) {
           localStorage.setItem('pressedHighScore', finalScore.toString());
@@ -87,7 +134,7 @@ export default function GameBoard() {
       });
       recordGameResult(won, finalScore);
       setStats(loadStats());
-      return s;
+      return finalScore;
     });
   }, []);
 
@@ -95,18 +142,23 @@ export default function GameBoard() {
     return difficulty === 'easy' ? 210 : difficulty === 'hard' ? 90 : 150;
   }, [difficulty]);
 
-  const startNewGame = useCallback((diff?: 'easy'|'normal'|'hard') => {
+  const startNewGame = useCallback((diff?: 'easy'|'normal'|'hard', isDaily?: boolean) => {
     const activeDiff = diff || difficulty;
     setDifficulty(activeDiff);
+    setIsDailyMode(!!isDaily);
     
     // Time based on difficulty
     const timeLimit = activeDiff === 'easy' ? 210 : activeDiff === 'hard' ? 90 : 150;
 
-    const newPuzzle = getRandomPuzzle();
+    const newPuzzle = isDaily ? getDailyPuzzle(new Date().toISOString().split('T')[0]) : getRandomPuzzle();
     setPuzzle(newPuzzle);
     setTimeLeft(timeLimit);
     setEndTime(Date.now() + timeLimit * 1000);
     setScore(0);
+    setDisplayScore(0);
+    setTimeBonus(0);
+    setComboMultiplier(1);
+    setLastWordTime(null);
     setFoundWords([]);
     setFoundBonusWords([]);
     setInputState({
@@ -264,11 +316,28 @@ export default function GameBoard() {
       const isBonusWord = puzzle.bonusWords?.includes(word);
       
       if (isMainWord || isBonusWord) {
+        let currentMultiplier = 1;
+        const now = Date.now();
+        if (lastWordTime && (now - lastWordTime) <= 3000) {
+            currentMultiplier = Math.min(3, comboMultiplier + 0.5);
+            setComboMultiplier(currentMultiplier);
+        } else {
+            setComboMultiplier(1);
+        }
+        setLastWordTime(now);
+
+        const difficultyMultiplier = difficulty === 'hard' ? 1.5 : 1;
+        const pts = Math.floor(word.length * 10 * difficultyMultiplier * currentMultiplier);
+
         if (isMainWord) {
           setFoundWords(fw => {
             const next = [...fw, word];
             if (next.length === puzzle.validWords.length) {
-              setTimeout(() => endGame(true), 600);
+              setGameOver(true);
+              const remTime = Math.max(0, Math.floor((endTime! - Date.now()) / 1000));
+              const tBonus = remTime * 10;
+              setTimeBonus(tBonus);
+              setTimeout(() => endGame(true, tBonus), 600);
             }
             return next;
           });
@@ -276,8 +345,6 @@ export default function GameBoard() {
           setFoundBonusWords(fw => [...fw, word]);
         }
         
-        const difficultyMultiplier = difficulty === 'hard' ? 1.5 : 1;
-        const pts = Math.floor(word.length * 10 * difficultyMultiplier);
         setScore(s => s + pts);
         
         const newSlots = [...prev.availableSlots];
@@ -332,13 +399,60 @@ export default function GameBoard() {
     });
   };
 
+  const getTitle = (pts: number) => {
+    if (pts >= 100000) return { title: "Lexicon Master", next: null, current: 100000 };
+    if (pts >= 25000) return { title: "Wordsmith", next: 100000, current: 25000 };
+    if (pts >= 5000) return { title: "Scribe", next: 25000, current: 5000 };
+    return { title: "Novice", next: 5000, current: 0 };
+  };
+
+  const generateShareGrid = () => {
+    if (!puzzle) return;
+    let gridStr = `Pressed For Words - Daily - Score: ${score}\n\n`;
+    Object.entries(groupedWords).forEach(([len, words]) => {
+      let row = "";
+      words.forEach(w => {
+        row += foundWords.includes(w) ? "🟩" : "⬜";
+      });
+      gridStr += row + "\n";
+    });
+    if (foundBonusWords.length > 0) {
+      gridStr += "🟨".repeat(foundBonusWords.length) + "\n";
+    }
+    navigator.clipboard.writeText(gridStr.trim());
+    setToastMessage("Copied to clipboard!");
+    setTimeout(() => setToastMessage(null), 1500);
+  };
+
   if (showWelcome && stats) {
     const winPct = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
     const avgScore = stats.gamesPlayed > 0 ? Math.round(stats.totalScore / stats.gamesPlayed) : 0;
+    const pts = stats.lifetimePoints || 0;
+    const rankInfo = getTitle(pts);
+    const progressPct = rankInfo.next ? Math.min(100, Math.max(0, Math.round(((pts - rankInfo.current) / (rankInfo.next - rankInfo.current)) * 100))) : 100;
+
     return (
       <div className="fixed inset-0 bg-pink-50 flex flex-col items-center justify-center font-sans p-4">
         <div className="bg-white p-6 sm:p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-6 shadow-2xl">
           <h1 className="text-4xl font-extrabold text-[#d4af37] tracking-widest text-center drop-shadow-[0_2px_4px_rgba(212,175,55,0.4)]">PRESSED</h1>
+          
+          <div className="w-full flex flex-col items-center border border-pink-200 bg-pink-50 rounded-lg p-3 shadow-inner">
+             <span className="text-[10px] text-pink-600 font-bold uppercase tracking-widest mb-1">Rank</span>
+             <span className="text-xl font-black text-pink-900 drop-shadow-sm uppercase">{rankInfo.title}</span>
+             {rankInfo.next ? (
+               <div className="w-full mt-2">
+                 <div className="flex justify-between text-[10px] text-pink-700 font-bold mb-1">
+                   <span>{pts.toLocaleString()} XP</span>
+                   <span>{rankInfo.next.toLocaleString()} XP</span>
+                 </div>
+                 <div className="w-full bg-pink-200 rounded-full h-2.5">
+                   <div className="bg-[#d4af37] h-2.5 rounded-full shadow-sm" style={{ width: `${progressPct}%` }}></div>
+                 </div>
+               </div>
+             ) : (
+                <div className="text-xs text-[#d4af37] font-bold mt-1">MAX RANK MAX XP</div>
+             )}
+          </div>
           <div className="w-full bg-pink-50 rounded-xl p-4 flex gap-[2px] justify-between border border-pink-100 shadow-inner">
             <div className="flex flex-col items-center flex-1">
               <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Streak</span>
@@ -354,6 +468,7 @@ export default function GameBoard() {
             </div>
           </div>
           <div className="flex flex-col gap-3 w-full mt-2">
+            <button onPointerDown={() => startNewGame('normal', true)} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
             <button onPointerDown={() => startNewGame('easy')} className="bg-green-500 border-b-4 border-r-2 border-green-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY EASY <span className="text-green-100 block text-xs tracking-normal mt-1 opacity-80">(3m 30s + Hint)</span></button>
             <button onPointerDown={() => startNewGame('normal')} className="bg-blue-500 border-b-4 border-r-2 border-blue-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY NORMAL <span className="text-blue-100 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
             <button onPointerDown={() => startNewGame('hard')} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(1m 30s + 1.5x Pts)</span></button>
@@ -369,6 +484,17 @@ export default function GameBoard() {
     <div className="fixed inset-0 bg-pink-50 flex flex-col items-center select-none font-sans overflow-hidden">
       <Sparkles />
       
+      {/* Intense Final 10 Seconds Overlay */}
+      {timeLeft <= 10 && !gameOver && !showWelcome && (
+        <div 
+          className="absolute inset-0 z-30 pointer-events-none animate-pulse"
+          style={{
+            backgroundColor: `rgba(239, 68, 68, ${((10 - timeLeft) / 10) * 0.4})`,
+            transition: 'background-color 1s linear'
+          }}
+        />
+      )}
+
       {showQuitConfirm && (
         <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white border border-pink-300 p-6 rounded-xl flex flex-col items-center text-center max-w-sm shadow-[0_10px_40px_rgba(219,39,119,0.15)] animate-[slideUp_0.2s_ease-out]">
@@ -404,11 +530,16 @@ export default function GameBoard() {
             <span className="text-red-400 font-extrabold">✖</span> ABANDON
           </button>
           
-          <div className="flex flex-col items-center mt-2">
+          <div className="flex flex-col items-center mt-2 relative">
             <span className="text-pink-900 text-xs font-bold mb-1">Score</span>
             <div className="bg-white border border-pink-200 shadow-sm rounded px-2 py-1 min-w-[60px] text-right">
-              <span className="text-[#d4af37] font-mono font-bold text-xl tracking-widest">{score.toString()}</span>
+              <span className="text-[#d4af37] font-mono font-bold text-xl tracking-widest">{displayScore.toString()}</span>
             </div>
+            {comboMultiplier > 1 && (
+              <div className="absolute -right-8 top-5 animate-pulse">
+                <span className="text-orange-500 font-black text-lg italic">{comboMultiplier}x</span>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col items-center pb-2">
@@ -492,11 +623,26 @@ export default function GameBoard() {
          <div className="w-full mt-auto pb-8 pt-4 px-4 flex flex-col items-center gap-6 border-t border-pink-200 select-none touch-none bg-pink-50">
           
           {gameOver ? (
-             <div className="w-full flex flex-col items-center gap-4 bg-white/90 p-6 rounded-xl border border-pink-300 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+             <div className="w-full flex flex-col items-center gap-4 bg-white/90 p-6 rounded-xl border border-pink-300 shadow-2xl animate-[slideUp_0.3s_ease-out] z-40 relative">
                 {foundWords.length === puzzle.validWords.length ? (
                   <>
                     <h2 className="text-3xl font-extrabold text-[#d4af37] tracking-widest drop-shadow-[0_2px_4px_rgba(212,175,55,0.4)]">BOARD CLEARED!</h2>
-                    <span className="text-pink-900 text-sm font-bold opacity-80">100% Mastery Achieved</span>
+                    <div className="w-full flex flex-col gap-1 text-sm text-pink-800 font-bold bg-pink-50 p-3 rounded border border-pink-200 mt-2">
+                      <div className="flex justify-between">
+                         <span className="opacity-80">Base + Bonus</span>
+                         <span>{score - timeBonus}</span>
+                      </div>
+                      {timeBonus > 0 && (
+                         <div className="flex justify-between text-green-600 animate-[pulse_1s_ease-in-out_3]">
+                           <span>Time Bonus</span>
+                           <span>+{timeBonus}</span>
+                         </div>
+                      )}
+                      <div className="flex justify-between border-t border-pink-300 pt-1 mt-1 text-lg text-pink-900">
+                         <span>Total</span>
+                         <span>{displayScore}</span>
+                      </div>
+                    </div>
                   </>
                 ) : (
                   <>
@@ -512,12 +658,21 @@ export default function GameBoard() {
                   >
                     MENU
                   </button>
-                  <button 
-                    onPointerDown={() => startNewGame()}
-                    className="flex-[2] bg-[#d4af37] border-b-4 border-r-2 border-yellow-700 text-white font-extrabold py-3 px-4 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all"
-                  >
-                    PLAY AGAIN
-                  </button>
+                  {isDailyMode ? (
+                    <button 
+                      onPointerDown={generateShareGrid}
+                      className="flex-[2] bg-blue-500 border-b-4 border-r-2 border-blue-700 text-white font-extrabold py-3 px-4 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all flex items-center justify-center gap-2"
+                    >
+                      SHARE <span className="text-xl">📈</span>
+                    </button>
+                  ) : (
+                    <button 
+                      onPointerDown={() => startNewGame()}
+                      className="flex-[2] bg-[#d4af37] border-b-4 border-r-2 border-yellow-700 text-white font-extrabold py-3 px-4 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all"
+                    >
+                      PLAY AGAIN
+                    </button>
+                  )}
                 </div>
              </div>
           ) : (

@@ -40,7 +40,28 @@ function isValidAnagram(word: string, sourceLetters: string[]): boolean {
   return true;
 }
 
-export function getRandomPuzzle(): Puzzle {
+// PRNG utilities for seeded daily puzzles
+function xmur3(str: string) {
+    for(var i = 0, h = 1779033703 ^ str.length; i < str.length; i++) {
+        h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
+        h = h << 13 | h >>> 19;
+    } return function() {
+        h = Math.imul(h ^ h >>> 16, 2246822507);
+        h = Math.imul(h ^ h >>> 13, 3266489909);
+        return (h ^= h >>> 16) >>> 0;
+    }
+}
+
+function mulberry32(a: number) {
+    return function() {
+      var t = a += 0x6D2B79F5;
+      t = Math.imul(t ^ t >>> 15, t | 1);
+      t ^= t + Math.imul(t ^ t >>> 7, t | 61);
+      return ((t ^ t >>> 14) >>> 0) / 4294967296;
+    }
+}
+
+function getPuzzleWithRng(rng: () => number): Puzzle {
   let rootLetters: string[] = [];
   let rootWordObj: string = "";
   let validWords: string[] = [];
@@ -49,7 +70,7 @@ export function getRandomPuzzle(): Puzzle {
   // Randomly pick a 6-letter root word and evaluate it.
   // We randomly select from ROOT_WORDS until we find one that generates >= 10 REQUIRED words.
   while (validWords.length < 10) {
-    const rootWord = ROOT_WORDS[Math.floor(Math.random() * ROOT_WORDS.length)];
+    const rootWord = ROOT_WORDS[Math.floor(rng() * ROOT_WORDS.length)];
     rootWordObj = rootWord;
     rootLetters = rootWord.split('');
     
@@ -92,7 +113,7 @@ export function getRandomPuzzle(): Puzzle {
   // Create a scrambled copy of the root letters for the user to solve
   let scrambled = [...rootLetters];
   for (let i = scrambled.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
+      const j = Math.floor(rng() * (i + 1));
       [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
   }
 
@@ -102,4 +123,13 @@ export function getRandomPuzzle(): Puzzle {
     bonusWords,
     bingoWord: rootWordObj.toUpperCase()
   };
+}
+
+export function getRandomPuzzle(): Puzzle {
+  return getPuzzleWithRng(Math.random);
+}
+
+export function getDailyPuzzle(dateStr: string): Puzzle {
+  const seed = xmur3(dateStr)();
+  return getPuzzleWithRng(mulberry32(seed));
 }

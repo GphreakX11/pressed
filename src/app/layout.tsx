@@ -17,8 +17,8 @@ export const metadata: Metadata = {
   description: "The ultimate speed dictionary game.",
   manifest: "/manifest.json",
   icons: {
-    icon: "/icon.png",
-    apple: "/apple-icon.png"
+    icon: [{ url: '/icon.png' }],
+    apple: [{ url: '/apple-icon.png' }]
   }
 };
 

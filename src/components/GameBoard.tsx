@@ -880,6 +880,7 @@ export default function GameBoard() {
   };
 
   if (showWelcome && stats) {
+    const winPct = stats.gamesPlayed > 0 ? `${Math.min(100, Math.round((stats.gamesWon / stats.gamesPlayed) * 100))}%` : '0%';
     const globalAccuracy = stats.totalWordsSubmitted && stats.totalWordsSubmitted > 0 ? `${Math.min(100, Math.round(((stats.totalWordsCorrect || 0) / stats.totalWordsSubmitted) * 100))}%` : '0%';
     const rankInfo = getTitle(stats.gamesWon);
     
@@ -1074,7 +1075,7 @@ export default function GameBoard() {
                  title={`${rankInfo.next - stats.gamesWon} more clears to reach ${getTitle(rankInfo.next).title}!`}
                >
                  <div className="flex justify-between text-[10px] text-pink-700 font-bold mb-1">
-                   <span>{stats.gamesWon} Clears</span>
+                   <span>{rankInfo.current} Clears</span>
                    <span>{rankInfo.next} Clears</span>
                  </div>
                  <div className="w-full bg-pink-200 rounded-full h-2.5 mb-1">
@@ -1091,8 +1092,8 @@ export default function GameBoard() {
             
             <div className="w-full bg-pink-50 rounded-xl p-4 flex gap-[2px] justify-between border border-pink-100 shadow-inner">
             <div className="flex flex-col items-center flex-1">
-              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Boards Cleared</span>
-              <span className="text-pink-900 text-2xl font-mono">{stats.gamesWon}</span>
+              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Win %</span>
+              <span className="text-pink-900 text-2xl font-mono">{winPct}</span>
             </div>
             <div className="flex flex-col items-center flex-1 border-l border-pink-200">
               <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Accuracy</span>

@@ -759,6 +759,11 @@ export default function GameBoard() {
                   Find 10 words in a row without a mistake to entirely stop the clock for 10 seconds.
                 </div>
 
+                <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-200 shadow-sm">
+                  <span className="font-extrabold text-indigo-600 block mb-1">⚡ Overdrive (11+ Word Streak):</span>
+                  Keep the streak going past 10! Every word you find correctly after that scores a massive <strong>3x multiplier</strong> — until you make a mistake or repeat a word.
+                </div>
+
                 <div className="bg-[#fff9e6] p-3 rounded-xl border border-[#d4af37] shadow-sm">
                   <span className="font-extrabold text-[#d4af37] block mb-1">🌍 Daily Trial:</span>
                   Compete on the exact same board as everyone else for the top spot on the Daily Leaderboard!

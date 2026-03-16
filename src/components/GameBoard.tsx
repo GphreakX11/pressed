@@ -271,6 +271,16 @@ export default function GameBoard() {
   }, [difficulty]);
 
   const startNewGame = useCallback((diff?: 'easy'|'normal'|'hard', isDaily?: boolean) => {
+    // User Gesture Audio Prime
+    [baseDingRef.current, bonusChimeRef.current, streakJackpotRef.current].forEach(el => {
+      if (el) {
+        el.play().then(() => {
+          el.pause();
+          el.currentTime = 0;
+        }).catch(() => {});
+      }
+    });
+
     const activeDiff = diff || difficulty;
     setDifficulty(activeDiff);
     setIsDailyMode(!!isDaily);

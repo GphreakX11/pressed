@@ -109,11 +109,11 @@ export default function GameBoard() {
       localStorage.setItem('apexMutePreference', next.toString());
       if (bgmRef.current) {
         if (next) bgmRef.current.pause();
-        else if (isAudioEnabled) bgmRef.current.play().catch(e => console.log('BGM Play Error:', e));
+        else if (isAudioEnabled && showWelcome) bgmRef.current.play().catch(e => console.log('BGM Play Error:', e));
       }
       return next;
     });
-  }, [isAudioEnabled]);
+  }, [isAudioEnabled, showWelcome]);
 
   const playSound = useCallback((type: 'pop' | 'coin' | 'jackpot', count: number = 0) => {
     if (!isAudioEnabled || isMuted) return;
@@ -549,9 +549,19 @@ export default function GameBoard() {
     return { title: "Novice", next: 5000, current: 0 };
   };
 
-  const generateShareGrid = () => {
+  const generateShareGrid = async () => {
     if (!puzzle) return;
-    let gridStr = `Apex Anagrams - Daily - Score: ${score}\n\n`;
+
+    // Calculate daily rank for the share string
+    let rankStr = "-";
+    if (score > 0) {
+      const idx = dailyLeaderboard.findIndex(e => score >= e.score);
+      rankStr = idx !== -1 ? `${idx + 1}` : (dailyLeaderboard.length < 10 ? `${dailyLeaderboard.length + 1}` : '10+');
+    }
+
+    const shareText = `Apex Anagrams: I just hit a ${score} on today's Daily Trial! Rank: ${rankStr}. Can you beat me? 🏆 https://pressed-beta.vercel.app`;
+    let gridStr = `${shareText}\n\n`;
+    
     Object.entries(groupedWords).forEach(([len, words]) => {
       let row = "";
       words.forEach(w => {
@@ -562,8 +572,22 @@ export default function GameBoard() {
     if (foundBonusWords.length > 0) {
       gridStr += "🟨".repeat(foundBonusWords.length) + "\n";
     }
-    navigator.clipboard.writeText(gridStr.trim());
-    setToastMessage("Copied to clipboard!");
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Apex Anagrams',
+          text: gridStr.trim(),
+        });
+        setToastMessage("Shared successfully!");
+      } else {
+        await navigator.clipboard.writeText(gridStr.trim());
+        setToastMessage("Copied to clipboard!");
+      }
+    } catch (err) {
+      console.log('Error sharing:', err);
+    }
+    
     setTimeout(() => setToastMessage(null), 1500);
   };
 

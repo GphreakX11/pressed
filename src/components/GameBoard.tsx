@@ -1012,22 +1012,22 @@ export default function GameBoard() {
             <span className="text-red-400 font-extrabold">✖</span> ABANDON
           </button>
 
-          {/* Persistent Mute Toggle */}
-          <button 
-            onPointerDown={toggleMute}
-            className="absolute top-2 right-4 text-pink-500 active:text-pink-700 text-lg font-bold bg-pink-100 w-8 h-8 flex items-center justify-center rounded-full border border-pink-200 shadow-sm touch-manipulation"
-            aria-label={isMuted ? "Unmute Sound" : "Mute Sound"}
-          >
-            {isMuted ? "🔇" : "🔊"}
-          </button>
-
-          {/* How to play top right */}
-          <button 
-            onPointerDown={() => setShowHowToPlay(true)}
-            className="absolute top-12 right-4 text-pink-500 active:text-pink-700 text-sm font-bold bg-pink-100 w-8 h-8 flex items-center justify-center rounded-full border border-pink-200 shadow-sm touch-manipulation"
-          >
-            ❓
-          </button>
+          {/* Mute + How to Play — side by side top right */}
+          <div className="absolute top-2 right-4 flex items-center gap-1">
+            <button 
+              onPointerDown={toggleMute}
+              className="text-pink-500 active:text-pink-700 text-lg font-bold bg-pink-100 w-8 h-8 flex items-center justify-center rounded-full border border-pink-200 shadow-sm touch-manipulation"
+              aria-label={isMuted ? "Unmute Sound" : "Mute Sound"}
+            >
+              {isMuted ? "🔇" : "🔊"}
+            </button>
+            <button 
+              onPointerDown={() => setShowHowToPlay(true)}
+              className="text-pink-500 active:text-pink-700 text-sm font-bold bg-pink-100 w-8 h-8 flex items-center justify-center rounded-full border border-pink-200 shadow-sm touch-manipulation"
+            >
+              ❓
+            </button>
+          </div>
           
           <div className="flex flex-col items-center mt-2 relative">
             <span className="text-pink-900 text-xs font-bold mb-1">Score</span>

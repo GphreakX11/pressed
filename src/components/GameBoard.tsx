@@ -1061,13 +1061,6 @@ export default function GameBoard() {
           </div>
         ) : (
           <div className="bg-white p-6 sm:p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-4 shadow-2xl z-10 animate-[slideUp_0.2s_ease-out] relative">
-            <button 
-              onPointerDown={toggleMute} 
-              className="absolute top-4 right-4 text-2xl active:scale-90 transition-transform touch-manipulation z-50 bg-pink-50 w-10 h-10 rounded-full flex items-center justify-center border border-pink-200 shadow-sm"
-              aria-label={isMuted ? "Unmute Sound" : "Mute Sound"}
-            >
-              {isMuted ? '🔇' : '🔊'}
-            </button>
             <div className="flex flex-col items-center mb-0 mt-2">
               <img src="/apex-branding-full.png" alt="Apex Anagrams" className="w-[90%] max-w-[240px] drop-shadow-md mb-2" />
             </div>

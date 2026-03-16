@@ -1,0 +1,76 @@
+'use server';
+
+import { kv } from '@vercel/kv';
+
+export type LeaderboardEntry = {
+  rank: number;
+  name: string;
+  score: number;
+  date: number;
+};
+
+const LEADERBOARD_ALLTIME_KEY = 'apex_global_alltime';
+
+function getDailyKey() {
+  const today = new Date().toISOString().split('T')[0];
+  return `apex_global_daily_${today}`;
+}
+
+export async function getTopScores(type: 'daily' | 'alltime' = 'alltime'): Promise<LeaderboardEntry[]> {
+  try {
+    const key = type === 'daily' ? getDailyKey() : LEADERBOARD_ALLTIME_KEY;
+    const results = await kv.zrange(key, 0, 9, { rev: true, withScores: true });
+    
+    const entries: LeaderboardEntry[] = [];
+    
+    for (let i = 0; i < results.length; i += 2) {
+      const memberStr = results[i] as string;
+      const score = Number(results[i + 1]);
+      const parts = memberStr.split(':');
+      const name = parts[0] || 'Unknown';
+      const date = parts.length > 1 ? parseInt(parts[1], 10) : Date.now();
+      
+      entries.push({
+        rank: entries.length + 1,
+        name,
+        score,
+        date
+      });
+    }
+    
+    return entries;
+  } catch (err) {
+    console.error('Failed to fetch leaderboard:', err);
+    return [];
+  }
+}
+
+export async function submitScore(name: string, score: number) {
+  try {
+    const cleanName = name.trim().substring(0, 12) || 'ANONYMOUS';
+    const memberId = `${cleanName}:${Date.now()}`;
+    
+    // Submit to All-Time
+    await kv.zadd(LEADERBOARD_ALLTIME_KEY, { score, member: memberId });
+    const countAllTime = await kv.zcard(LEADERBOARD_ALLTIME_KEY);
+    if (countAllTime > 20) {
+       await kv.zremrangebyrank(LEADERBOARD_ALLTIME_KEY, 0, -21);
+    }
+
+    // Submit to Daily
+    const dailyKey = getDailyKey();
+    await kv.zadd(dailyKey, { score, member: memberId });
+    // Set daily key to expire in 48 hours to clean up automatically.
+    // 48 hours = 2 days = 172800 seconds.
+    await kv.expire(dailyKey, 172800);
+    const countDaily = await kv.zcard(dailyKey);
+    if (countDaily > 20) {
+       await kv.zremrangebyrank(dailyKey, 0, -21);
+    }
+
+    return { success: true };
+  } catch (err) {
+    console.error('Failed to submit score:', err);
+    return { success: false, error: 'Database error' };
+  }
+}

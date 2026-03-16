@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Puzzle, getRandomPuzzle, getDailyPuzzle } from "@/lib/puzzles";
 import { PlayerStats, loadStats, recordGameResult } from "@/lib/stats";
+import { getTopScores, submitScore, type LeaderboardEntry } from '@/app/actions';
 import Sparkles from './Sparkles';
 
 // Retro font via Next/Google fonts is possible but for simplicity and guaranteeing zero-config, we'll use system fonts that look digital
@@ -23,6 +24,15 @@ export default function GameBoard() {
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+
+  // Leaderboard State
+  const [dailyLeaderboard, setDailyLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [allTimeLeaderboard, setAllTimeLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardTab, setLeaderboardTab] = useState<'daily'|'alltime'>('daily');
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [qualifiesForLeaderboard, setQualifiesForLeaderboard] = useState(false);
+  const [isSubmittingScore, setIsSubmittingScore] = useState(false);
+  const [playerName, setPlayerName] = useState("");
 
   const lastWordTime = useRef<number>(0);
   const [comboCount, setComboCount] = useState(0);
@@ -207,9 +217,42 @@ export default function GameBoard() {
       });
       recordGameResult(won, finalScore);
       setStats(loadStats());
+
+      // Leaderboard Qualification Check
+      if (finalScore > 0) {
+        setDailyLeaderboard(currentLb => {
+          if (currentLb.length < 10 || finalScore > currentLb[currentLb.length - 1].score) {
+            setQualifiesForLeaderboard(true);
+          }
+          return currentLb;
+        });
+        setAllTimeLeaderboard(currentLb => {
+          if (currentLb.length < 10 || finalScore > currentLb[currentLb.length - 1].score) {
+            setQualifiesForLeaderboard(true);
+          }
+          return currentLb;
+        });
+      }
+
       return finalScore;
     });
   }, []);
+
+  const handleScoreSubmit = async () => {
+    if (!playerName.trim() || isSubmittingScore) return;
+    setIsSubmittingScore(true);
+    
+    const res = await submitScore(playerName, score);
+    if (res.success) {
+      const refreshedDaily = await getTopScores('daily');
+      const refreshedAllTime = await getTopScores('alltime');
+      setDailyLeaderboard(refreshedDaily);
+      setAllTimeLeaderboard(refreshedAllTime);
+    }
+    
+    setQualifiesForLeaderboard(false);
+    setIsSubmittingScore(false);
+  };
 
   const totalTimeLimit = useMemo(() => {
     return difficulty === 'easy' ? 210 : difficulty === 'hard' ? 90 : 150;
@@ -260,6 +303,8 @@ export default function GameBoard() {
     const saved = localStorage.getItem('pressedHighScore');
     if (saved) setHighScore(parseInt(saved, 10));
     setStats(loadStats());
+    getTopScores('daily').then(setDailyLeaderboard).catch(console.error);
+    getTopScores('alltime').then(setAllTimeLeaderboard).catch(console.error);
     // Welcome screen shows on mount, so we don't automatically trigger startNewGame
   }, []);
 
@@ -532,6 +577,49 @@ export default function GameBoard() {
     return (
       <div className="fixed inset-0 bg-pink-50 flex flex-col items-center justify-center font-sans p-4">
         
+        {/* Global Leaderboard Modal */}
+        {showLeaderboard && (
+          <div className="absolute inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-sm bg-gradient-to-br from-pink-50 to-white border-4 border-[#d4af37] rounded-3xl p-6 shadow-2xl animate-[slideUp_0.3s_ease-out] flex flex-col h-auto max-h-[80vh]">
+              <div className="flex justify-between items-center border-b-2 border-pink-200 pb-3 mb-3">
+                <h2 className="text-2xl font-black italic text-pink-900 tracking-tighter uppercase flex items-center gap-2">
+                  <span className="text-3xl">🏆</span> TOP 10
+                </h2>
+                <button onPointerDown={() => setShowLeaderboard(false)} className="text-pink-400 font-black text-xl w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center active:bg-pink-200 transition-colors touch-manipulation">✕</button>
+              </div>
+              
+              <div className="flex bg-pink-100 rounded-lg p-1 mb-4 flex-none">
+                 <button 
+                   onPointerDown={() => setLeaderboardTab('daily')}
+                   className={`flex-1 py-2 text-xs sm:text-sm font-black uppercase tracking-widest rounded-md transition-all touch-manipulation ${leaderboardTab === 'daily' ? 'bg-white text-pink-900 shadow-sm' : 'text-pink-500'}`}
+                 >Daily Trial</button>
+                 <button 
+                   onPointerDown={() => setLeaderboardTab('alltime')}
+                   className={`flex-1 py-2 text-xs sm:text-sm font-black uppercase tracking-widest rounded-md transition-all touch-manipulation ${leaderboardTab === 'alltime' ? 'bg-white text-pink-900 shadow-sm' : 'text-pink-500'}`}
+                 >All-Time</button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-2">
+                {(leaderboardTab === 'daily' ? dailyLeaderboard : allTimeLeaderboard).length === 0 ? (
+                  <p className="text-center text-pink-600 font-bold py-8">No scores recorded yet. Be the first!</p>
+                ) : (
+                  (leaderboardTab === 'daily' ? dailyLeaderboard : allTimeLeaderboard).map((entry, idx) => (
+                    <div key={idx} className="flex justify-between items-center bg-white border border-pink-200 p-3 rounded-xl shadow-sm">
+                      <div className="flex items-center gap-3">
+                        <span className={`font-black italic w-6 text-center ${idx === 0 ? 'text-[#d4af37] text-xl drop-shadow-sm' : idx === 1 ? 'text-gray-400 text-lg' : idx === 2 ? 'text-amber-700 text-lg' : 'text-pink-400'}`}>
+                          #{idx + 1}
+                        </span>
+                        <span className="font-extrabold text-pink-900 tracking-wider uppercase text-sm truncate max-w-[120px]">{entry.name}</span>
+                      </div>
+                      <span className="font-mono font-bold text-lg text-[#d4af37]">{entry.score}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {!isAudioEnabled ? (
           <div className="bg-white p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-4 shadow-2xl z-10 text-center animate-[slideUp_0.3s_ease-out]">
             <div className="flex flex-col items-center mb-0">
@@ -550,12 +638,20 @@ export default function GameBoard() {
               )}
             </div>
 
-            <button 
-              onPointerDown={() => initializeAudio()} 
-              className="w-full bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-4 rounded shadow-md active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-xl tracking-widest select-none touch-manipulation"
-            >
-              ENTER LOBBY
-            </button>
+            <div className="flex justify-between w-full mt-2 gap-2">
+              <button 
+                onPointerDown={() => setShowLeaderboard(true)}
+                className="flex-1 bg-white border-2 border-[#d4af37] text-yellow-700 font-extrabold py-3 rounded shadow-sm active:bg-yellow-50 transition-all text-xs tracking-widest select-none touch-manipulation flex items-center justify-center gap-2"
+              >
+                <span className="text-base">🏆</span> RANK
+              </button>
+              <button 
+                onPointerDown={() => initializeAudio()} 
+                className="flex-[2] bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-md active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-lg tracking-widest select-none touch-manipulation"
+              >
+                ENTER LOBBY
+              </button>
+            </div>
             <p className="text-[10px] text-pink-400 font-bold uppercase tracking-widest mt-1">Enables Audio & Gameplay</p>
           </div>
         ) : (
@@ -591,9 +687,10 @@ export default function GameBoard() {
               <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Win %</span>
               <span className="text-pink-900 text-3xl font-mono">{winPct}</span>
             </div>
-            <div className="flex flex-col items-center flex-1 border-l border-pink-200">
-              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Avg Score</span>
-              <span className="text-pink-900 text-3xl font-mono">{avgScore}</span>
+            <div className="flex flex-col items-center flex-1 border-l border-pink-200 relative cursor-pointer active:opacity-80 touch-manipulation" onPointerDown={() => setShowLeaderboard(true)}>
+              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Leaderboard</span>
+              <span className="text-pink-900 text-3xl font-mono absolute -top-1 -right-1 opacity-20">🏆</span>
+              <div className="mt-1 bg-white border border-[#d4af37] text-yellow-600 text-[8px] font-black px-2 py-1 rounded shadow-sm tracking-widest uppercase">View Top 10</div>
             </div>
           </div>
             <div className="flex flex-col gap-3 w-full mt-2">
@@ -616,7 +713,7 @@ export default function GameBoard() {
       <Sparkles />
       
       {/* Hardened Background Watermark Logo */}
-      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0 overflow-hidden opacity-[0.05]">
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none -z-10 overflow-hidden opacity-10">
         <img src="/apex-branding-full.png" alt="" className="w-[120%] max-w-2xl drop-shadow-sm mt-16 object-contain" />
       </div>
 
@@ -790,6 +887,34 @@ export default function GameBoard() {
          <div className="w-full mt-auto pb-8 pt-4 px-4 flex flex-col items-center gap-6 border-t border-pink-200 select-none touch-none bg-pink-50">
           
           {gameOver ? (
+           qualifiesForLeaderboard ? (
+             <div className="w-full flex flex-col items-center gap-4 bg-gradient-to-br from-yellow-100 via-yellow-200 to-yellow-400 p-6 rounded-xl border-4 border-[#d4af37] shadow-[0_10px_40px_rgba(212,175,55,0.4)] animate-[slideUp_0.4s_ease-out] z-40 relative text-center">
+                <div className="text-4xl animate-bounce drop-shadow-sm">🏆</div>
+                <h2 className="text-3xl sm:text-4xl font-black text-yellow-900 tracking-tighter italic uppercase drop-shadow-sm leading-tight">APEX<br/>PERFORMANCE!</h2>
+                <p className="text-yellow-800 font-bold text-sm bg-white/50 px-4 py-2 rounded-lg border border-yellow-300 w-full">You reached the Top 10 with a score of <br/><span className="font-mono text-2xl text-yellow-900 drop-shadow-sm">{score}</span>!</p>
+                <input 
+                  type="text" 
+                  maxLength={12}
+                  placeholder="ENTER NAME" 
+                  value={playerName}
+                  onChange={e => setPlayerName(e.target.value)}
+                  className="w-full text-center text-xl font-black text-yellow-900 bg-white border-2 border-yellow-500 rounded-xl p-3 uppercase tracking-widest placeholder-yellow-600/40 focus:outline-none focus:border-yellow-700 focus:bg-white transition-all shadow-inner"
+                />
+                <button 
+                  onPointerDown={handleScoreSubmit}
+                  disabled={isSubmittingScore || !playerName.trim()}
+                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 border-b-4 border-r-2 border-yellow-800 text-white font-extrabold py-4 rounded-xl shadow-md active:border-0 active:translate-y-[4px] transition-all tracking-widest text-lg touch-manipulation disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
+                >
+                  {isSubmittingScore ? 'SUBMITTING...' : 'CLAIM RANK'}
+                </button>
+                <button 
+                  onPointerDown={() => setQualifiesForLeaderboard(false)}
+                  className="text-yellow-700 text-xs font-bold uppercase tracking-widest mt-1 underline opacity-80 active:opacity-100 touch-manipulation p-2"
+                >
+                  Skip
+                </button>
+             </div>
+           ) : (
              <div className="w-full flex flex-col items-center gap-4 bg-white/90 p-6 rounded-xl border border-pink-300 shadow-2xl animate-[slideUp_0.3s_ease-out] z-40 relative">
                 {foundWords.length === puzzle.validWords.length ? (
                   <>
@@ -808,6 +933,18 @@ export default function GameBoard() {
                       <div className="flex justify-between border-t border-pink-300 pt-1 mt-1 text-lg text-pink-900">
                          <span>Total</span>
                          <span>{displayScore}</span>
+                      </div>
+
+                      {/* Leaderboard Ranks */}
+                      <div className="flex justify-between border-t border-pink-300 pt-2 mt-2 text-xs text-pink-700 font-bold uppercase tracking-widest bg-white/50 p-2 rounded-md shadow-inner">
+                         <div className="flex flex-col items-center flex-1 border-r border-pink-200">
+                           <span className="opacity-80 mb-1 text-[9px]">Daily Rank</span>
+                           <span className="text-xl text-[#d4af37] font-black">{score === 0 ? '-' : (dailyLeaderboard.findIndex(e => score >= e.score) !== -1 ? dailyLeaderboard.findIndex(e => score >= e.score) + 1 : (dailyLeaderboard.length < 10 ? dailyLeaderboard.length + 1 : '10+'))}</span>
+                         </div>
+                         <div className="flex flex-col items-center flex-1">
+                           <span className="opacity-80 mb-1 text-[9px]">All-Time</span>
+                           <span className="text-xl text-pink-900 font-black">{score === 0 ? '-' : (allTimeLeaderboard.findIndex(e => score >= e.score) !== -1 ? allTimeLeaderboard.findIndex(e => score >= e.score) + 1 : (allTimeLeaderboard.length < 10 ? allTimeLeaderboard.length + 1 : '10+'))}</span>
+                         </div>
                       </div>
                     </div>
                   </>
@@ -842,6 +979,7 @@ export default function GameBoard() {
                   )}
                 </div>
              </div>
+           )
           ) : (
             <div className="w-full relative flex flex-col items-center">
               {/* Floating Bonus Toast Overlay */}

@@ -852,13 +852,13 @@ export default function GameBoard() {
                 </div>
 
                 <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 shadow-sm">
-                  <span className="font-extrabold text-blue-600 block mb-1">🧊 Clarity Bonus (5-Word Streak):</span>
-                  Find 5 words in a row without a single mistake or duplicate. Unlocks a hidden word instantly.
+                  <span className="font-extrabold text-blue-600 block mb-1">🧊 Time Freeze (5-Word Streak):</span>
+                  Find 5 words in a row without a mistake to stop the clock for 10 seconds!
                 </div>
                 
                 <div className="bg-purple-50 p-3 rounded-xl border border-purple-200 shadow-sm">
-                  <span className="font-extrabold text-purple-600 block mb-1">⏱️ Time Freeze (10-Word Streak):</span>
-                  Find 10 words in a row without a mistake to entirely stop the clock for 10 seconds.
+                  <span className="font-extrabold text-purple-600 block mb-1">🔮 Clarity Bonus (10-Word Streak):</span>
+                  Find 10 words in a row without a single mistake or duplicate — the longest unfound word is revealed and scored for you.
                 </div>
 
                 <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-200 shadow-sm">

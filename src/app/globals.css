@@ -62,3 +62,8 @@ body {
 .animate-fallAndTwinkle {
   animation: fallAndTwinkle linear infinite;
 }
+
+.frozen {
+  color: #00f2ff !important;
+  text-shadow: 0 0 10px #00f2ff;
+}

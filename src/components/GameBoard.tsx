@@ -33,6 +33,16 @@ export default function GameBoard() {
   const [qualifiesForLeaderboard, setQualifiesForLeaderboard] = useState(false);
   const [isSubmittingScore, setIsSubmittingScore] = useState(false);
   const [playerName, setPlayerName] = useState("");
+  const [playerId, setPlayerId] = useState("");
+
+  useEffect(() => {
+    let id = localStorage.getItem('apexPlayerId');
+    if (!id) {
+       id = Math.random().toString(36).substring(2, 12);
+       localStorage.setItem('apexPlayerId', id);
+    }
+    setPlayerId(id);
+  }, []);
 
   const lastWordTime = useRef<number>(0);
   const [comboCount, setComboCount] = useState(0);
@@ -273,7 +283,7 @@ export default function GameBoard() {
     else if (difficulty === 'easy') diffLabel = 'E';
     else if (difficulty === 'hard') diffLabel = 'H';
 
-    const res = await submitScore(playerName, score, diffLabel);
+    const res = await submitScore(playerName, playerId, score, diffLabel);
     if (res.success) {
       const refreshedDaily = await getTopScores('daily');
       const refreshedAllTime = await getTopScores('alltime');
@@ -1016,7 +1026,7 @@ export default function GameBoard() {
             )}
             <div className={`bg-white border border-pink-200 shadow-sm rounded-md px-3 py-1 mt-2 transform transition-all ${isTimeFrozen ? 'scale-110 shadow-[0_0_15px_rgba(59,130,246,0.5)] border-blue-400' : ''}`}>
               <span 
-                className="font-mono font-bold text-3xl tracking-widest animate-[pulse_1.5s_ease-in-out_infinite]"
+                className={`font-mono font-bold text-3xl tracking-widest animate-[pulse_1.5s_ease-in-out_infinite] ${isTimeFrozen ? 'frozen' : ''}`}
                 style={{
                   color: isTimeFrozen ? '#3b82f6' : `hsl(${Math.floor(Math.max(0, Math.min(1, timeLeft / totalTimeLimit)) * 120)}, 90%, 45%)`,
                   transition: 'color 1s linear'

@@ -29,14 +29,14 @@ export async function getTopScores(type: 'daily' | 'alltime' = 'alltime'): Promi
       const score = Number(results[i + 1]);
       const parts = memberStr.split(':');
       const name = parts[0] || 'Unknown';
-      const date = parts.length > 1 ? parseInt(parts[1], 10) : Date.now();
+      const playerId = parts[1] || 'Temp';
       const difficulty = parts.length > 2 ? parts[2] : 'N';
       
       entries.push({
         rank: entries.length + 1,
         name,
         score,
-        date,
+        date: Date.now(), // No longer parsed from string
         difficulty
       });
     }
@@ -48,11 +48,11 @@ export async function getTopScores(type: 'daily' | 'alltime' = 'alltime'): Promi
   }
 }
 
-export async function submitScore(name: string, score: number, difficultyLabel: string = 'N') {
+export async function submitScore(name: string, playerId: string, score: number, difficultyLabel: string = 'N') {
   try {
     const cleanName = name.trim().substring(0, 12) || 'ANONYMOUS';
     const safeName = cleanName.replace(/:/g, ''); // Ensure no colons in member name
-    const memberId = `${safeName}:${Date.now()}:${difficultyLabel}`;
+    const memberId = `${safeName}:${playerId}:${difficultyLabel}`;
     
     // Submit to All-Time
     await kv.zadd(LEADERBOARD_ALLTIME_KEY, { score, member: memberId });

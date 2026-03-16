@@ -59,39 +59,37 @@ export default function GameBoard() {
 
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const baseDingRef = useRef<HTMLAudioElement | null>(null);
-  const bonusChimeRef = useRef<HTMLAudioElement | null>(null);
-  const streakJackpotRef = useRef<HTMLAudioElement | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  // Precision Streak & UI States
+  const [accuracyStreak, setAccuracyStreak] = useState(0);
+  const [isTimeFrozen, setIsTimeFrozen] = useState(false);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
 
   useEffect(() => {
     // Load mute preference
     const savedMute = localStorage.getItem('apexMutePreference');
     const initialMute = savedMute === 'true';
     if (savedMute) setIsMuted(initialMute);
-
-    baseDingRef.current = new Audio('/base_ding.mp3');
-    baseDingRef.current.volume = 0.6;
-
-    bonusChimeRef.current = new Audio('/bonus_chime.mp3');
-    bonusChimeRef.current.volume = 0.6;
-
-    streakJackpotRef.current = new Audio('/streak_jackpot.mp3');
-    streakJackpotRef.current.volume = 0.6;
   }, []);
 
-  const initializeAudio = useCallback(() => {
-    if (isAudioEnabled) return;
-    setIsAudioEnabled(true);
-    
-    // Unlock all audio elements for iOS Safari by playing and immediately pausing
-    [baseDingRef.current, bonusChimeRef.current, streakJackpotRef.current].forEach(el => {
-      if (el) {
-        el.play().then(() => {
-          el.pause();
-          el.currentTime = 0;
-        }).catch(() => {});
+  const initWebAudio = () => {
+    if (!audioCtxRef.current && typeof window !== 'undefined') {
+      const AudioCtx = window.AudioContext || (window as any).webkitAudioContext;
+      if (AudioCtx) {
+        audioCtxRef.current = new AudioCtx();
       }
-    });
+    }
+    if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+      audioCtxRef.current.resume();
+    }
+  };
+
+  const initializeAudio = useCallback(() => {
+    if (!isAudioEnabled) {
+      setIsAudioEnabled(true);
+    }
+    initWebAudio();
   }, [isAudioEnabled]);
 
   const toggleMute = useCallback(() => {
@@ -105,19 +103,60 @@ export default function GameBoard() {
   const playSound = useCallback((type: 'pop' | 'coin' | 'jackpot', count: number = 0) => {
     if (!isAudioEnabled || isMuted) return;
     
-    try {
-      let soundToPlay: HTMLAudioElement | null = null;
-      if (type === 'pop') soundToPlay = baseDingRef.current;
-      else if (type === 'coin') soundToPlay = bonusChimeRef.current;
-      else if (type === 'jackpot') soundToPlay = streakJackpotRef.current;
+    initWebAudio();
+    const ctx = audioCtxRef.current;
+    if (!ctx) return;
+    
+    if (ctx.state === 'suspended') ctx.resume();
 
-      if (soundToPlay) {
-        // Reset playback for rapid-fire
-        soundToPlay.currentTime = 0;
-        soundToPlay.play().catch(e => console.log(`Audio ${type} failed:`, e));
-      }
-    } catch (err) {
-      console.warn(`Audio ${type} failed to play:`, err);
+    const now = ctx.currentTime;
+    const masterGain = ctx.createGain();
+    masterGain.connect(ctx.destination);
+
+    if (type === 'pop') {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, now); // A5
+      osc.frequency.exponentialRampToValueAtTime(1760, now + 0.1); // A6
+      masterGain.gain.setValueAtTime(0.3, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+      
+      osc.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.1);
+    } else if (type === 'coin') {
+      const osc = ctx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(987.77, now); // B5
+      osc.frequency.setValueAtTime(1318.51, now + 0.1); // E6
+      masterGain.gain.setValueAtTime(0.3, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      
+      osc.connect(masterGain);
+      osc.start(now);
+      osc.stop(now + 0.3);
+    } else if (type === 'jackpot') {
+      const osc1 = ctx.createOscillator();
+      const osc2 = ctx.createOscillator();
+      osc1.type = 'triangle';
+      osc2.type = 'sine';
+      
+      // Pitch goes up based on combo count
+      const baseFreq = 440 + (Math.min(count, 10) * 110);
+      osc1.frequency.setValueAtTime(baseFreq, now);
+      osc1.frequency.exponentialRampToValueAtTime(baseFreq * 1.5, now + 0.3);
+      osc2.frequency.setValueAtTime(baseFreq * 1.5, now);
+      osc2.frequency.exponentialRampToValueAtTime(baseFreq * 2, now + 0.3);
+      
+      masterGain.gain.setValueAtTime(0.4, now);
+      masterGain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+      
+      osc1.connect(masterGain);
+      osc2.connect(masterGain);
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.4);
+      osc2.stop(now + 0.4);
     }
   }, [isAudioEnabled, isMuted]);
 
@@ -229,7 +268,12 @@ export default function GameBoard() {
     if (!playerName.trim() || isSubmittingScore) return;
     setIsSubmittingScore(true);
     
-    const res = await submitScore(playerName, score);
+    let diffLabel = 'N';
+    if (isDailyMode) diffLabel = 'D';
+    else if (difficulty === 'easy') diffLabel = 'E';
+    else if (difficulty === 'hard') diffLabel = 'H';
+
+    const res = await submitScore(playerName, score, diffLabel);
     if (res.success) {
       const refreshedDaily = await getTopScores('daily');
       const refreshedAllTime = await getTopScores('alltime');
@@ -246,16 +290,7 @@ export default function GameBoard() {
   }, [difficulty]);
 
   const startNewGame = useCallback((diff?: 'easy'|'normal'|'hard', isDaily?: boolean) => {
-    // User Gesture Audio Prime
-    [baseDingRef.current, bonusChimeRef.current, streakJackpotRef.current].forEach(el => {
-      if (el) {
-        el.play().then(() => {
-          el.pause();
-          el.currentTime = 0;
-        }).catch(() => {});
-      }
-    });
-
+    initWebAudio();
     const activeDiff = diff || difficulty;
     setDifficulty(activeDiff);
     setIsDailyMode(!!isDaily);
@@ -271,6 +306,9 @@ export default function GameBoard() {
     setDisplayScore(0);
     setTimeBonus(0);
     setComboCount(0);
+    setAccuracyStreak(0);
+    setIsTimeFrozen(false);
+    setShowHowToPlay(false);
     lastWordTime.current = 0;
     setFoundWords([]);
     setFoundBonusWords([]);
@@ -301,7 +339,7 @@ export default function GameBoard() {
   }, []);
 
   useEffect(() => {
-    if (!puzzle || gameOver || !endTime || showWelcome) return;
+    if (!puzzle || gameOver || !endTime || showWelcome || isTimeFrozen) return;
 
     const checkTime = () => {
       const remaining = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
@@ -416,6 +454,7 @@ export default function GameBoard() {
       const isAlreadyBonus = foundBonusWords.includes(word);
       
       if (isAlreadyMain || isAlreadyBonus) {
+        setAccuracyStreak(0);
         // Already found
         setToastMessage("Already Found!");
         setTimeout(() => setToastMessage(null), 1500);
@@ -490,6 +529,50 @@ export default function GameBoard() {
         
         setJuiceToast({ id: Date.now(), points: pts, isCombo: comboEarned });
 
+        // Precision Streak Logic
+        setAccuracyStreak(prev => {
+          const next = prev + 1;
+          if (next === 5) {
+            // Clarity Bonus
+            const unfound = puzzle.validWords.filter(w => !foundWords.includes(w) && w !== word);
+            if (unfound.length > 0) {
+              const longest = unfound.reduce((a, b) => a.length >= b.length ? a : b);
+              setFoundWords(fw => {
+                if (fw.includes(longest)) return fw;
+                const updated = [...fw, longest];
+                
+                // Automatically win if the bonus fills the last word
+                if (updated.length === puzzle.validWords.length) {
+                  setGameOver(true);
+                  const remTime = Math.max(0, Math.floor((endTime! - Date.now()) / 1000));
+                  const tBonus = remTime * 10;
+                  setTimeBonus(tBonus);
+                  setTimeout(() => endGame(true, tBonus), 600);
+                }
+                return updated;
+              });
+              const bonusPts = Math.floor(longest.length * 10 * difficultyMultiplier);
+              setScore(s => s + bonusPts);
+              setTimeout(() => {
+                setToastMessage(`CLARITY BONUS: ${longest.toUpperCase()}`);
+                playSound('coin');
+              }, 400);
+            }
+          } else if (next === 10) {
+            // Time Freeze
+            setIsTimeFrozen(true);
+            setEndTime(e => e ? e + 5000 : e);
+            setTimeout(() => {
+              setTimeout(() => setToastMessage("TIME FREEZE! (5s)"), 400);
+              playSound('jackpot', 5);
+            }, 400);
+            setTimeout(() => {
+              if (!gameOverRef.current) setIsTimeFrozen(false);
+            }, 5000);
+          }
+          return next;
+        });
+
         if (comboEarned) {
           const blastId = Date.now();
           setJackpotBlast({ id: blastId, active: true, count: newCount });
@@ -516,6 +599,7 @@ export default function GameBoard() {
         };
       } else {
         // Invalid word
+        setAccuracyStreak(0);
         setShakeInput(true);
         setTimeout(() => setShakeInput(false), 300);
         
@@ -583,6 +667,27 @@ export default function GameBoard() {
     setTimeout(() => setToastMessage(null), 1500);
   };
 
+  const handleShareGame = async () => {
+    const shareText = "Check out Apex Anagrams! It's a high-speed daily word challenge. Can you make the Top 10? 🏆 https://pressed-beta.vercel.app";
+    
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: 'Apex Anagrams',
+          text: shareText,
+        });
+        setToastMessage("Shared successfully!");
+      } else {
+        await navigator.clipboard.writeText(shareText);
+        setToastMessage("Link Copied!");
+      }
+    } catch (err) {
+      console.log('Error sharing:', err);
+    }
+    
+    setTimeout(() => setToastMessage(null), 1500);
+  };
+
   if (showWelcome && stats) {
     const winPct = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
     const avgScore = stats.gamesPlayed > 0 ? Math.round(stats.totalScore / stats.gamesPlayed) : 0;
@@ -593,6 +698,47 @@ export default function GameBoard() {
     return (
       <div className="fixed inset-0 bg-pink-50 flex flex-col items-center justify-center font-sans p-4">
         
+        {/* How to Play Modal */}
+        {showHowToPlay && (
+          <div className="absolute inset-0 z-[250] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-gradient-to-br from-pink-50 to-white border-4 border-pink-300 rounded-3xl p-6 shadow-2xl animate-[slideUp_0.3s_ease-out] flex flex-col h-auto max-h-[90vh]">
+              <div className="flex justify-between items-center border-b-2 border-pink-200 pb-3 mb-4">
+                <h2 className="text-2xl font-black italic text-pink-900 tracking-tighter uppercase flex items-center gap-2">
+                  <span className="text-3xl font-normal">❓</span> APEX PROTOCOLS
+                </h2>
+                <button onPointerDown={() => setShowHowToPlay(false)} className="text-pink-400 font-black text-xl w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center active:bg-pink-200 transition-colors touch-manipulation">✕</button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-4 text-sm text-pink-900 font-medium">
+                <div className="bg-white p-3 rounded-xl border border-pink-200 shadow-sm">
+                  <span className="font-extrabold text-pink-700 block mb-1">🎯 The Goal:</span>
+                  Find as many anagrams as possible before the 3:00 timer hits zero. (1.5x points on Hard!)
+                </div>
+                
+                <div className="bg-orange-50 p-3 rounded-xl border border-orange-200 shadow-sm">
+                  <span className="font-extrabold text-orange-600 block mb-1 flex items-center gap-2"><span className="animate-pulse">🔥</span> Apex Streak:</span>
+                  Find 2 words within 5 seconds to trigger a 1.5x Score Multiplier.
+                </div>
+
+                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 shadow-sm">
+                  <span className="font-extrabold text-blue-600 block mb-1">🧊 Clarity Bonus (5-Word Streak):</span>
+                  Find 5 words in a row without a single mistake or duplicate. Unlocks a hidden word instantly.
+                </div>
+                
+                <div className="bg-purple-50 p-3 rounded-xl border border-purple-200 shadow-sm">
+                  <span className="font-extrabold text-purple-600 block mb-1">⏱️ Time Freeze (10-Word Streak):</span>
+                  Find 10 words in a row without a mistake to entirely stop the clock for 5 seconds.
+                </div>
+
+                <div className="bg-[#fff9e6] p-3 rounded-xl border border-[#d4af37] shadow-sm">
+                  <span className="font-extrabold text-[#d4af37] block mb-1">🌍 Daily Trial:</span>
+                  Compete on the exact same board as everyone else for the top spot on the Daily Leaderboard!
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Global Leaderboard Modal */}
         {showLeaderboard && (
           <div className="absolute inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
@@ -625,7 +771,17 @@ export default function GameBoard() {
                         <span className={`font-black italic w-6 text-center ${idx === 0 ? 'text-[#d4af37] text-xl drop-shadow-sm' : idx === 1 ? 'text-gray-400 text-lg' : idx === 2 ? 'text-amber-700 text-lg' : 'text-pink-400'}`}>
                           #{idx + 1}
                         </span>
-                        <span className="font-extrabold text-pink-900 tracking-wider uppercase text-sm truncate max-w-[120px]">{entry.name}</span>
+                        <div className="flex items-center gap-1 group relative">
+                          <span className="font-extrabold text-pink-900 tracking-wider uppercase text-sm truncate max-w-[120px]">{entry.name}</span>
+                          {entry.difficulty && (
+                            <span 
+                              className="text-[9px] font-black text-white bg-pink-300 rounded px-1 ml-1 leading-tight flex items-center justify-center min-w-[16px] h-[16px] shadow-sm cursor-help" 
+                              title={entry.difficulty === 'E' ? 'Easy' : entry.difficulty === 'H' ? 'Hard' : entry.difficulty === 'D' ? 'Daily' : 'Normal'}
+                            >
+                              {entry.difficulty}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <span className="font-mono font-bold text-lg text-[#d4af37]">{entry.score}</span>
                     </div>
@@ -654,10 +810,16 @@ export default function GameBoard() {
               )}
             </div>
 
-            <div className="flex justify-between w-full mt-2 gap-2">
+            <div className="flex justify-between w-full mt-2 gap-2 relative">
+              <button 
+                onPointerDown={() => setShowHowToPlay(true)}
+                className="absolute -top-14 left-0 text-pink-600 bg-pink-100 border border-pink-300 font-extrabold w-10 h-10 rounded-full shadow-sm active:scale-95 transition-all text-xl touch-manipulation flex items-center justify-center z-50"
+              >
+                ?
+              </button>
               <button 
                 onPointerDown={() => setShowLeaderboard(true)}
-                className="flex-1 bg-white border-2 border-[#d4af37] text-yellow-700 font-extrabold py-3 rounded shadow-sm active:bg-yellow-50 transition-all text-xs tracking-widest select-none touch-manipulation flex items-center justify-center gap-2"
+                className="flex-[1.5] bg-white border-2 border-[#d4af37] text-yellow-700 font-extrabold py-3 rounded shadow-sm active:bg-yellow-50 transition-all text-xs tracking-widest select-none touch-manipulation flex items-center justify-center gap-2"
               >
                 <span className="text-base">🏆</span> RANK
               </button>
@@ -716,8 +878,12 @@ export default function GameBoard() {
               <div className="mt-1 bg-white border border-[#d4af37] text-yellow-600 text-[8px] font-black px-2 py-1 rounded shadow-sm tracking-widest uppercase">View Top 10</div>
             </div>
           </div>
-            <div className="flex flex-col gap-3 w-full mt-2">
-              <button onPointerDown={() => startNewGame('normal', true)} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
+            <div className="flex flex-col gap-3 w-full mt-1">
+              <div className="flex gap-2 w-full">
+                <button onPointerDown={() => setShowHowToPlay(true)} className="flex-1 bg-white border-2 border-pink-300 text-pink-600 font-extrabold py-2 rounded shadow-sm active:bg-pink-50 transition-all text-[10px] tracking-widest select-none touch-manipulation flex items-center justify-center gap-2 opacity-90"><span className="text-base text-pink-400">❓</span> HOW TO PLAY</button>
+                <button onPointerDown={handleShareGame} className="flex-1 bg-white border-2 border-pink-300 text-pink-600 font-extrabold py-2 rounded shadow-sm active:bg-pink-50 transition-all text-[10px] tracking-widest select-none touch-manipulation flex items-center justify-center gap-2 opacity-90"><span className="text-base text-pink-400">🔗</span> SHARE GAME</button>
+              </div>
+              <button onPointerDown={() => startNewGame('normal', true)} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-1">DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
               <button onPointerDown={() => startNewGame('easy')} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m 30s + Hint)</span></button>
               <button onPointerDown={() => startNewGame('normal')} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY NORMAL <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
               <button onPointerDown={() => startNewGame('hard')} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(1m 30s + 1.5x Pts)</span></button>
@@ -811,6 +977,14 @@ export default function GameBoard() {
           >
             {isMuted ? "🔇" : "🔊"}
           </button>
+
+          {/* How to play top right */}
+          <button 
+            onPointerDown={() => setShowHowToPlay(true)}
+            className="absolute top-12 right-4 text-pink-500 active:text-pink-700 text-sm font-bold bg-pink-100 w-8 h-8 flex items-center justify-center rounded-full border border-pink-200 shadow-sm touch-manipulation"
+          >
+            ❓
+          </button>
           
           <div className="flex flex-col items-center mt-2 relative">
             <span className="text-pink-900 text-xs font-bold mb-1">Score</span>
@@ -822,19 +996,24 @@ export default function GameBoard() {
                 flex items-center justify-center w-10 h-10 rounded border-2 shadow-sm transition-all duration-300
                 ${comboCount > 0 
                   ? 'bg-orange-100 border-orange-500 text-orange-600 animate-heartbeat' 
-                  : 'bg-gray-100 border-gray-300 text-gray-400 opacity-60'}
+                  : (accuracyStreak >= 5 
+                    ? 'bg-blue-100 border-blue-500 text-blue-600 animate-pulse'
+                    : 'bg-gray-100 border-gray-300 text-gray-400 opacity-60')}
               `}>
-                <span className="font-black text-lg italic">1.5x</span>
+                <span className="font-black text-sm italic">{comboCount > 0 ? '1.5x' : (accuracyStreak >= 5 ? `${accuracyStreak}🔥` : '1.0x')}</span>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-col items-center pb-2">
-            <div className="bg-white border border-pink-200 shadow-sm rounded-md px-3 py-1 mt-2">
+          <div className="flex flex-col items-center pb-2 relative">
+            {isTimeFrozen && (
+              <div className="absolute -top-4 bg-blue-100 text-blue-700 font-bold px-2 py-1 text-[10px] rounded-full animate-bounce shadow-sm border border-blue-300">FROZEN</div>
+            )}
+            <div className={`bg-white border border-pink-200 shadow-sm rounded-md px-3 py-1 mt-2 transform transition-all ${isTimeFrozen ? 'scale-110 shadow-[0_0_15px_rgba(59,130,246,0.5)] border-blue-400' : ''}`}>
               <span 
                 className="font-mono font-bold text-3xl tracking-widest animate-[pulse_1.5s_ease-in-out_infinite]"
                 style={{
-                  color: `hsl(${Math.floor(Math.max(0, Math.min(1, timeLeft / totalTimeLimit)) * 120)}, 90%, 45%)`,
+                  color: isTimeFrozen ? '#3b82f6' : `hsl(${Math.floor(Math.max(0, Math.min(1, timeLeft / totalTimeLimit)) * 120)}, 90%, 45%)`,
                   transition: 'color 1s linear'
                 }}
               >

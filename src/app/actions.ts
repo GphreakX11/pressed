@@ -7,6 +7,7 @@ export type LeaderboardEntry = {
   name: string;
   score: number;
   date: number;
+  difficulty?: string;
 };
 
 const LEADERBOARD_ALLTIME_KEY = 'apex_global_alltime';
@@ -29,12 +30,14 @@ export async function getTopScores(type: 'daily' | 'alltime' = 'alltime'): Promi
       const parts = memberStr.split(':');
       const name = parts[0] || 'Unknown';
       const date = parts.length > 1 ? parseInt(parts[1], 10) : Date.now();
+      const difficulty = parts.length > 2 ? parts[2] : 'N';
       
       entries.push({
         rank: entries.length + 1,
         name,
         score,
-        date
+        date,
+        difficulty
       });
     }
     
@@ -45,10 +48,11 @@ export async function getTopScores(type: 'daily' | 'alltime' = 'alltime'): Promi
   }
 }
 
-export async function submitScore(name: string, score: number) {
+export async function submitScore(name: string, score: number, difficultyLabel: string = 'N') {
   try {
     const cleanName = name.trim().substring(0, 12) || 'ANONYMOUS';
-    const memberId = `${cleanName}:${Date.now()}`;
+    const safeName = cleanName.replace(/:/g, ''); // Ensure no colons in member name
+    const memberId = `${safeName}:${Date.now()}:${difficultyLabel}`;
     
     // Submit to All-Time
     await kv.zadd(LEADERBOARD_ALLTIME_KEY, { score, member: memberId });

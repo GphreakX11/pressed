@@ -59,7 +59,7 @@ export default function GameBoard() {
 
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const bgmRef = useRef<HTMLAudioElement | null>(null);
+  const lobbyMusicRef = useRef<HTMLAudioElement | null>(null);
   const baseDingRef = useRef<HTMLAudioElement | null>(null);
   const bonusChimeRef = useRef<HTMLAudioElement | null>(null);
   const streakJackpotRef = useRef<HTMLAudioElement | null>(null);
@@ -70,9 +70,9 @@ export default function GameBoard() {
     const initialMute = savedMute === 'true';
     if (savedMute) setIsMuted(initialMute);
 
-    bgmRef.current = new Audio('/music.mp3');
-    bgmRef.current.loop = true;
-    bgmRef.current.volume = 0.2;
+    lobbyMusicRef.current = new Audio('/music.mp3');
+    lobbyMusicRef.current.loop = true;
+    lobbyMusicRef.current.volume = 0.2;
 
     baseDingRef.current = new Audio('/base_ding.mp3');
     baseDingRef.current.volume = 0.6;
@@ -98,8 +98,8 @@ export default function GameBoard() {
       }
     });
 
-    if (bgmRef.current && !isMuted) {
-      bgmRef.current.play().catch(error => console.log('BGM Play Error:', error));
+    if (lobbyMusicRef.current && !isMuted) {
+      lobbyMusicRef.current.play().catch(error => console.log('Lobby Music Play Error:', error));
     }
   }, [isAudioEnabled, isMuted]);
 
@@ -107,9 +107,9 @@ export default function GameBoard() {
     setIsMuted(prev => {
       const next = !prev;
       localStorage.setItem('apexMutePreference', next.toString());
-      if (bgmRef.current) {
-        if (next) bgmRef.current.pause();
-        else if (isAudioEnabled && showWelcome) bgmRef.current.play().catch(e => console.log('BGM Play Error:', e));
+      if (lobbyMusicRef.current) {
+        if (next) lobbyMusicRef.current.pause();
+        else if (isAudioEnabled && showWelcome) lobbyMusicRef.current.play().catch(e => console.log('Lobby Music Play Error:', e));
       }
       return next;
     });
@@ -133,6 +133,18 @@ export default function GameBoard() {
       console.warn(`Audio ${type} failed to play:`, err);
     }
   }, [isAudioEnabled, isMuted]);
+
+  // Room-Based Music Logic
+  useEffect(() => {
+    if (!isAudioEnabled || !lobbyMusicRef.current) return;
+    
+    if (showWelcome) {
+      if (!isMuted) lobbyMusicRef.current.play().catch(e => console.log('Lobby Music Play Error:', e));
+    } else {
+      lobbyMusicRef.current.pause();
+      lobbyMusicRef.current.currentTime = 0;
+    }
+  }, [showWelcome, isAudioEnabled, isMuted]);
 
   // Speed Combo Indicator Hook strictly controls 5-second active window
   useEffect(() => {
@@ -289,12 +301,7 @@ export default function GameBoard() {
     setJuiceToast(null);
     setToastMessage(null);
     
-    // The Cut-off: Stop lobby music when game starts
-    if (bgmRef.current) {
-      bgmRef.current.pause();
-      bgmRef.current.currentTime = 0;
-    }
-    
+    // The Cut-off: Handled elegantly by the Room-Based Music Logic Effect
     // Safety fallback: if they bypassed the gate somehow, init audio on first game start
     if (!isAudioEnabled) initializeAudio();
   }, [difficulty, isAudioEnabled, initializeAudio]);
@@ -679,8 +686,15 @@ export default function GameBoard() {
             <p className="text-[10px] text-pink-400 font-bold uppercase tracking-widest mt-1">Enables Audio & Gameplay</p>
           </div>
         ) : (
-          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-4 shadow-2xl z-10 animate-[slideUp_0.2s_ease-out]">
-            <div className="flex flex-col items-center mb-0">
+          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-4 shadow-2xl z-10 animate-[slideUp_0.2s_ease-out] relative">
+            <button 
+              onPointerDown={toggleMute} 
+              className="absolute top-4 right-4 text-2xl active:scale-90 transition-transform touch-manipulation z-50 bg-pink-50 w-10 h-10 rounded-full flex items-center justify-center border border-pink-200 shadow-sm"
+              aria-label={isMuted ? "Unmute Sound" : "Mute Sound"}
+            >
+              {isMuted ? '🔇' : '🔊'}
+            </button>
+            <div className="flex flex-col items-center mb-0 mt-2">
               <img src="/apex-branding-full.png" alt="Apex Anagrams" className="w-[90%] max-w-[240px] drop-shadow-md mb-2" />
             </div>
             

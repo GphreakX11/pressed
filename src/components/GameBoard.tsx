@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Puzzle, getRandomPuzzle } from "@/lib/puzzles";
 import { PlayerStats, loadStats, recordGameResult } from "@/lib/stats";
+import Sparkles from './Sparkles';
 
 // Retro font via Next/Google fonts is possible but for simplicity and guaranteeing zero-config, we'll use system fonts that look digital
 // We'll rely on Tailwind utility classes and some custom inline styles if needed for the digital LED look.
@@ -89,6 +90,10 @@ export default function GameBoard() {
       return s;
     });
   }, []);
+
+  const totalTimeLimit = useMemo(() => {
+    return difficulty === 'easy' ? 210 : difficulty === 'hard' ? 90 : 150;
+  }, [difficulty]);
 
   const startNewGame = useCallback((diff?: 'easy'|'normal'|'hard') => {
     const activeDiff = diff || difficulty;
@@ -331,27 +336,27 @@ export default function GameBoard() {
     const winPct = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
     const avgScore = stats.gamesPlayed > 0 ? Math.round(stats.totalScore / stats.gamesPlayed) : 0;
     return (
-      <div className="fixed inset-0 bg-[#0d148c] flex flex-col items-center justify-center font-sans p-4">
-        <div className="bg-[#050942] p-6 sm:p-8 rounded-2xl border-2 border-white/20 w-full max-w-sm flex flex-col items-center gap-6 shadow-2xl">
-          <h1 className="text-4xl font-extrabold text-[#e6de22] tracking-widest text-center drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)]">PRESSED</h1>
-          <div className="w-full bg-[#00000050] rounded-xl p-4 flex gap-[2px] justify-between border border-white/10 shadow-inner">
+      <div className="fixed inset-0 bg-pink-50 flex flex-col items-center justify-center font-sans p-4">
+        <div className="bg-white p-6 sm:p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-6 shadow-2xl">
+          <h1 className="text-4xl font-extrabold text-[#d4af37] tracking-widest text-center drop-shadow-[0_2px_4px_rgba(212,175,55,0.4)]">PRESSED</h1>
+          <div className="w-full bg-pink-50 rounded-xl p-4 flex gap-[2px] justify-between border border-pink-100 shadow-inner">
             <div className="flex flex-col items-center flex-1">
-              <span className="text-white/60 text-[10px] font-bold uppercase tracking-wider mb-1">Streak</span>
-              <span className="text-white text-3xl font-mono relative">{stats.currentStreak} <span className="absolute -right-5 top-0 text-orange-500 text-sm animate-pulse">🔥</span></span>
+              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Streak</span>
+              <span className="text-pink-900 text-3xl font-mono relative">{stats.currentStreak} <span className="absolute -right-5 top-0 text-orange-400 text-sm animate-pulse">🔥</span></span>
             </div>
-            <div className="flex flex-col items-center flex-1 border-l border-white/10">
-              <span className="text-white/60 text-[10px] font-bold uppercase tracking-wider mb-1">Win %</span>
-              <span className="text-white text-3xl font-mono">{winPct}</span>
+            <div className="flex flex-col items-center flex-1 border-l border-pink-200">
+              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Win %</span>
+              <span className="text-pink-900 text-3xl font-mono">{winPct}</span>
             </div>
-            <div className="flex flex-col items-center flex-1 border-l border-white/10">
-              <span className="text-white/60 text-[10px] font-bold uppercase tracking-wider mb-1">Avg Score</span>
-              <span className="text-white text-3xl font-mono">{avgScore}</span>
+            <div className="flex flex-col items-center flex-1 border-l border-pink-200">
+              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Avg Score</span>
+              <span className="text-pink-900 text-3xl font-mono">{avgScore}</span>
             </div>
           </div>
           <div className="flex flex-col gap-3 w-full mt-2">
-            <button onPointerDown={() => startNewGame('easy')} className="bg-green-600 border-b-4 border-r-2 border-green-800 font-extrabold text-white py-3 rounded active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY EASY <span className="text-green-200 block text-xs tracking-normal mt-1 opacity-80">(3m 30s + Hint)</span></button>
-            <button onPointerDown={() => startNewGame('normal')} className="bg-blue-600 border-b-4 border-r-2 border-blue-800 font-extrabold text-white py-3 rounded active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY NORMAL <span className="text-blue-200 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
-            <button onPointerDown={() => startNewGame('hard')} className="bg-red-600 border-b-4 border-r-2 border-red-800 font-extrabold text-white py-3 rounded active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY HARD <span className="text-red-200 block text-xs tracking-normal mt-1 opacity-80">(1m 30s + 1.5x Pts)</span></button>
+            <button onPointerDown={() => startNewGame('easy')} className="bg-green-500 border-b-4 border-r-2 border-green-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY EASY <span className="text-green-100 block text-xs tracking-normal mt-1 opacity-80">(3m 30s + Hint)</span></button>
+            <button onPointerDown={() => startNewGame('normal')} className="bg-blue-500 border-b-4 border-r-2 border-blue-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY NORMAL <span className="text-blue-100 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
+            <button onPointerDown={() => startNewGame('hard')} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(1m 30s + 1.5x Pts)</span></button>
           </div>
         </div>
       </div>
@@ -361,23 +366,24 @@ export default function GameBoard() {
   if (!puzzle) return null;
 
   return (
-    <div className="fixed inset-0 bg-[#0d148c] flex flex-col items-center select-none font-sans overflow-hidden">
+    <div className="fixed inset-0 bg-pink-50 flex flex-col items-center select-none font-sans overflow-hidden">
+      <Sparkles />
       
       {showQuitConfirm && (
-        <div className="absolute inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
-          <div className="bg-[#050942] border-2 border-red-500/50 p-6 rounded-xl flex flex-col items-center text-center max-w-sm shadow-[0_0_30px_rgba(239,68,68,0.3)] animate-[slideUp_0.2s_ease-out]">
-            <h2 className="text-2xl font-bold text-red-500 mb-2 tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">ABANDON GAME?</h2>
-            <p className="text-white/80 mb-6 text-sm font-semibold">Quitting now will count as a loss and reset your current streak. Are you sure?</p>
+        <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white border border-pink-300 p-6 rounded-xl flex flex-col items-center text-center max-w-sm shadow-[0_10px_40px_rgba(219,39,119,0.15)] animate-[slideUp_0.2s_ease-out]">
+            <h2 className="text-2xl font-bold text-pink-600 mb-2 tracking-widest">ABANDON GAME?</h2>
+            <p className="text-pink-800 mb-6 text-sm font-medium">Quitting now will count as a loss and reset your current streak. Are you sure?</p>
             <div className="flex gap-4 w-full">
               <button 
                 onPointerDown={() => setShowQuitConfirm(false)}
-                className="flex-1 bg-gray-600 border-b-4 border-gray-800 text-white font-bold py-3 rounded active:border-0 active:translate-y-[4px] transition-all touch-manipulation text-sm tracking-widest"
+                className="flex-1 bg-gray-400 border-b-4 border-gray-500 text-white font-bold py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] transition-all touch-manipulation text-sm tracking-widest"
               >
                 CANCEL
               </button>
               <button 
                 onPointerDown={handleQuitGame}
-                className="flex-1 bg-red-600 border-b-4 border-red-800 text-white font-bold py-3 rounded active:border-0 active:translate-y-[4px] transition-all touch-manipulation text-sm tracking-widest"
+                className="flex-1 bg-red-500 border-b-4 border-red-700 text-white font-bold py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] transition-all touch-manipulation text-sm tracking-widest"
               >
                 QUIT
               </button>
@@ -393,30 +399,36 @@ export default function GameBoard() {
           {/* Escape Hatch Button */}
           <button 
             onPointerDown={() => setShowQuitConfirm(true)}
-            className="absolute top-2 left-4 text-white/50 active:text-white text-[10px] font-bold tracking-widest bg-white/10 px-2 py-1 flex items-center gap-1 rounded border border-white/20 touch-manipulation"
+            className="absolute top-2 left-4 text-pink-500 active:text-pink-700 text-[10px] font-bold tracking-widest bg-pink-100 px-2 py-1 flex items-center gap-1 rounded border border-pink-200 shadow-sm touch-manipulation"
           >
-            <span className="text-red-400">✖</span> ABANDON
+            <span className="text-red-400 font-extrabold">✖</span> ABANDON
           </button>
           
           <div className="flex flex-col items-center mt-2">
-            <span className="text-white text-xs font-bold mb-1">Score</span>
-            <div className="bg-black border border-gray-600 px-2 py-1 min-w-[60px] text-right">
-              <span className="text-red-600 font-mono text-xl tracking-widest">{score.toString()}</span>
+            <span className="text-pink-900 text-xs font-bold mb-1">Score</span>
+            <div className="bg-white border border-pink-200 shadow-sm rounded px-2 py-1 min-w-[60px] text-right">
+              <span className="text-[#d4af37] font-mono font-bold text-xl tracking-widest">{score.toString()}</span>
             </div>
           </div>
 
           <div className="flex flex-col items-center pb-2">
-            <div className="bg-black border-2 border-white/30 rounded-md px-3 py-1 mt-2">
-              <span className={`font-mono text-3xl tracking-widest ${timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-orange-500'}`}>
+            <div className="bg-white border border-pink-200 shadow-sm rounded-md px-3 py-1 mt-2">
+              <span 
+                className="font-mono font-bold text-3xl tracking-widest animate-[pulse_1.5s_ease-in-out_infinite]"
+                style={{
+                  color: `hsl(${Math.floor(Math.max(0, Math.min(1, timeLeft / totalTimeLimit)) * 120)}, 90%, 45%)`,
+                  transition: 'color 1s linear'
+                }}
+              >
                 {formatTime(timeLeft)}
               </span>
             </div>
           </div>
 
           <div className="flex flex-col items-center">
-            <span className="text-white text-xs font-bold mb-1">High Score</span>
-            <div className="bg-black border border-gray-600 px-2 py-1 min-w-[60px] text-right">
-              <span className="text-red-600 font-mono text-xl tracking-widest">{highScore.toString()}</span>
+            <span className="text-pink-900 text-xs font-bold mb-1">High Score</span>
+            <div className="bg-white border border-pink-200 shadow-sm rounded px-2 py-1 min-w-[60px] text-right">
+              <span className="text-[#d4af37] font-mono font-bold text-xl tracking-widest">{highScore.toString()}</span>
             </div>
           </div>
           
@@ -424,7 +436,7 @@ export default function GameBoard() {
 
         {/* Toast Message */}
         {toastMessage && (
-          <div className="absolute top-24 transform -translate-x-1/2 left-1/2 z-40 bg-black/80 text-white font-bold py-2 px-4 rounded-full border border-white/20 animate-[slideUp_0.2s_ease-out] shadow-lg pointer-events-none">
+          <div className="absolute top-24 transform -translate-x-1/2 left-1/2 z-40 bg-white/90 text-pink-900 font-bold py-2 px-4 rounded-full border border-pink-300 animate-[slideUp_0.2s_ease-out] shadow-xl pointer-events-none">
             {toastMessage}
           </div>
         )}
@@ -432,8 +444,8 @@ export default function GameBoard() {
         {/* Bonus Words Indicator */}
         {foundBonusWords.length > 0 && (
           <div className="w-full px-4 mb-2">
-            <div className="text-[10px] sm:text-xs text-green-400 font-bold bg-green-900/30 py-2 px-3 rounded border border-green-500/30 break-words leading-relaxed">
-              <span className="text-white/60 mr-1 uppercase">Bonus:</span> 
+            <div className="text-[10px] sm:text-xs text-[#d4af37] font-bold bg-white/60 py-2 px-3 rounded border border-pink-200 shadow-sm break-words leading-relaxed">
+              <span className="text-pink-600 mr-1 uppercase">Bonus:</span> 
               {foundBonusWords.map(w => w.toUpperCase()).join(", ")}
             </div>
           </div>
@@ -457,12 +469,12 @@ export default function GameBoard() {
                           key={i} 
                           className={`w-[16px] h-[20px] sm:w-[20px] sm:h-[24px] md:w-[24px] md:h-[28px] border flex items-center justify-center text-[10px] sm:text-[11px] font-bold shadow-sm ${
                             isFound 
-                              ? 'bg-white border-gray-300 text-black' 
+                              ? 'bg-white border-pink-300 text-pink-900' 
                               : isMissed
-                              ? 'bg-red-900 border-red-700 text-red-200'
+                              ? 'bg-pink-200 border-pink-400 text-pink-700'
                               : isEasyHint && i === 0
-                              ? 'bg-blue-900 border-blue-500 text-blue-200'
-                              : 'bg-white border-gray-300 text-transparent'
+                              ? 'bg-yellow-50 border-yellow-300 text-yellow-600'
+                              : 'bg-white border-pink-200 text-transparent'
                           }`}
                         >
                           {isFound || isMissed || (isEasyHint && i === 0) ? char.toUpperCase() : ''}
@@ -477,32 +489,32 @@ export default function GameBoard() {
         </div>
 
         {/* Bottom Input Area */}
-         <div className="w-full mt-auto pb-8 pt-4 px-4 flex flex-col items-center gap-6 border-t border-white/10 select-none touch-none bg-[#0d148c]">
+         <div className="w-full mt-auto pb-8 pt-4 px-4 flex flex-col items-center gap-6 border-t border-pink-200 select-none touch-none bg-pink-50">
           
           {gameOver ? (
-             <div className="w-full flex flex-col items-center gap-4 bg-black/50 p-6 rounded-xl border border-white/20 shadow-2xl animate-[slideUp_0.3s_ease-out]">
+             <div className="w-full flex flex-col items-center gap-4 bg-white/90 p-6 rounded-xl border border-pink-300 shadow-2xl animate-[slideUp_0.3s_ease-out]">
                 {foundWords.length === puzzle.validWords.length ? (
                   <>
-                    <h2 className="text-3xl font-extrabold text-green-400 tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">BOARD CLEARED!</h2>
-                    <span className="text-white text-sm font-bold opacity-80">100% Mastery Achieved</span>
+                    <h2 className="text-3xl font-extrabold text-[#d4af37] tracking-widest drop-shadow-[0_2px_4px_rgba(212,175,55,0.4)]">BOARD CLEARED!</h2>
+                    <span className="text-pink-900 text-sm font-bold opacity-80">100% Mastery Achieved</span>
                   </>
                 ) : (
                   <>
-                    <h2 className="text-3xl font-bold text-orange-500 tracking-widest drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">TIME'S UP</h2>
-                    <span className="text-white text-sm font-bold opacity-80">You missed {puzzle.validWords.length - foundWords.length} words</span>
+                    <h2 className="text-3xl font-bold text-pink-500 tracking-widest drop-shadow-[0_2px_4px_rgba(236,72,153,0.3)]">TIME'S UP</h2>
+                    <span className="text-pink-900 text-sm font-bold opacity-80">You missed {puzzle.validWords.length - foundWords.length} words</span>
                   </>
                 )}
                 
                 <div className="flex gap-4 w-full mt-2">
                   <button 
                     onPointerDown={() => setShowWelcome(true)}
-                    className="flex-1 bg-gray-600 border-b-4 border-r-2 border-gray-800 text-white font-extrabold py-3 px-4 rounded shadow-md active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all"
+                    className="flex-1 bg-gray-400 border-b-4 border-r-2 border-gray-500 text-white font-extrabold py-3 px-4 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all"
                   >
                     MENU
                   </button>
                   <button 
                     onPointerDown={() => startNewGame()}
-                    className="flex-[2] bg-[#e6de22] border-b-4 border-r-2 border-yellow-700 text-black font-extrabold py-3 px-4 rounded shadow-md active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all"
+                    className="flex-[2] bg-[#d4af37] border-b-4 border-r-2 border-yellow-700 text-white font-extrabold py-3 px-4 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all"
                   >
                     PLAY AGAIN
                   </button>
@@ -530,12 +542,12 @@ export default function GameBoard() {
                       key={`input-${i}`} 
                       className={`w-12 h-12 sm:w-14 sm:h-14 border-2 flex items-center justify-center text-3xl font-bold rounded-sm select-none touch-none transition-all duration-75 relative ${
                         isActiveCell && !isSuccessActive
-                          ? 'bg-white text-[#4a1c22] border-gray-300 shadow-md' 
+                          ? 'bg-pink-100 text-pink-900 border-pink-400 shadow-md' 
                           : isActiveCell && isSuccessActive && successAnim.type === 'base'
                           ? 'bg-green-100 border-green-400 text-green-900 ring-4 ring-green-500 shadow-[0_0_15px_rgba(34,197,94,0.6)] scale-105'
                           : isActiveCell && isSuccessActive && successAnim.type === 'bonus'
                           ? 'bg-yellow-100 border-yellow-400 text-yellow-900 ring-4 ring-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.6)] scale-105'
-                          : 'bg-white border-gray-300 text-transparent'
+                          : 'bg-white border-pink-300 text-transparent'
                       }`}
                     >
                       {charToShow}
@@ -551,7 +563,7 @@ export default function GameBoard() {
                     <button
                       key={`avail-${i}-${char}`}
                       onPointerDown={(e) => handleLetterClick(char, i, e)}
-                      className="w-[52px] h-[52px] sm:w-[60px] sm:h-[60px] bg-[#e6e6e6] border-b-4 border-r-2 border-[#b0b0b0] text-[#4a1c22] flex items-center justify-center text-3xl sm:text-4xl font-extrabold rounded shadow-md active:translate-y-[4px] active:border-b-0 active:border-r-0 active:mt-[4px] touch-manipulation select-none"
+                      className="w-[52px] h-[52px] sm:w-[60px] sm:h-[60px] bg-white border-b-4 border-r-2 border-pink-300 text-pink-900 flex items-center justify-center text-3xl sm:text-4xl font-extrabold rounded shadow-md active:translate-y-[4px] active:border-b-0 active:border-r-0 active:mt-[4px] touch-manipulation select-none"
                     >
                       {char}
                     </button>
@@ -565,19 +577,19 @@ export default function GameBoard() {
               <div className="flex justify-center gap-2 sm:gap-4 w-full mt-4 h-12">
                 <button 
                   onPointerDown={handleMix}
-                  className="flex-1 bg-[#d8db14] border-2 border-black text-black font-extrabold rounded shadow-[0_3px_0_rgba(0,0,0,0.5)] active:translate-y-[3px] active:shadow-none text-base sm:text-lg tracking-wider touch-none select-none"
+                  className="flex-1 bg-[#d4af37] border-b-4 border-r-2 border-yellow-700 text-white font-extrabold rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-base sm:text-lg tracking-wider touch-none select-none"
                 >
                   MIX
                 </button>
                 <button 
                   onPointerDown={handleEnter}
-                  className="flex-1 bg-[#d8db14] border-2 border-black text-black font-extrabold rounded shadow-[0_3px_0_rgba(0,0,0,0.5)] active:translate-y-[3px] active:shadow-none text-base sm:text-lg tracking-wider touch-none select-none"
+                  className="flex-1 bg-[#d4af37] border-b-4 border-r-2 border-yellow-700 text-white font-extrabold rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-base sm:text-lg tracking-wider touch-none select-none"
                 >
                   ENTER
                 </button>
                 <button 
                   onPointerDown={handleUndo}
-                  className="flex-1 bg-[#d8db14] border-2 border-black text-black font-extrabold rounded shadow-[0_3px_0_rgba(0,0,0,0.5)] active:translate-y-[3px] active:shadow-none text-base sm:text-lg tracking-wider touch-none select-none"
+                  className="flex-1 bg-[#d4af37] border-b-4 border-r-2 border-yellow-700 text-white font-extrabold rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-base sm:text-lg tracking-wider touch-none select-none"
                 >
                   UNDO
                 </button>

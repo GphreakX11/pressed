@@ -523,9 +523,8 @@ export default function GameBoard() {
         
         {!isAudioEnabled ? (
           <div className="bg-white p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-4 shadow-2xl z-10 text-center animate-[slideUp_0.3s_ease-out]">
-            <div className="flex flex-col items-center mb-2">
-              <img src="/apex-branding-full.png" alt="Apex Anagrams" className="w-[100%] max-w-[280px] drop-shadow-lg mb-1" />
-              <h1 className="text-3xl font-black text-[#8B0000] tracking-tighter uppercase italic">Apex Anagrams</h1>
+            <div className="flex flex-col items-center mb-0">
+              <img src="/apex-branding-full.png" alt="Apex Anagrams" className="w-[100%] max-w-[280px] drop-shadow-lg mb-2" />
             </div>
             
             <div className="flex flex-col gap-2 my-2">
@@ -550,9 +549,8 @@ export default function GameBoard() {
           </div>
         ) : (
           <div className="bg-white p-6 sm:p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-4 shadow-2xl z-10 animate-[slideUp_0.2s_ease-out]">
-            <div className="flex flex-col items-center mb-2">
-              <img src="/apex-branding-full.png" alt="Apex Anagrams" className="w-[90%] max-w-[240px] drop-shadow-md mb-1" />
-              <h1 className="text-2xl font-black text-[#8B0000] tracking-tighter uppercase italic">Apex Anagrams</h1>
+            <div className="flex flex-col items-center mb-0">
+              <img src="/apex-branding-full.png" alt="Apex Anagrams" className="w-[90%] max-w-[240px] drop-shadow-md mb-2" />
             </div>
             
             <div className="w-full flex flex-col items-center border border-pink-200 bg-pink-50 rounded-lg p-3 shadow-inner mb-2">
@@ -606,6 +604,11 @@ export default function GameBoard() {
     <div id="game-container" className="fixed inset-0 bg-pink-50 flex flex-col items-center select-none font-sans overflow-hidden">
       <Sparkles />
       
+      {/* Subtle In-Game HUD Branding */}
+      <div className="absolute top-4 left-4 z-50 opacity-70 pointer-events-none">
+        <img src="/icon.png" alt="Apex" className="w-8 h-8 md:w-10 md:h-10 drop-shadow-sm" />
+      </div>
+
       {/* Dynamic Jackpot Flash Background */}
       {jackpotBlast?.active && (
          <div className="absolute inset-0 z-[100] pointer-events-none animate-bgFlash" />

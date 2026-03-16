@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import { Puzzle, getRandomPuzzle, getDailyPuzzle } from "@/lib/puzzles";
+import { Puzzle, Difficulty, getRandomPuzzle, getDailyPuzzle } from "@/lib/puzzles";
 import { PlayerStats, loadStats, recordGameResult } from "@/lib/stats";
 import { getTopScores, submitScore, type LeaderboardEntry } from '@/app/actions';
 import Sparkles from './Sparkles';
@@ -19,7 +19,7 @@ export default function GameBoard() {
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [foundBonusWords, setFoundBonusWords] = useState<string[]>([]);
   
-  const [difficulty, setDifficulty] = useState<'easy'|'normal'|'hard'>('normal');
+  const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [isDailyMode, setIsDailyMode] = useState(false);
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
@@ -316,10 +316,11 @@ export default function GameBoard() {
     setIsSubmittingScore(true);
     setHasSubmissionError(false);
     
-    let diffLabel = 'N';
+    let diffLabel: string = 'N';
     if (isDailyMode) diffLabel = 'D';
     else if (difficulty === 'easy') diffLabel = 'E';
     else if (difficulty === 'hard') diffLabel = 'H';
+    // Normal stays 'N'
 
     const payload = JSON.stringify({ name: playerName, score, difficulty: diffLabel, isDaily: isDailyMode });
     localStorage.setItem('pending_score', payload);
@@ -392,19 +393,22 @@ export default function GameBoard() {
   };
 
   const totalTimeLimit = useMemo(() => {
-    return difficulty === 'easy' ? 210 : difficulty === 'hard' ? 90 : 150;
+    // Easy: 3:00, Normal: 2:30, Hard: 2:00
+    return difficulty === 'easy' ? 180 : difficulty === 'hard' ? 120 : 150;
   }, [difficulty]);
 
-  const startNewGame = useCallback((diff?: 'easy'|'normal'|'hard', isDaily?: boolean) => {
+  const startNewGame = useCallback((diff?: Difficulty, isDaily?: boolean) => {
     initWebAudio();
     const activeDiff = diff || difficulty;
     setDifficulty(activeDiff);
     setIsDailyMode(!!isDaily);
     
-    // Time based on difficulty
-    const timeLimit = activeDiff === 'easy' ? 210 : activeDiff === 'hard' ? 90 : 150;
+    // Easy: 3:00 | Normal: 2:30 | Hard: 2:00
+    const timeLimit = activeDiff === 'easy' ? 180 : activeDiff === 'hard' ? 120 : 150;
 
-    const newPuzzle = isDaily ? getDailyPuzzle(new Date().toISOString().split('T')[0]) : getRandomPuzzle();
+    const newPuzzle = isDaily
+      ? getDailyPuzzle(new Date().toISOString().split('T')[0])
+      : getRandomPuzzle(activeDiff);
     setPuzzle(newPuzzle);
     setTimeLeft(timeLimit);
     setEndTime(Date.now() + timeLimit * 1000);
@@ -602,10 +606,14 @@ export default function GameBoard() {
         setComboCount(newCount);
 
         const isOverdrive = accuracyStreak >= 10;
-        const difficultyMultiplier = difficulty === 'hard' ? 1.5 : 1;
+        // Difficulty multiplier: Easy 1.0x, Normal 1.2x, Hard 1.5x
+        const difficultyMultiplier = difficulty === 'hard' ? 1.5 : difficulty === 'normal' ? 1.2 : 1.0;
         const diffMult = isOverdrive ? 1 : difficultyMultiplier;
         const comboMult = isOverdrive ? 3.0 : (comboEarned ? 1.5 : 1);
         const pts = Math.floor(word.length * 10 * diffMult * comboMult);
+
+        // Difficulty factor used for bonus-reveal points
+        const diffFactor = difficultyMultiplier;
 
         if (isOverdrive) {
           const toastId = Date.now();
@@ -648,7 +656,24 @@ export default function GameBoard() {
         setAccuracyStreak(prev => {
           const next = prev + 1;
           if (next === 5) {
-            // Clarity Bonus Cinematic
+            // 5-Word Streak → Time Freeze (Cryo-Stasis)
+            setIsTimeFrozen(true);
+            setSlamOverlay({ text: 'CRYO-STASIS: 10S FREEZE', type: 'ice' });
+            setTimeout(() => setSlamOverlay(null), 2000);
+
+            setTimeout(() => {
+              playSound('jackpot', 5);
+            }, 400);
+
+            // Freeze for exactly 10 seconds, then refund the time into endTime
+            setTimeout(() => {
+              if (!gameOverRef.current) {
+                setEndTime(e => e ? e + 10000 : e);
+                setIsTimeFrozen(false);
+              }
+            }, 10000);
+          } else if (next === 10) {
+            // 10-Word Streak → Clarity Bonus (reveal longest unfound word)
             setSlamOverlay({ text: 'CLARITY PROTOCOL', type: 'gold' });
             setTimeout(() => setSlamOverlay(null), 2000);
 
@@ -658,7 +683,7 @@ export default function GameBoard() {
               setFoundWords(fw => {
                 if (fw.includes(longest)) return fw;
                 const updated = [...fw, longest];
-                
+
                 // Automatically win if the bonus fills the last word
                 if (updated.length === puzzle.validWords.length) {
                   setGameOver(true);
@@ -669,29 +694,12 @@ export default function GameBoard() {
                 }
                 return updated;
               });
-              const bonusPts = Math.floor(longest.length * 10 * (difficulty === 'hard' ? 1.5 : 1));
+              const bonusPts = Math.floor(longest.length * 10 * diffFactor);
               setScore(s => s + bonusPts);
               setTimeout(() => {
                 playSound('coin');
               }, 400);
             }
-          } else if (next === 10) {
-            // Time Freeze Cinematic (10s Upgrade)
-            setIsTimeFrozen(true);
-            setSlamOverlay({ text: 'CRYO-STASIS: 10S FREEZE', type: 'ice' });
-            setTimeout(() => setSlamOverlay(null), 2000);
-
-            setTimeout(() => {
-              playSound('jackpot', 5);
-            }, 400);
-            
-            // Wait exactly 10 seconds, then definitively add 10000ms to the endTime to "refund" the frozen time.
-            setTimeout(() => {
-              if (!gameOverRef.current) {
-                setEndTime(e => e ? e + 10000 : e);
-                setIsTimeFrozen(false);
-              }
-            }, 10000);
           }
           return next;
         });
@@ -835,7 +843,7 @@ export default function GameBoard() {
               <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-4 text-sm text-pink-900 font-medium">
                 <div className="bg-white p-3 rounded-xl border border-pink-200 shadow-sm">
                   <span className="font-extrabold text-pink-700 block mb-1">🎯 The Goal:</span>
-                  Find as many anagrams as possible before the 3:00 timer hits zero. (1.5x points on Hard!)
+                  Find as many anagrams as possible before time runs out. Easy: 3:00 (1.0x pts). Normal: 2:30 (1.2x pts). Hard: 2:00 (1.5x pts).
                 </div>
                 
                 <div className="bg-orange-50 p-3 rounded-xl border border-orange-200 shadow-sm">
@@ -942,7 +950,7 @@ export default function GameBoard() {
                 <>
                   <p className="text-pink-900 font-bold mb-1">Welcome Back!</p>
                   <span className="text-xl font-black text-[#d4af37] uppercase tracking-widest">{rankInfo.title}</span>
-                  <span className="text-pink-600 font-bold">Current Streak: {stats.currentStreak} 🔥</span>
+                  <span className="text-pink-600 font-bold">Current Daily Streak: {stats.currentStreak} 🔥</span>
                 </>
               )}
             </div>
@@ -1014,7 +1022,7 @@ export default function GameBoard() {
             
             <div className="w-full bg-pink-50 rounded-xl p-4 flex gap-[2px] justify-between border border-pink-100 shadow-inner">
             <div className="flex flex-col items-center flex-1">
-              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Streak</span>
+              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Daily Streak</span>
               <span className="text-pink-900 text-3xl font-mono relative">{stats.currentStreak} <span className="absolute -right-5 top-0 text-orange-400 text-sm animate-pulse">🔥</span></span>
             </div>
             <div className="flex flex-col items-center flex-1 border-l border-pink-200">
@@ -1096,7 +1104,7 @@ export default function GameBoard() {
         <div className="absolute inset-0 z-50 bg-white/80 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white border border-pink-300 p-6 rounded-xl flex flex-col items-center text-center max-w-sm shadow-[0_10px_40px_rgba(219,39,119,0.15)] animate-[slideUp_0.2s_ease-out]">
             <h2 className="text-2xl font-bold text-pink-600 mb-2 tracking-widest">ABANDON GAME?</h2>
-            <p className="text-pink-800 mb-6 text-sm font-medium">Quitting now will count as a loss and reset your current streak. Are you sure?</p>
+            <p className="text-pink-800 mb-6 text-sm font-medium">Quitting now will count as a loss and reset your current daily streak. Are you sure?</p>
             <div className="flex gap-4 w-full">
               <button 
                 onPointerDown={() => setShowQuitConfirm(false)}

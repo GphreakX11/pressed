@@ -2,6 +2,8 @@ import sowpods from './sowpods-static.json';
 import english10 from './english-10.json';
 import englishAll from './english-all.json';
 
+export type Difficulty = 'easy' | 'normal' | 'hard';
+
 export type Puzzle = {
   sourceLetters: string[];
   validWords: string[];
@@ -9,17 +11,40 @@ export type Puzzle = {
   bingoWord: string;
 };
 
-// 1. Commonality & Root Generation Guard
-// We generate puzzles EXCLUSIVELY from the top 10% most common English words
-// to ensure the 6-letter root word is instantly recognizable by all players.
-const ROOT_WORDS = (english10 as string[]).filter((w: string) => {
+// Word profile constants
+const VOWELS = new Set(['A','E','I','O','U']);
+const POWER_LETTERS = new Set(['Q','X','Z','J','K']);
+
+function countVowels(word: string): number {
+  return word.split('').filter(c => VOWELS.has(c.toUpperCase())).length;
+}
+function hasPowerLetter(word: string): boolean {
+  return word.split('').some(c => POWER_LETTERS.has(c.toUpperCase()));
+}
+
+// All 6-letter common English roots verified in SOWPODS
+const ROOT_WORDS_ALL = (english10 as string[]).filter((w: string) => {
   return w.length === 6 && sowpods.includes(w.toUpperCase());
 });
 
-// 2. Case-Sensitivity Filter
-// As per the requirement, we exclude any word that only exists capitalized in the 
-// English corpus data (e.g. 'Albert' or 'China' without 'china'). 
-// `wordlist-english.english` inherently checks this by strictly exposing safe lowercase variants.
+// Per-difficulty root pools
+const ROOT_WORDS: Record<Difficulty, string[]> = {
+  // Easy: 3+ vowels → lots of recognizable permutations
+  easy:   ROOT_WORDS_ALL.filter(w => countVowels(w) >= 3),
+  // Normal: 2-3 vowels → standard mix
+  normal: ROOT_WORDS_ALL.filter(w => { const v = countVowels(w); return v >= 2 && v <= 3; }),
+  // Hard: ≤2 vowels OR contains a power letter
+  hard:   ROOT_WORDS_ALL.filter(w => countVowels(w) <= 2 || hasPowerLetter(w)),
+};
+
+// Grid caps per difficulty
+const GRID_CAP: Record<Difficulty, number> = {
+  easy:   8,
+  normal: 12,
+  hard:   15,
+};
+
+// Case-Sensitivity Filter: discard proper nouns / acronyms that only appear capitalised.
 function meetsCaseSensitivityFilter(word: string): boolean {
   return (englishAll as string[]).includes(word.toLowerCase());
 }
@@ -74,55 +99,53 @@ function mulberry32(a: number) {
     }
 }
 
-function getPuzzleWithRng(rng: () => number): Puzzle {
+function getPuzzleWithRng(rng: () => number, difficulty: Difficulty = 'normal'): Puzzle {
   let rootLetters: string[] = [];
   let rootWordObj: string = "";
   let validWords: string[] = [];
   let bonusWords: string[] = [];
 
-  // Randomly pick a 6-letter root word and evaluate it.
-  while (validWords.length < 10) {
-    const rootWord = ROOT_WORDS[Math.floor(rng() * ROOT_WORDS.length)];
+  const pool = ROOT_WORDS[difficulty];
+  const cap = GRID_CAP[difficulty];
+  // Require at least enough filtered words to fill the grid
+  const minRequired = Math.min(cap, 5);
+
+  while (validWords.length < minRequired) {
+    const rootWord = pool[Math.floor(rng() * pool.length)];
     rootWordObj = rootWord;
     rootLetters = rootWord.split('');
-    
-    // 4. Scrabble/Enable1 Standard Base
-    // All anagrams must be mathematically valid and exist in the SOWPODS dictionary.
-    const allSowpodsValid = sowpods.filter((word: string) => {
-      return isValidAnagram(word, rootLetters);
-    });
 
-    // 5. Commonality Filter
-    // Discard words with a frequency score below our threshold (`wordlist-english.english`) 
-    // to avoid 'Scrabble-obscure' words that nobody knows. Applies case-sensitivity filter.
-    const filteredForCommonality = allSowpodsValid.filter((w: string) => {
-      return meetsCaseSensitivityFilter(w);
-    }).map((w: string) => w.toUpperCase());
-    
-    const deduplicated = Array.from(new Set(filteredForCommonality));
-    
+    // SOWPODS base — all mathematically valid anagrams
+    const allSowpodsValid = sowpods.filter((word: string) => isValidAnagram(word, rootLetters));
+
+    // Commonality filter — discard Scrabble-obscure words
+    const filtered = allSowpodsValid
+      .filter((w: string) => meetsCaseSensitivityFilter(w))
+      .map((w: string) => w.toUpperCase());
+
+    const deduplicated = Array.from(new Set(filtered));
+
     validWords = [];
     bonusWords = [];
-    
-    // Hard cap the main grid to 14 words to prevent mobile scroll overflow
+
     if (deduplicated.length > 0) {
       const bingoWord = rootWordObj.toUpperCase();
-      const nonBingoWords = deduplicated.filter(w => w !== bingoWord);
-      
-      // Select bingo word first, then up to 13 others for the main grid
-      const cappedGrid = [bingoWord, ...nonBingoWords.slice(0, 13)];
-      const overflowBonus = nonBingoWords.slice(13);
-      
+      const nonBingo = deduplicated.filter(w => w !== bingoWord);
+
+      // Bingo word first, then fill grid up to the per-difficulty cap
+      const cappedGrid = [bingoWord, ...nonBingo.slice(0, cap - 1)];
+      const overflow = nonBingo.slice(cap - 1);
+
       validWords = cappedGrid;
-      bonusWords.push(...overflowBonus);
+      bonusWords.push(...overflow);
     }
   }
 
-  // Create a scrambled copy of the root letters for the user to solve
+  // Scramble the source letters
   let scrambled = [...rootLetters];
   for (let i = scrambled.length - 1; i > 0; i--) {
-      const j = Math.floor(rng() * (i + 1));
-      [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
+    const j = Math.floor(rng() * (i + 1));
+    [scrambled[i], scrambled[j]] = [scrambled[j], scrambled[i]];
   }
 
   return {
@@ -133,11 +156,12 @@ function getPuzzleWithRng(rng: () => number): Puzzle {
   };
 }
 
-export function getRandomPuzzle(): Puzzle {
-  return getPuzzleWithRng(Math.random);
+export function getRandomPuzzle(difficulty: Difficulty = 'normal'): Puzzle {
+  return getPuzzleWithRng(Math.random, difficulty);
 }
 
 export function getDailyPuzzle(dateStr: string): Puzzle {
   const seed = xmur3(dateStr)();
-  return getPuzzleWithRng(mulberry32(seed));
+  // Daily Trial always uses Normal profile for competitive fairness
+  return getPuzzleWithRng(mulberry32(seed), 'normal');
 }

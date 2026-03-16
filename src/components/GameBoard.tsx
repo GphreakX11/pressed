@@ -266,9 +266,6 @@ export default function GameBoard() {
     }
     
     setStats(newStats);
-    // Reset submitted count for the next game
-    setWordsSubmitted(0);
-    wordsSubmittedRef.current = 0;
     setGameOver(true);
     setShowWelcome(true);
     setShowQuitConfirm(false);
@@ -342,9 +339,6 @@ export default function GameBoard() {
       }
       
       setStats(newStats);
-      // Reset submitted count for the next game
-      setWordsSubmitted(0);
-      wordsSubmittedRef.current = 0;
 
       // Leaderboard Qualification Check
       if (finalScore > 0) {

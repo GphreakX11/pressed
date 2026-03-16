@@ -880,8 +880,7 @@ export default function GameBoard() {
   };
 
   if (showWelcome && stats) {
-    const winPct = stats.gamesPlayed > 0 ? `${Math.round((stats.gamesWon / stats.gamesPlayed) * 100)}%` : '-';
-    const globalAccuracy = stats.totalWordsSubmitted && stats.totalWordsSubmitted > 0 ? `${Math.round(((stats.totalWordsCorrect || 0) / stats.totalWordsSubmitted) * 100)}%` : '-';
+    const globalAccuracy = stats.totalWordsSubmitted && stats.totalWordsSubmitted > 0 ? `${Math.min(100, Math.round(((stats.totalWordsCorrect || 0) / stats.totalWordsSubmitted) * 100))}%` : '0%';
     const rankInfo = getTitle(stats.gamesWon);
     
     // Calculate progress as a percentage between current rank threshold and next rank threshold
@@ -1078,8 +1077,11 @@ export default function GameBoard() {
                    <span>{stats.gamesWon} Clears</span>
                    <span>{rankInfo.next} Clears</span>
                  </div>
-                 <div className="w-full bg-pink-200 rounded-full h-2.5">
+                 <div className="w-full bg-pink-200 rounded-full h-2.5 mb-1">
                    <div className="bg-[#d4af37] h-2.5 rounded-full shadow-sm transition-all duration-500" style={{ width: `${progressPct}%` }}></div>
+                 </div>
+                 <div className="text-[9px] text-[#d4af37] text-right font-black uppercase tracking-wider opacity-90">
+                   Progress to {getTitle(rankInfo.next).title}
                  </div>
                </div>
              ) : (
@@ -1089,12 +1091,16 @@ export default function GameBoard() {
             
             <div className="w-full bg-pink-50 rounded-xl p-4 flex gap-[2px] justify-between border border-pink-100 shadow-inner">
             <div className="flex flex-col items-center flex-1">
-              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Win %</span>
-              <span className="text-pink-900 text-2xl font-mono">{winPct}</span>
+              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Boards Cleared</span>
+              <span className="text-pink-900 text-2xl font-mono">{stats.gamesWon}</span>
             </div>
             <div className="flex flex-col items-center flex-1 border-l border-pink-200">
               <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Accuracy</span>
               <span className="text-pink-900 text-2xl font-mono">{globalAccuracy}</span>
+            </div>
+            <div className="flex flex-col items-center flex-1 border-l border-pink-200">
+              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Best Score</span>
+              <span className="text-pink-900 text-2xl font-mono">{stats.highScore}</span>
             </div>
             <div className="flex flex-col items-center flex-[1.2] border-l border-pink-200 relative cursor-pointer active:opacity-80 touch-manipulation" onPointerDown={() => setShowLeaderboard(true)}>
               <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Leaderboard</span>
@@ -1408,7 +1414,7 @@ export default function GameBoard() {
                     <div className="flex flex-col items-center flex-1 border-r border-pink-200">
                       <span className="text-[10px] uppercase font-black tracking-widest text-blue-500 mb-1">Accuracy</span>
                       <span className="text-xl font-black text-blue-900">
-                        {wordsSubmitted > 0 ? `${Math.round(((foundWords.length + foundBonusWords.length) / wordsSubmitted) * 100)}%` : '-'}
+                        {wordsSubmitted > 0 ? `${Math.min(100, Math.round(((foundWords.length + foundBonusWords.length) / wordsSubmitted) * 100))}%` : '0%'}
                       </span>
                     </div>
                     <div className="flex flex-col items-center flex-1">

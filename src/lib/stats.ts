@@ -10,6 +10,7 @@ export interface PlayerStats {
   totalWordsCorrect?: number;
   totalGridBoxesSeen?: number;
   totalGridBoxesFilled?: number;
+  highScore?: number;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -43,6 +44,7 @@ export function loadStats(): PlayerStats {
     if (stats.totalWordsCorrect === undefined) stats.totalWordsCorrect = 0;
     if (stats.totalGridBoxesSeen === undefined) stats.totalGridBoxesSeen = 0;
     if (stats.totalGridBoxesFilled === undefined) stats.totalGridBoxesFilled = 0;
+    if (stats.highScore === undefined) stats.highScore = 0;
     
     const now = new Date();
     
@@ -93,6 +95,7 @@ export function recordGameResult(
   stats.totalWordsCorrect = (stats.totalWordsCorrect || 0) + wordsCorrect;
   stats.totalGridBoxesSeen = (stats.totalGridBoxesSeen || 0) + gridBoxesSeen;
   stats.totalGridBoxesFilled = (stats.totalGridBoxesFilled || 0) + gridBoxesFilled;
+  stats.highScore = Math.max(stats.highScore || 0, score);
   
   if (won) {
     stats.gamesWon += 1;

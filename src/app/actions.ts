@@ -48,35 +48,27 @@ export async function getTopScores(type: 'daily' | 'alltime' = 'alltime'): Promi
   }
 }
 
-export async function submitScore(name: string, playerId: string, score: number, difficultyLabel: string = 'N') {
+export async function submitScore(name: string, playerId: string, score: number, difficultyLabel: string = 'N', isDaily: boolean = false) {
   try {
     const cleanName = name.trim().substring(0, 12) || 'ANONYMOUS';
-    const safeName = cleanName.replace(/:/g, ''); // Ensure no colons in member name
+    const safeName = cleanName.replace(/:/g, '');
     const memberId = `${safeName}:${playerId}:${difficultyLabel}`;
-    
-    // Clear any previous records for this exact player to prevent difficulty-variant duplicates
     const baseIdent = `${safeName}:${playerId}`;
-    await kv.zrem(LEADERBOARD_ALLTIME_KEY, `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`);
-    
-    // Submit new score to All-Time
-    await kv.zadd(LEADERBOARD_ALLTIME_KEY, { score, member: memberId });
-    const countAllTime = await kv.zcard(LEADERBOARD_ALLTIME_KEY);
-    if (countAllTime > 20) {
-       await kv.zremrangebyrank(LEADERBOARD_ALLTIME_KEY, 0, -21);
-    }
 
-    // Clear any previous records for the daily board
-    const dailyKey = getDailyKey();
-    await kv.zrem(dailyKey, `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`);
-
-    // Submit new score to Daily
-    await kv.zadd(dailyKey, { score, member: memberId });
-    // Set daily key to expire in 48 hours to clean up automatically.
-    // 48 hours = 2 days = 172800 seconds.
-    await kv.expire(dailyKey, 172800);
-    const countDaily = await kv.zcard(dailyKey);
-    if (countDaily > 20) {
-       await kv.zremrangebyrank(dailyKey, 0, -21);
+    if (isDaily) {
+      // Daily Trial — only goes to the daily key. Never touches all-time.
+      const dailyKey = getDailyKey();
+      await kv.zrem(dailyKey, `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`);
+      await kv.zadd(dailyKey, { score, member: memberId });
+      await kv.expire(dailyKey, 172800); // 48 hours auto-expiry
+      const countDaily = await kv.zcard(dailyKey);
+      if (countDaily > 20) await kv.zremrangebyrank(dailyKey, 0, -21);
+    } else {
+      // Standard / Random mode — only goes to the Hall of Fame (all-time). Never touches daily.
+      await kv.zrem(LEADERBOARD_ALLTIME_KEY, `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`);
+      await kv.zadd(LEADERBOARD_ALLTIME_KEY, { score, member: memberId });
+      const countAllTime = await kv.zcard(LEADERBOARD_ALLTIME_KEY);
+      if (countAllTime > 20) await kv.zremrangebyrank(LEADERBOARD_ALLTIME_KEY, 0, -21);
     }
 
     return { success: true };

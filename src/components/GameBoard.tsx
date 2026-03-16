@@ -285,7 +285,7 @@ export default function GameBoard() {
     else if (difficulty === 'easy') diffLabel = 'E';
     else if (difficulty === 'hard') diffLabel = 'H';
 
-    const res = await submitScore(playerName, playerId, score, diffLabel);
+    const res = await submitScore(playerName, playerId, score, diffLabel, isDailyMode);
     if (res.success) {
       const refreshedDaily = await getTopScores('daily');
       const refreshedAllTime = await getTopScores('alltime');
@@ -792,7 +792,7 @@ export default function GameBoard() {
                  <button 
                    onPointerDown={() => setLeaderboardTab('alltime')}
                    className={`flex-1 py-2 text-xs sm:text-sm font-black uppercase tracking-widest rounded-md transition-all touch-manipulation ${leaderboardTab === 'alltime' ? 'bg-white text-pink-900 shadow-sm' : 'text-pink-500'}`}
-                 >All-Time</button>
+                 >Hall of Fame</button>
               </div>
 
               <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-2">
@@ -1189,7 +1189,7 @@ export default function GameBoard() {
                       {/* Leaderboard Ranks */}
                       <div className="flex justify-between border-t border-pink-300 pt-2 mt-2 text-xs text-pink-700 font-bold uppercase tracking-widest bg-white/50 p-2 rounded-md shadow-inner">
                          <div className="flex flex-col items-center flex-1 border-r border-pink-200">
-                           <span className="opacity-80 mb-1 text-[9px]">Daily Rank</span>
+                           <span className="opacity-80 mb-1 text-[9px]">Daily Trial</span>
                            <span className="text-xl text-[#d4af37] font-black">{score === 0 ? '-' : (dailyLeaderboard.findIndex(e => score >= e.score) !== -1 ? dailyLeaderboard.findIndex(e => score >= e.score) + 1 : (dailyLeaderboard.length < 10 ? dailyLeaderboard.length + 1 : '10+'))}</span>
                          </div>
                          <div className="flex flex-col items-center flex-1">
@@ -1206,28 +1206,25 @@ export default function GameBoard() {
                   </>
                 )}
                 
-                <div className="flex gap-4 w-full mt-2">
+                <div className="flex gap-2 w-full mt-2">
                   <button 
                     onPointerDown={() => setShowWelcome(true)}
                     className="flex-1 bg-gray-400 border-b-4 border-r-2 border-gray-500 text-white font-extrabold py-3 px-4 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all"
                   >
                     MENU
                   </button>
-                  {isDailyMode ? (
-                    <button 
-                      onPointerDown={generateShareGrid}
-                      className="flex-[2] bg-blue-500 border-b-4 border-r-2 border-blue-700 text-white font-extrabold py-3 px-4 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all flex items-center justify-center gap-2"
-                    >
-                      SHARE <span className="text-xl">📈</span>
-                    </button>
-                  ) : (
-                    <button 
-                      onPointerDown={() => startNewGame()}
-                      className="flex-[2] bg-[#d4af37] border-b-4 border-r-2 border-yellow-700 text-white font-extrabold py-3 px-4 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all"
-                    >
-                      PLAY AGAIN
-                    </button>
-                  )}
+                  <button 
+                    onPointerDown={generateShareGrid}
+                    className="flex-1 bg-blue-500 border-b-4 border-r-2 border-blue-700 text-white font-extrabold py-3 px-4 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all flex items-center justify-center gap-2"
+                  >
+                    SHARE <span className="text-xl">📈</span>
+                  </button>
+                  <button 
+                    onPointerDown={() => startNewGame()}
+                    className="flex-1 bg-[#d4af37] border-b-4 border-r-2 border-yellow-700 text-white font-extrabold py-3 px-4 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] text-sm tracking-wider select-none touch-manipulation transition-all"
+                  >
+                    RETRY
+                  </button>
                 </div>
              </div>
            )

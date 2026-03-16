@@ -32,6 +32,8 @@ export default function GameBoard() {
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [qualifiesForLeaderboard, setQualifiesForLeaderboard] = useState(false);
   const [isSubmittingScore, setIsSubmittingScore] = useState(false);
+  const [hasSubmissionError, setHasSubmissionError] = useState(false);
+  const [hasPendingSubmission, setHasPendingSubmission] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [playerId, setPlayerId] = useState("");
 
@@ -42,6 +44,10 @@ export default function GameBoard() {
        localStorage.setItem('apexPlayerId', id);
     }
     setPlayerId(id);
+
+    if (localStorage.getItem('pending_score')) {
+      setHasPendingSubmission(true);
+    }
   }, []);
 
   const lastWordTime = useRef<number>(0);
@@ -241,6 +247,35 @@ export default function GameBoard() {
     setShowQuitConfirm(false);
   }, [score]);
 
+  // --- Automatic Score Recovery Effect ---
+  useEffect(() => {
+    if (showWelcome) {
+      const pendingJson = localStorage.getItem('pending_score');
+      if (pendingJson) {
+        setToastMessage('Recovering your last high score...');
+        try {
+          const data = JSON.parse(pendingJson);
+          submitScore(data.name, playerId, data.score, data.difficulty, data.isDaily)
+            .then(res => {
+              if (res && res.success) {
+                localStorage.removeItem('pending_score');
+                setHasPendingSubmission(false);
+                setToastMessage('Score Posted!');
+                getTopScores('daily').then(setDailyLeaderboard);
+                getTopScores('alltime').then(setAllTimeLeaderboard);
+              }
+            })
+            .catch(() => {
+              // Fail silently in background, user can retry string manually or it tries again next time
+            });
+        } catch (e) {
+          // Bad JSON
+        }
+      }
+    }
+  }, [showWelcome, playerId]);
+  // ---------------------------------------
+
   const endGame = useCallback((won: boolean, additionalScore: number = 0) => {
     if (gameOverRef.current) return;
     setGameOver(true);
@@ -279,22 +314,81 @@ export default function GameBoard() {
   const handleScoreSubmit = async () => {
     if (!playerName.trim() || isSubmittingScore) return;
     setIsSubmittingScore(true);
+    setHasSubmissionError(false);
     
     let diffLabel = 'N';
     if (isDailyMode) diffLabel = 'D';
     else if (difficulty === 'easy') diffLabel = 'E';
     else if (difficulty === 'hard') diffLabel = 'H';
 
-    const res = await submitScore(playerName, playerId, score, diffLabel, isDailyMode);
-    if (res.success) {
-      const refreshedDaily = await getTopScores('daily');
-      const refreshedAllTime = await getTopScores('alltime');
-      setDailyLeaderboard(refreshedDaily);
-      setAllTimeLeaderboard(refreshedAllTime);
+    const payload = JSON.stringify({ name: playerName, score, difficulty: diffLabel, isDaily: isDailyMode });
+    localStorage.setItem('pending_score', payload);
+
+    try {
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 8000));
+      const submitPromise = submitScore(playerName, playerId, score, diffLabel, isDailyMode);
+
+      const res = await Promise.race([submitPromise, timeoutPromise]) as any;
+
+      if (res && res.success) {
+        localStorage.removeItem('pending_score');
+        setHasPendingSubmission(false);
+        const refreshedDaily = await getTopScores('daily');
+        const refreshedAllTime = await getTopScores('alltime');
+        setDailyLeaderboard(refreshedDaily);
+        setAllTimeLeaderboard(refreshedAllTime);
+        setQualifiesForLeaderboard(false);
+        setToastMessage('Score Posted!');
+      } else {
+        throw new Error(res?.error || 'Database error');
+      }
+    } catch (err: any) {
+      console.error('Submission failed:', err);
+      setHasSubmissionError(true);
+      if (err.message === 'TIMEOUT') {
+        setToastMessage("Server is slow. Don't worry, your score is saved locally. Try hitting submit again or refresh.");
+      } else {
+        setToastMessage('Connection Error. Try again.');
+      }
+    } finally {
+      setIsSubmittingScore(false);
     }
+  };
+
+  const handleRecoverScore = async () => {
+    const pendingJson = localStorage.getItem('pending_score');
+    if (!pendingJson) return;
     
-    setQualifiesForLeaderboard(false);
-    setIsSubmittingScore(false);
+    try {
+      setIsSubmittingScore(true);
+      const data = JSON.parse(pendingJson);
+      
+      const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 8000));
+      const submitPromise = submitScore(data.name, playerId, data.score, data.difficulty, data.isDaily);
+      
+      const res = await Promise.race([submitPromise, timeoutPromise]) as any;
+      
+      if (res && res.success) {
+        localStorage.removeItem('pending_score');
+        setHasPendingSubmission(false);
+        const refreshedDaily = await getTopScores('daily');
+        const refreshedAllTime = await getTopScores('alltime');
+        setDailyLeaderboard(refreshedDaily);
+        setAllTimeLeaderboard(refreshedAllTime);
+        setToastMessage('Score Posted!');
+      } else {
+        throw new Error(res?.error || 'Database error');
+      }
+    } catch (err: any) {
+      console.error('Recovery failed:', err);
+      if (err.message === 'TIMEOUT') {
+        setToastMessage("Server is slow. Don't worry, your score is saved locally. Try hitting submit again or refresh.");
+      } else {
+        setToastMessage('Connection Error. Try again.');
+      }
+    } finally {
+      setIsSubmittingScore(false);
+    }
   };
 
   const totalTimeLimit = useMemo(() => {
@@ -854,6 +948,18 @@ export default function GameBoard() {
             </div>
 
             <div className="flex justify-between w-full mt-2 gap-2 relative">
+              {hasPendingSubmission && (
+                <div className="absolute -top-16 left-0 right-0 bg-red-50 border border-red-200 p-2 rounded-lg flex flex-col gap-1 items-center text-center shadow-sm z-50 animate-[slideUp_0.3s_ease-out]">
+                  <span className="text-red-700 font-bold text-[10px] uppercase">Connection Failed Last Game</span>
+                  <button 
+                    onPointerDown={handleRecoverScore}
+                    disabled={isSubmittingScore}
+                    className="bg-red-500 text-white font-black uppercase text-[10px] px-3 py-1.5 rounded shadow-sm hover:bg-red-600 active:translate-y-[2px] transition-all disabled:opacity-50"
+                  >
+                    {isSubmittingScore ? 'UPLOADING...' : 'RESUBMIT SCORE'}
+                  </button>
+                </div>
+              )}
               <button 
                 onPointerDown={() => setShowHowToPlay(true)}
                 className="absolute -top-14 left-0 text-pink-600 bg-pink-100 border border-pink-300 font-extrabold w-10 h-10 rounded-full shadow-sm active:scale-95 transition-all text-xl touch-manipulation flex items-center justify-center z-50"
@@ -1165,7 +1271,7 @@ export default function GameBoard() {
                   disabled={isSubmittingScore || !playerName.trim()}
                   className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 border-b-4 border-r-2 border-yellow-800 text-white font-extrabold py-4 rounded-xl shadow-md active:border-0 active:translate-y-[4px] transition-all tracking-widest text-lg touch-manipulation disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
                 >
-                  {isSubmittingScore ? 'SUBMITTING...' : 'CLAIM RANK'}
+                  {isSubmittingScore ? 'SUBMITTING...' : hasSubmissionError ? 'RETRY SUBMISSION' : 'CLAIM RANK'}
                 </button>
                 <button 
                   onPointerDown={() => setQualifiesForLeaderboard(false)}

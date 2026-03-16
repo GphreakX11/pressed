@@ -1,6 +1,5 @@
-import commonWords from './clean-words.json';
-import blocklist from './blocklist.json';
 import sowpods from './sowpods-static.json';
+import wl from 'wordlist-english';
 
 export type Puzzle = {
   sourceLetters: string[];
@@ -9,14 +8,27 @@ export type Puzzle = {
   bingoWord: string;
 };
 
-// Compute all valid 6-letter root words from the common dictionary
-const ROOT_WORDS = commonWords.filter((w: string) => w.length === 6);
+// 1. Commonality & Root Generation Guard
+// We generate puzzles EXCLUSIVELY from the top 10% most common English words
+// to ensure the 6-letter root word is instantly recognizable by all players.
+const ROOT_WORDS = wl['english/10'].filter((w: string) => {
+  return w.length === 6 && sowpods.includes(w.toUpperCase());
+});
+
+// 2. Case-Sensitivity Filter
+// As per the requirement, we exclude any word that only exists capitalized in the 
+// English corpus data (e.g. 'Albert' or 'China' without 'china'). 
+// `wordlist-english.english` inherently checks this by strictly exposing safe lowercase variants.
+function meetsCaseSensitivityFilter(word: string): boolean {
+  return wl.english.includes(word.toLowerCase());
+}
 
 /**
  * Helper function to check if a dictionary word can be formed 
  * strictly using the available source letters (accounting for duplicates).
  */
 function isValidAnagram(word: string, sourceLetters: string[]): boolean {
+  // 3. Length Guard: Ensure words are at least 3 letters long.
   if (word.length < 3 || word.length > 6) return false;
   
   const sourceCounts: Record<string, number> = {};
@@ -68,58 +80,40 @@ function getPuzzleWithRng(rng: () => number): Puzzle {
   let bonusWords: string[] = [];
 
   // Randomly pick a 6-letter root word and evaluate it.
-  // We randomly select from ROOT_WORDS until we find one that generates >= 10 REQUIRED words.
   while (validWords.length < 10) {
     const rootWord = ROOT_WORDS[Math.floor(rng() * ROOT_WORDS.length)];
     rootWordObj = rootWord;
     rootLetters = rootWord.split('');
     
-    // Filter against the common words dictionary instead of the massive Scrabble dictionary.
-    const allValidFound = commonWords.filter((word: string) => {
+    // 4. Scrabble/Enable1 Standard Base
+    // All anagrams must be mathematically valid and exist in the SOWPODS dictionary.
+    const allSowpodsValid = sowpods.filter((word: string) => {
       return isValidAnagram(word, rootLetters);
+    });
+
+    // 5. Commonality Filter
+    // Discard words with a frequency score below our threshold (`wordlist-english.english`) 
+    // to avoid 'Scrabble-obscure' words that nobody knows. Applies case-sensitivity filter.
+    const filteredForCommonality = allSowpodsValid.filter((w: string) => {
+      return meetsCaseSensitivityFilter(w);
     }).map((w: string) => w.toUpperCase());
     
-    // De-duplicate in case of any overlaps
-    const deduplicated = Array.from(new Set(allValidFound));
+    const deduplicated = Array.from(new Set(filteredForCommonality));
     
-    // Sift out the generic blocklist words into a bonus array
     validWords = [];
     bonusWords = [];
-    const blockListUpper = blocklist.map(w => w.toUpperCase());
-    
-    for (const w of deduplicated) {
-      if (blockListUpper.includes(w)) {
-        bonusWords.push(w);
-      } else {
-        validWords.push(w);
-      }
-    }
     
     // Hard cap the main grid to 14 words to prevent mobile scroll overflow
-    if (validWords.length > 0) {
+    if (deduplicated.length > 0) {
       const bingoWord = rootWordObj.toUpperCase();
-      const nonBingoWords = validWords.filter(w => w !== bingoWord);
+      const nonBingoWords = deduplicated.filter(w => w !== bingoWord);
       
-      // Select bingo word first, then top 13 most common
+      // Select bingo word first, then up to 13 others for the main grid
       const cappedGrid = [bingoWord, ...nonBingoWords.slice(0, 13)];
       const overflowBonus = nonBingoWords.slice(13);
       
       validWords = cappedGrid;
       bonusWords.push(...overflowBonus);
-    }
-  }
-
-  // EXHAUSTIVE SOWPODS FALLBACK
-  // Any legally playable word in the entire english scrabble dictionary 
-  // that was NOT already caught by our curated 10k list above gets
-  // indiscriminately added to the Bonus Words pool.
-  const allSowpodsValid = sowpods.filter((word: string) => {
-    return isValidAnagram(word, rootLetters);
-  }).map((w: string) => w.toUpperCase());
-  
-  for (const sowWord of allSowpodsValid) {
-    if (!validWords.includes(sowWord) && !bonusWords.includes(sowWord)) {
-       bonusWords.push(sowWord);
     }
   }
 

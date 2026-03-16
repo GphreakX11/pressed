@@ -59,7 +59,6 @@ export default function GameBoard() {
 
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [isMuted, setIsMuted] = useState(false);
-  const lobbyMusicRef = useRef<HTMLAudioElement | null>(null);
   const baseDingRef = useRef<HTMLAudioElement | null>(null);
   const bonusChimeRef = useRef<HTMLAudioElement | null>(null);
   const streakJackpotRef = useRef<HTMLAudioElement | null>(null);
@@ -69,10 +68,6 @@ export default function GameBoard() {
     const savedMute = localStorage.getItem('apexMutePreference');
     const initialMute = savedMute === 'true';
     if (savedMute) setIsMuted(initialMute);
-
-    lobbyMusicRef.current = new Audio('/music.mp3');
-    lobbyMusicRef.current.loop = true;
-    lobbyMusicRef.current.volume = 0.2;
 
     baseDingRef.current = new Audio('/base_ding.mp3');
     baseDingRef.current.volume = 0.6;
@@ -97,23 +92,15 @@ export default function GameBoard() {
         }).catch(() => {});
       }
     });
-
-    if (lobbyMusicRef.current && !isMuted) {
-      lobbyMusicRef.current.play().catch(error => console.log('Lobby Music Play Error:', error));
-    }
-  }, [isAudioEnabled, isMuted]);
+  }, [isAudioEnabled]);
 
   const toggleMute = useCallback(() => {
     setIsMuted(prev => {
       const next = !prev;
       localStorage.setItem('apexMutePreference', next.toString());
-      if (lobbyMusicRef.current) {
-        if (next) lobbyMusicRef.current.pause();
-        else if (isAudioEnabled && showWelcome) lobbyMusicRef.current.play().catch(e => console.log('Lobby Music Play Error:', e));
-      }
       return next;
     });
-  }, [isAudioEnabled, showWelcome]);
+  }, []);
 
   const playSound = useCallback((type: 'pop' | 'coin' | 'jackpot', count: number = 0) => {
     if (!isAudioEnabled || isMuted) return;
@@ -133,18 +120,6 @@ export default function GameBoard() {
       console.warn(`Audio ${type} failed to play:`, err);
     }
   }, [isAudioEnabled, isMuted]);
-
-  // Room-Based Music Logic
-  useEffect(() => {
-    if (!isAudioEnabled || !lobbyMusicRef.current) return;
-    
-    if (showWelcome) {
-      if (!isMuted) lobbyMusicRef.current.play().catch(e => console.log('Lobby Music Play Error:', e));
-    } else {
-      lobbyMusicRef.current.pause();
-      lobbyMusicRef.current.currentTime = 0;
-    }
-  }, [showWelcome, isAudioEnabled, isMuted]);
 
   // Speed Combo Indicator Hook strictly controls 5-second active window
   useEffect(() => {

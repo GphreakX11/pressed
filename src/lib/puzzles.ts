@@ -1,5 +1,6 @@
 import sowpods from './sowpods-static.json';
-import wl from 'wordlist-english';
+import english10 from './english-10.json';
+import englishAll from './english-all.json';
 
 export type Puzzle = {
   sourceLetters: string[];
@@ -11,7 +12,7 @@ export type Puzzle = {
 // 1. Commonality & Root Generation Guard
 // We generate puzzles EXCLUSIVELY from the top 10% most common English words
 // to ensure the 6-letter root word is instantly recognizable by all players.
-const ROOT_WORDS = wl['english/10'].filter((w: string) => {
+const ROOT_WORDS = (english10 as string[]).filter((w: string) => {
   return w.length === 6 && sowpods.includes(w.toUpperCase());
 });
 
@@ -20,7 +21,7 @@ const ROOT_WORDS = wl['english/10'].filter((w: string) => {
 // English corpus data (e.g. 'Albert' or 'China' without 'china'). 
 // `wordlist-english.english` inherently checks this by strictly exposing safe lowercase variants.
 function meetsCaseSensitivityFilter(word: string): boolean {
-  return wl.english.includes(word.toLowerCase());
+  return (englishAll as string[]).includes(word.toLowerCase());
 }
 
 /**

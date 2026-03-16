@@ -756,7 +756,7 @@ export default function GameBoard() {
                 
                 <div className="bg-purple-50 p-3 rounded-xl border border-purple-200 shadow-sm">
                   <span className="font-extrabold text-purple-600 block mb-1">⏱️ Time Freeze (10-Word Streak):</span>
-                  Find 10 words in a row without a mistake to entirely stop the clock for 5 seconds.
+                  Find 10 words in a row without a mistake to entirely stop the clock for 10 seconds.
                 </div>
 
                 <div className="bg-[#fff9e6] p-3 rounded-xl border border-[#d4af37] shadow-sm">

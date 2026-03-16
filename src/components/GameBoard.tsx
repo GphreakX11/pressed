@@ -881,7 +881,7 @@ export default function GameBoard() {
 
   if (showWelcome && stats) {
     const winPct = stats.gamesPlayed > 0 ? `${Math.min(100, Math.round((stats.gamesWon / stats.gamesPlayed) * 100))}%` : '0%';
-    const globalAccuracy = stats.totalWordsSubmitted && stats.totalWordsSubmitted > 0 ? `${Math.min(100, Math.round(((stats.totalWordsCorrect || 0) / stats.totalWordsSubmitted) * 100))}%` : '0%';
+    const globalAccuracy = stats.totalWordsAttemptedLifetime && stats.totalWordsAttemptedLifetime > 0 ? `${Math.min(100, Math.round(((stats.totalWordsFoundLifetime || 0) / stats.totalWordsAttemptedLifetime) * 100))}%` : '0%';
     const rankInfo = getTitle(stats.gamesWon);
     
     // Calculate progress as a percentage between current rank threshold and next rank threshold

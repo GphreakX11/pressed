@@ -6,8 +6,8 @@ export interface PlayerStats {
   totalScore: number;
   lastPlayedDate: number | null; // Timestamp
   lifetimePoints?: number;
-  totalWordsSubmitted?: number;
-  totalWordsCorrect?: number;
+  totalWordsAttemptedLifetime?: number;
+  totalWordsFoundLifetime?: number;
   totalGridBoxesSeen?: number;
   totalGridBoxesFilled?: number;
   highScore?: number;
@@ -21,8 +21,8 @@ const DEFAULT_STATS: PlayerStats = {
   totalScore: 0,
   lastPlayedDate: null,
   lifetimePoints: 0,
-  totalWordsSubmitted: 0,
-  totalWordsCorrect: 0,
+  totalWordsAttemptedLifetime: 0,
+  totalWordsFoundLifetime: 0,
   totalGridBoxesSeen: 0,
   totalGridBoxesFilled: 0,
 };
@@ -40,8 +40,8 @@ export function loadStats(): PlayerStats {
     if (stats.lifetimePoints === undefined) {
       stats.lifetimePoints = stats.totalScore || 0;
     }
-    if (stats.totalWordsSubmitted === undefined) stats.totalWordsSubmitted = 0;
-    if (stats.totalWordsCorrect === undefined) stats.totalWordsCorrect = 0;
+    if (stats.totalWordsAttemptedLifetime === undefined) stats.totalWordsAttemptedLifetime = 0;
+    if (stats.totalWordsFoundLifetime === undefined) stats.totalWordsFoundLifetime = 0;
     if (stats.totalGridBoxesSeen === undefined) stats.totalGridBoxesSeen = 0;
     if (stats.totalGridBoxesFilled === undefined) stats.totalGridBoxesFilled = 0;
     if (stats.highScore === undefined) stats.highScore = 0;
@@ -91,8 +91,8 @@ export function recordGameResult(
   stats.totalScore += score;
   stats.lifetimePoints = (stats.lifetimePoints || 0) + score;
   
-  stats.totalWordsSubmitted = (stats.totalWordsSubmitted || 0) + wordsSubmitted;
-  stats.totalWordsCorrect = (stats.totalWordsCorrect || 0) + wordsCorrect;
+  stats.totalWordsAttemptedLifetime = (stats.totalWordsAttemptedLifetime || 0) + wordsSubmitted;
+  stats.totalWordsFoundLifetime = (stats.totalWordsFoundLifetime || 0) + wordsCorrect;
   stats.totalGridBoxesSeen = (stats.totalGridBoxesSeen || 0) + gridBoxesSeen;
   stats.totalGridBoxesFilled = (stats.totalGridBoxesFilled || 0) + gridBoxesFilled;
   stats.highScore = Math.max(stats.highScore || 0, score);

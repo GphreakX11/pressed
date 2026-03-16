@@ -360,8 +360,19 @@ export default function GameBoard() {
       const isBonusWord = puzzle.bonusWords?.includes(word);
       
       if (isMainWord || isBonusWord) {
+        console.log('--- SUBMIT CLICKED ---');
         const now = Date.now();
-        const comboEarned = lastWordTime !== null && (now - lastWordTime) <= 3000;
+        console.log('Current Time:', now, 'Last Word:', lastWordTime);
+
+        let comboEarned = false;
+        if (lastWordTime !== null) {
+          const timeDiff = now - lastWordTime;
+          console.log('Time Difference:', timeDiff);
+          if (timeDiff <= 3000) {
+            console.log('✅ STREAK ACHIEVED! Triggering UI and 1.5x Math');
+            comboEarned = true;
+          }
+        }
         
         const newCount = comboEarned ? comboCount + 1 : 0;
         setComboCount(newCount);
@@ -532,12 +543,12 @@ export default function GameBoard() {
       
       {/* Dynamic Jackpot Flash Background */}
       {jackpotBlast?.active && (
-         <div className="absolute inset-0 z-10 pointer-events-none animate-bgFlash" />
+         <div className="absolute inset-0 z-[100] pointer-events-none animate-bgFlash" />
       )}
 
       {/* Massive STREAK BONUS Overlay */}
       {jackpotBlast?.active && (
-         <div className="absolute top-1/2 left-1/2 z-50 pointer-events-none animate-blastUp flex flex-col items-center justify-center w-full">
+         <div className="absolute inset-0 z-[150] pointer-events-none animate-blastUp flex flex-col items-center justify-center w-full h-full">
             <span className="text-5xl md:text-7xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-orange-600 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] filter drop-shadow-xl" style={{ WebkitTextStroke: '2px #7c2d12' }}>
               STREAK BONUS!
             </span>
@@ -753,12 +764,12 @@ export default function GameBoard() {
               )}
               
               {/* Current Input Slots */}
-              <div className="relative w-full">
+              <div className="relative w-full z-10">
                 {/* Floating Juice Toast */}
                 {juiceToast && (
                   <div 
                     key={`juice-${juiceToast.id}`} 
-                    className="absolute -top-[40px] left-1/2 transform -translate-x-1/2 z-50 pointer-events-none animate-floatUpFade"
+                    className="absolute -top-[40px] left-1/2 transform -translate-x-1/2 z-[150] pointer-events-none animate-floatUpFade"
                   >
                     <span className={`font-black text-2xl md:text-3xl tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
                       juiceToast.isCombo ? 'text-[#ff5500] italic' : 'text-[#22c55e]'

@@ -775,13 +775,22 @@ export default function GameBoard() {
 
         {/* Global Leaderboard Modal */}
         {showLeaderboard && (
-          <div className="absolute inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="w-full max-w-sm bg-gradient-to-br from-pink-50 to-white border-4 border-[#d4af37] rounded-3xl p-6 shadow-2xl animate-[slideUp_0.3s_ease-out] flex flex-col h-auto max-h-[80vh]">
+          <div
+            className="absolute inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+            onPointerDown={() => setShowLeaderboard(false)}
+          >
+            <div
+              className="w-full max-w-sm bg-gradient-to-br from-pink-50 to-white border-4 border-[#d4af37] rounded-3xl p-6 shadow-2xl animate-[slideUp_0.3s_ease-out] flex flex-col h-auto max-h-[80vh]"
+              onPointerDown={e => e.stopPropagation()}
+            >
               <div className="flex justify-between items-center border-b-2 border-pink-200 pb-3 mb-3">
                 <h2 className="text-2xl font-black italic text-pink-900 tracking-tighter uppercase flex items-center gap-2">
                   <span className="text-3xl">🏆</span> TOP 10
                 </h2>
-                <button onPointerDown={() => setShowLeaderboard(false)} className="text-pink-400 font-black text-xl w-8 h-8 rounded-full bg-pink-100 flex items-center justify-center active:bg-pink-200 transition-colors touch-manipulation">✕</button>
+                <button
+                  onPointerDown={() => setShowLeaderboard(false)}
+                  className="text-pink-400 font-black text-2xl w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center active:bg-pink-200 transition-colors touch-manipulation"
+                >✕</button>
               </div>
               
               <div className="flex bg-pink-100 rounded-lg p-1 mb-4 flex-none">

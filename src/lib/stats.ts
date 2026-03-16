@@ -6,6 +6,10 @@ export interface PlayerStats {
   totalScore: number;
   lastPlayedDate: number | null; // Timestamp
   lifetimePoints?: number;
+  totalWordsSubmitted?: number;
+  totalWordsCorrect?: number;
+  totalGridBoxesSeen?: number;
+  totalGridBoxesFilled?: number;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -16,6 +20,10 @@ const DEFAULT_STATS: PlayerStats = {
   totalScore: 0,
   lastPlayedDate: null,
   lifetimePoints: 0,
+  totalWordsSubmitted: 0,
+  totalWordsCorrect: 0,
+  totalGridBoxesSeen: 0,
+  totalGridBoxesFilled: 0,
 };
 
 const STATS_KEY = 'pressedPlayerStats';
@@ -31,6 +39,11 @@ export function loadStats(): PlayerStats {
     if (stats.lifetimePoints === undefined) {
       stats.lifetimePoints = stats.totalScore || 0;
     }
+    if (stats.totalWordsSubmitted === undefined) stats.totalWordsSubmitted = 0;
+    if (stats.totalWordsCorrect === undefined) stats.totalWordsCorrect = 0;
+    if (stats.totalGridBoxesSeen === undefined) stats.totalGridBoxesSeen = 0;
+    if (stats.totalGridBoxesFilled === undefined) stats.totalGridBoxesFilled = 0;
+    
     const now = new Date();
     
     // Check streak logic based on calendar days, not strict 24h
@@ -62,12 +75,24 @@ export function saveStats(stats: PlayerStats) {
   localStorage.setItem(STATS_KEY, JSON.stringify(stats));
 }
 
-export function recordGameResult(won: boolean, score: number) {
+export function recordGameResult(
+  won: boolean, 
+  score: number,
+  wordsSubmitted: number,
+  wordsCorrect: number,
+  gridBoxesSeen: number,
+  gridBoxesFilled: number
+) {
   const stats = loadStats();
   
   stats.gamesPlayed += 1;
   stats.totalScore += score;
   stats.lifetimePoints = (stats.lifetimePoints || 0) + score;
+  
+  stats.totalWordsSubmitted = (stats.totalWordsSubmitted || 0) + wordsSubmitted;
+  stats.totalWordsCorrect = (stats.totalWordsCorrect || 0) + wordsCorrect;
+  stats.totalGridBoxesSeen = (stats.totalGridBoxesSeen || 0) + gridBoxesSeen;
+  stats.totalGridBoxesFilled = (stats.totalGridBoxesFilled || 0) + gridBoxesFilled;
   
   if (won) {
     stats.gamesWon += 1;

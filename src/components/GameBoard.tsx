@@ -18,6 +18,7 @@ export default function GameBoard() {
   const [highScore, setHighScore] = useState(0);
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [foundBonusWords, setFoundBonusWords] = useState<string[]>([]);
+  const [wordsSubmitted, setWordsSubmitted] = useState(0);
   
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [isDailyMode, setIsDailyMode] = useState(false);
@@ -241,8 +242,25 @@ export default function GameBoard() {
   }, [puzzle]);
 
   const handleQuitGame = useCallback(() => {
-    recordGameResult(false, score);
-    setStats(loadStats());
+    // Collect final advanced stats for quit 
+    const wordsCorrect = foundWordsRef.current.length + foundBonusWords.length;
+    const gridSeen = puzzle?.validWords.length || 0;
+    const gridFilled = foundWordsRef.current.length;
+    
+    // Save current title before recording result
+    const currentStats = loadStats();
+    const oldTitle = getTitle(currentStats.gamesWon).title;
+
+    recordGameResult(false, score, wordsSubmitted, wordsCorrect, gridSeen, gridFilled);
+    
+    // Check for rank up
+    const newStats = loadStats();
+    const newTitle = getTitle(newStats.gamesWon).title;
+    if (newTitle !== oldTitle) {
+      setTimeout(() => setToastMessage(`Rank Up: You are now a ${newTitle}!`), 1000);
+    }
+    
+    setStats(newStats);
     setGameOver(true);
     setShowWelcome(true);
     setShowQuitConfirm(false);
@@ -296,8 +314,26 @@ export default function GameBoard() {
         }
         return h;
       });
-      recordGameResult(won, finalScore);
-      setStats(loadStats());
+
+      // Collect advanced stats 
+      const wordsCorrect = foundWordsRef.current.length + foundBonusWords.length;
+      const gridSeen = puzzle?.validWords.length || 0;
+      const gridFilled = foundWordsRef.current.length;
+
+      // Save current title before recording result
+      const currentStats = loadStats();
+      const oldTitle = getTitle(currentStats.gamesWon).title;
+
+      recordGameResult(won, finalScore, wordsSubmitted, wordsCorrect, gridSeen, gridFilled);
+      
+      // Check for rank up
+      const newStats = loadStats();
+      const newTitle = getTitle(newStats.gamesWon).title;
+      if (newTitle !== oldTitle) {
+        setTimeout(() => setToastMessage(`Rank Up: You are now a ${newTitle}!`), 1000);
+      }
+      
+      setStats(newStats);
 
       // Leaderboard Qualification Check
       if (finalScore > 0) {
@@ -436,6 +472,7 @@ export default function GameBoard() {
     lastWordTime.current = 0;
     setFoundWords([]);
     setFoundBonusWords([]);
+    setWordsSubmitted(0);
     setInputState({
       currentInput: [],
       availableSlots: [...newPuzzle.sourceLetters]
@@ -596,6 +633,8 @@ export default function GameBoard() {
         return prev;
       }
       
+      setWordsSubmitted(ws => ws + 1);
+      
       const isMainWord = puzzle.validWords.includes(word);
       const isBonusWord = puzzle.bonusWords?.includes(word);
       
@@ -749,6 +788,7 @@ export default function GameBoard() {
         };
       } else {
         // Invalid word
+        setWordsSubmitted(ws => ws + 1);
         setAccuracyStreak(0);
         setShakeInput(true);
         setTimeout(() => setShakeInput(false), 300);
@@ -768,11 +808,12 @@ export default function GameBoard() {
     });
   };
 
-  const getTitle = (pts: number) => {
-    if (pts >= 100000) return { title: "Lexicon Master", next: null, current: 100000 };
-    if (pts >= 25000) return { title: "Wordsmith", next: 100000, current: 25000 };
-    if (pts >= 5000) return { title: "Scribe", next: 25000, current: 5000 };
-    return { title: "Novice", next: 5000, current: 0 };
+  const getTitle = (clears: number) => {
+    if (clears >= 50) return { title: "Apex Legend", next: null, current: 50 };
+    if (clears >= 25) return { title: "Cipher", next: 50, current: 25 };
+    if (clears >= 10) return { title: "Scholar", next: 25, current: 10 };
+    if (clears >= 1) return { title: "Scribe", next: 10, current: 1 };
+    return { title: "Novice", next: 1, current: 0 };
   };
 
   const generateShareGrid = async () => {
@@ -840,10 +881,15 @@ export default function GameBoard() {
 
   if (showWelcome && stats) {
     const winPct = stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0;
-    const avgScore = stats.gamesPlayed > 0 ? Math.round(stats.totalScore / stats.gamesPlayed) : 0;
-    const pts = stats.lifetimePoints || 0;
-    const rankInfo = getTitle(pts);
-    const progressPct = rankInfo.next ? Math.min(100, Math.max(0, Math.round(((pts - rankInfo.current) / (rankInfo.next - rankInfo.current)) * 100))) : 100;
+    const rankInfo = getTitle(stats.gamesWon);
+    
+    // Calculate progress as a percentage between current rank threshold and next rank threshold
+    let progressPct = 100;
+    if (rankInfo.next !== null) {
+      const range = rankInfo.next - rankInfo.current;
+      const progress = stats.gamesWon - rankInfo.current;
+      progressPct = Math.min(100, Math.max(0, Math.round((progress / range) * 100)));
+    }
 
     return (
       <div className="fixed inset-0 bg-pink-50 flex flex-col items-center justify-center font-sans p-4">
@@ -888,6 +934,11 @@ export default function GameBoard() {
                 <div className="bg-[#fff9e6] p-3 rounded-xl border border-[#d4af37] shadow-sm">
                   <span className="font-extrabold text-[#d4af37] block mb-1">🌍 Daily Trial:</span>
                   Compete on the exact same board as everyone else for the top spot on the Daily Leaderboard!
+                </div>
+
+                <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-200 shadow-sm">
+                  <span className="font-extrabold text-emerald-600 block mb-1">🏅 Player Ranks:</span>
+                  Clear the board to rise from Novice all the way to Apex Legend!
                 </div>
               </div>
             </div>
@@ -1023,19 +1074,22 @@ export default function GameBoard() {
             
             <div className="w-full flex flex-col items-center border border-pink-200 bg-pink-50 rounded-lg p-3 shadow-inner mb-2">
              <span className="text-[10px] text-pink-600 font-bold uppercase tracking-widest mb-1">Rank</span>
-             <span className="text-xl font-black text-pink-900 drop-shadow-sm uppercase">{rankInfo.title}</span>
+             <span className="text-xl font-black text-[#d4af37] drop-shadow-sm uppercase">{rankInfo.title}</span>
              {rankInfo.next ? (
-               <div className="w-full mt-2">
+               <div 
+                 className="w-full mt-2 cursor-help" 
+                 title={`${rankInfo.next - stats.gamesWon} more clears to reach ${getTitle(rankInfo.next).title}!`}
+               >
                  <div className="flex justify-between text-[10px] text-pink-700 font-bold mb-1">
-                   <span>{pts.toLocaleString()} XP</span>
-                   <span>{rankInfo.next.toLocaleString()} XP</span>
+                   <span>{stats.gamesWon} Clears</span>
+                   <span>{rankInfo.next} Clears</span>
                  </div>
                  <div className="w-full bg-pink-200 rounded-full h-2.5">
-                   <div className="bg-[#d4af37] h-2.5 rounded-full shadow-sm" style={{ width: `${progressPct}%` }}></div>
+                   <div className="bg-[#d4af37] h-2.5 rounded-full shadow-sm transition-all duration-500" style={{ width: `${progressPct}%` }}></div>
                  </div>
                </div>
              ) : (
-                <div className="text-xs text-[#d4af37] font-bold mt-1">MAX RANK MAX XP</div>
+                <div className="text-xs text-[#d4af37] font-bold mt-1">MAX RANK SECURED</div>
               )}
             </div>
             
@@ -1346,6 +1400,30 @@ export default function GameBoard() {
                     <h2 className="text-3xl font-bold text-pink-500 tracking-widest drop-shadow-[0_2px_4px_rgba(236,72,153,0.3)]">TIME'S UP</h2>
                     <span className="text-pink-900 text-sm font-bold opacity-80">You missed {puzzle.validWords.length - foundWords.length} words</span>
                   </>
+                )}
+                
+                {/* Advanced Player Stats Panel */}
+                {stats && (
+                  <div className="w-full flex justify-between border-t border-b border-pink-200 py-3 my-1 bg-white/50 px-2 rounded-lg">
+                    <div className="flex flex-col items-center flex-1 border-r border-pink-200">
+                      <span className="text-[10px] uppercase font-black tracking-widest text-pink-500 mb-1">Win %</span>
+                      <span className="text-xl font-black text-pink-900">
+                        {stats.gamesPlayed > 0 ? Math.round((stats.gamesWon / stats.gamesPlayed) * 100) : 0}%
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center flex-1 border-r border-pink-200">
+                      <span className="text-[10px] uppercase font-black tracking-widest text-blue-500 mb-1">Accuracy</span>
+                      <span className="text-xl font-black text-blue-900">
+                        {stats.totalWordsSubmitted ? Math.round(((stats.totalWordsCorrect || 0) / stats.totalWordsSubmitted) * 100) : 0}%
+                      </span>
+                    </div>
+                    <div className="flex flex-col items-center flex-1">
+                      <span className="text-[10px] uppercase font-black tracking-widest text-orange-500 mb-1">Streak</span>
+                      <span className="text-xl font-black text-orange-600 flex items-center gap-1">
+                        {stats.currentStreak} <span className="text-sm">🔥</span>
+                      </span>
+                    </div>
+                  </div>
                 )}
                 
                 <div className="flex gap-2 w-full mt-2">

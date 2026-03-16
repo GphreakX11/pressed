@@ -54,15 +54,22 @@ export async function submitScore(name: string, playerId: string, score: number,
     const safeName = cleanName.replace(/:/g, ''); // Ensure no colons in member name
     const memberId = `${safeName}:${playerId}:${difficultyLabel}`;
     
-    // Submit to All-Time
+    // Clear any previous records for this exact player to prevent difficulty-variant duplicates
+    const baseIdent = `${safeName}:${playerId}`;
+    await kv.zrem(LEADERBOARD_ALLTIME_KEY, `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`);
+    
+    // Submit new score to All-Time
     await kv.zadd(LEADERBOARD_ALLTIME_KEY, { score, member: memberId });
     const countAllTime = await kv.zcard(LEADERBOARD_ALLTIME_KEY);
     if (countAllTime > 20) {
        await kv.zremrangebyrank(LEADERBOARD_ALLTIME_KEY, 0, -21);
     }
 
-    // Submit to Daily
+    // Clear any previous records for the daily board
     const dailyKey = getDailyKey();
+    await kv.zrem(dailyKey, `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`);
+
+    // Submit new score to Daily
     await kv.zadd(dailyKey, { score, member: memberId });
     // Set daily key to expire in 48 hours to clean up automatically.
     // 48 hours = 2 days = 172800 seconds.

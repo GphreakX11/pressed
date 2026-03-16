@@ -75,6 +75,8 @@ export default function GameBoard() {
   const [accuracyStreak, setAccuracyStreak] = useState(0);
   const [isTimeFrozen, setIsTimeFrozen] = useState(false);
   const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [slamOverlay, setSlamOverlay] = useState<{ text: string, type: 'gold' | 'ice' } | null>(null);
+  const [overdriveToast, setOverdriveToast] = useState<{ id: number } | null>(null);
 
   useEffect(() => {
     // Load mute preference
@@ -505,9 +507,17 @@ export default function GameBoard() {
         const newCount = comboEarned ? comboCount + 1 : 0;
         setComboCount(newCount);
 
+        const isOverdrive = accuracyStreak >= 10;
         const difficultyMultiplier = difficulty === 'hard' ? 1.5 : 1;
-        const currentMultiplier = comboEarned ? 1.5 : 1;
-        const pts = Math.floor(word.length * 10 * difficultyMultiplier * currentMultiplier);
+        const diffMult = isOverdrive ? 1 : difficultyMultiplier;
+        const comboMult = isOverdrive ? 3.0 : (comboEarned ? 1.5 : 1);
+        const pts = Math.floor(word.length * 10 * diffMult * comboMult);
+
+        if (isOverdrive) {
+          const toastId = Date.now();
+          setOverdriveToast({ id: toastId });
+          setTimeout(() => setOverdriveToast(curr => curr?.id === toastId ? null : curr), 1000);
+        }
 
         if (isMainWord) {
           setFoundWords(fw => {
@@ -544,7 +554,10 @@ export default function GameBoard() {
         setAccuracyStreak(prev => {
           const next = prev + 1;
           if (next === 5) {
-            // Clarity Bonus
+            // Clarity Bonus Cinematic
+            setSlamOverlay({ text: 'CLARITY PROTOCOL', type: 'gold' });
+            setTimeout(() => setSlamOverlay(null), 2000);
+
             const unfound = puzzle.validWords.filter(w => !foundWords.includes(w) && w !== word);
             if (unfound.length > 0) {
               const longest = unfound.reduce((a, b) => a.length >= b.length ? a : b);
@@ -562,28 +575,29 @@ export default function GameBoard() {
                 }
                 return updated;
               });
-              const bonusPts = Math.floor(longest.length * 10 * difficultyMultiplier);
+              const bonusPts = Math.floor(longest.length * 10 * (difficulty === 'hard' ? 1.5 : 1));
               setScore(s => s + bonusPts);
               setTimeout(() => {
-                setToastMessage(`CLARITY BONUS: ${longest.toUpperCase()}`);
                 playSound('coin');
               }, 400);
             }
           } else if (next === 10) {
-            // Time Freeze
+            // Time Freeze Cinematic (10s Upgrade)
             setIsTimeFrozen(true);
+            setSlamOverlay({ text: 'CRYO-STASIS: 10S FREEZE', type: 'ice' });
+            setTimeout(() => setSlamOverlay(null), 2000);
+
             setTimeout(() => {
-              setTimeout(() => setToastMessage("TIME FREEZE! (5s)"), 400);
               playSound('jackpot', 5);
             }, 400);
             
-            // Wait exactly 5 seconds, then definitively add 5000ms to the endTime to "refund" the frozen time.
+            // Wait exactly 10 seconds, then definitively add 10000ms to the endTime to "refund" the frozen time.
             setTimeout(() => {
               if (!gameOverRef.current) {
-                setEndTime(e => e ? e + 5000 : e);
+                setEndTime(e => e ? e + 10000 : e);
                 setIsTimeFrozen(false);
               }
-            }, 5000);
+            }, 10000);
           }
           return next;
         });
@@ -913,9 +927,18 @@ export default function GameBoard() {
   if (!puzzle) return null;
 
   return (
-    <div id="game-container" className="fixed inset-0 bg-pink-50 flex flex-col items-center select-none font-sans overflow-hidden">
+    <div id="game-container" className={`fixed inset-0 bg-pink-50 flex flex-col items-center select-none font-sans overflow-hidden ${isTimeFrozen ? 'frost-edges' : ''}`}>
       <Sparkles />
       
+      {/* Cinematic Slam Overlay */}
+      {slamOverlay && (
+         <div className="absolute inset-0 z-[200] pointer-events-none flex flex-col items-center justify-center">
+            <span className={`animate-slamText text-5xl md:text-6xl font-black italic tracking-tighter text-transparent bg-clip-text drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] px-4 text-center ${slamOverlay.type === 'gold' ? 'bg-gradient-to-b from-yellow-300 to-yellow-600' : 'bg-gradient-to-b from-cyan-300 to-blue-600'}`} style={{ WebkitTextStroke: `2px ${slamOverlay.type === 'gold' ? '#7c2d12' : '#1e3a8a'}` }}>
+              {slamOverlay.text}
+            </span>
+         </div>
+      )}
+
       {/* Hardened Background Watermark Logo */}
       <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none -z-10 overflow-hidden opacity-10">
         <img src="/apex-branding-full.png" alt="" className="w-[120%] max-w-2xl drop-shadow-sm mt-16 object-contain" />
@@ -1101,8 +1124,14 @@ export default function GameBoard() {
         </div>
 
         {/* Bottom Input Area */}
-         <div className="w-full mt-auto pb-8 pt-4 px-4 flex flex-col items-center gap-6 border-t border-pink-200 select-none touch-none bg-pink-50">
+         <div className="w-full mt-auto pb-8 pt-4 px-4 flex flex-col items-center gap-6 border-t border-pink-200 select-none touch-none bg-pink-50 relative">
           
+          {overdriveToast && !gameOver && (
+            <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-black italic tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-600 animate-floatUpFade pointer-events-none whitespace-nowrap z-50">
+              3x ACCURACY BONUS
+            </div>
+          )}
+
           {gameOver ? (
            qualifiesForLeaderboard ? (
              <div className="w-full flex flex-col items-center gap-4 bg-gradient-to-br from-yellow-100 via-yellow-200 to-yellow-400 p-6 rounded-xl border-4 border-[#d4af37] shadow-[0_10px_40px_rgba(212,175,55,0.4)] animate-[slideUp_0.4s_ease-out] z-40 relative text-center">

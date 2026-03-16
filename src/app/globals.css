@@ -76,7 +76,6 @@ body {
 
 .frost-edges {
   animation: frostEdges 3s infinite;
-  pointer-events: none;
 }
 
 @keyframes slamText {

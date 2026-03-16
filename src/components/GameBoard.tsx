@@ -77,6 +77,17 @@ export default function GameBoard() {
   const initializeAudio = useCallback(() => {
     if (isAudioEnabled) return;
     setIsAudioEnabled(true);
+    
+    // Unlock all audio elements for iOS Safari by playing and immediately pausing
+    [baseDingRef.current, bonusChimeRef.current, streakJackpotRef.current].forEach(el => {
+      if (el) {
+        el.play().then(() => {
+          el.pause();
+          el.currentTime = 0;
+        }).catch(() => {});
+      }
+    });
+
     if (bgmRef.current && !isMuted) {
       bgmRef.current.play().catch(error => console.log('BGM Play Error:', error));
     }
@@ -604,9 +615,9 @@ export default function GameBoard() {
     <div id="game-container" className="fixed inset-0 bg-pink-50 flex flex-col items-center select-none font-sans overflow-hidden">
       <Sparkles />
       
-      {/* Subtle In-Game HUD Branding */}
-      <div className="absolute top-4 left-4 z-50 opacity-70 pointer-events-none">
-        <img src="/icon.png" alt="Apex" className="w-8 h-8 md:w-10 md:h-10 drop-shadow-sm" />
+      {/* Hardened Background Watermark Logo */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none z-0 overflow-hidden opacity-[0.05]">
+        <img src="/apex-branding-full.png" alt="" className="w-[120%] max-w-2xl drop-shadow-sm mt-16 object-contain" />
       </div>
 
       {/* Dynamic Jackpot Flash Background */}

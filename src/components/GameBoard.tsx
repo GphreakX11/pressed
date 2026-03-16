@@ -25,7 +25,7 @@ export default function GameBoard() {
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
 
   const [lastWordTime, setLastWordTime] = useState<number | null>(null);
-  const [comboMultiplier, setComboMultiplier] = useState(1);
+  const [comboCount, setComboCount] = useState(0);
   const [timeBonus, setTimeBonus] = useState(0);
 
   const foundWordsRef = useRef<string[]>([]);
@@ -43,34 +43,77 @@ export default function GameBoard() {
   const [shakeInput, setShakeInput] = useState(false);
   const [successAnim, setSuccessAnim] = useState<{ active: boolean; word: string[]; type: 'base' | 'bonus' }>({ active: false, word: [], type: 'base' });
   const [bonusToast, setBonusToast] = useState<{ id: number; points: number } | null>(null);
+  const [juiceToast, setJuiceToast] = useState<{ id: number; points: number, isCombo: boolean } | null>(null);
+  const [jackpotBlast, setJackpotBlast] = useState<{ id: number, active: boolean, count: number } | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
-  
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const audioContextRef = useRef<AudioContext | null>(null);
+
   useEffect(() => {
+    // Initialize Web Audio API
     try {
-      audioRef.current = new Audio('/sounds/bonus.mp3');
-    } catch(e) {}
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      audioContextRef.current = new AudioContext();
+    } catch(e) {
+      console.error("Web Audio API not supported:", e);
+    }
   }, []);
 
-  // Speed Combo Reset Hook securely prevents infinite loops
+  const playChime = useCallback((count: number) => {
+    try {
+      if (!audioContextRef.current) return;
+      
+      // Resume context if suspended (browser auto-play policy)
+      if (audioContextRef.current.state === 'suspended') {
+        audioContextRef.current.resume();
+      }
+
+      const ctx = audioContextRef.current;
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      // Configure oscillator (A high, bell-like ping)
+      osc.type = 'sine';
+      
+      // Base frequency 800Hz, pitching up cleanly by ~40Hz per combo count 
+      const baseFreq = 800;
+      osc.frequency.setValueAtTime(baseFreq + (count * 40), ctx.currentTime);
+
+      // Configure gain envelope (quick attack, 500ms exponential decay)
+      gainNode.gain.setValueAtTime(0, ctx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.5, ctx.currentTime + 0.05); // attack
+      gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.5); // release
+
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      osc.start();
+      osc.stop(ctx.currentTime + 0.5);
+    } catch (err) {
+      console.warn("Audio chime failed to play:", err);
+    }
+  }, []);
+
+  // Speed Combo Indicator Hook strictly controls 3-second active window
   useEffect(() => {
-    if (!lastWordTime || comboMultiplier === 1 || gameOver) return;
+    if (!lastWordTime || comboCount === 0 || gameOver) return;
     
+    // Safety check in case the effect runs slightly late
     const now = Date.now();
     const timeElapsed = now - lastWordTime;
     const remainingTime = 3000 - timeElapsed;
     
     if (remainingTime <= 0) {
-      setComboMultiplier(1);
+      setComboCount(0);
       return;
     }
     
     const timer = setTimeout(() => {
-      setComboMultiplier(1);
+      setComboCount(0);
     }, remainingTime);
     
     return () => clearTimeout(timer);
-  }, [lastWordTime, comboMultiplier, gameOver]);
+  }, [lastWordTime, comboCount, gameOver]);
 
   // Rolling display score animation
   useEffect(() => {
@@ -157,7 +200,7 @@ export default function GameBoard() {
     setScore(0);
     setDisplayScore(0);
     setTimeBonus(0);
-    setComboMultiplier(1);
+    setComboCount(0);
     setLastWordTime(null);
     setFoundWords([]);
     setFoundBonusWords([]);
@@ -170,6 +213,7 @@ export default function GameBoard() {
     setShakeInput(false);
     setSuccessAnim({ active: false, word: [], type: 'base' });
     setBonusToast(null);
+    setJuiceToast(null);
     setToastMessage(null);
   }, [difficulty]);
 
@@ -316,21 +360,20 @@ export default function GameBoard() {
       const isBonusWord = puzzle.bonusWords?.includes(word);
       
       if (isMainWord || isBonusWord) {
-        let currentMultiplier = 1;
         const now = Date.now();
-        if (lastWordTime && (now - lastWordTime) <= 3000) {
-            currentMultiplier = Math.min(3, comboMultiplier + 0.5);
-            setComboMultiplier(currentMultiplier);
-        } else {
-            setComboMultiplier(1);
-        }
+        const comboEarned = lastWordTime !== null && (now - lastWordTime) <= 3000;
+        
+        const newCount = comboEarned ? comboCount + 1 : 0;
+        setComboCount(newCount);
         setLastWordTime(now);
 
         const difficultyMultiplier = difficulty === 'hard' ? 1.5 : 1;
+        const currentMultiplier = comboEarned ? 1.5 : 1;
         const pts = Math.floor(word.length * 10 * difficultyMultiplier * currentMultiplier);
 
         if (isMainWord) {
           setFoundWords(fw => {
+            if (fw.includes(word)) return fw; // Strict mode prevention
             const next = [...fw, word];
             if (next.length === puzzle.validWords.length) {
               setGameOver(true);
@@ -342,7 +385,7 @@ export default function GameBoard() {
             return next;
           });
         } else {
-          setFoundBonusWords(fw => [...fw, word]);
+          setFoundBonusWords(fw => fw.includes(word) ? fw : [...fw, word]); // Strict mode prevention
         }
         
         setScore(s => s + pts);
@@ -357,14 +400,17 @@ export default function GameBoard() {
         // Trigger non-blocking visual success animation
         setSuccessAnim({ active: true, word: wordChars, type: isBonus ? 'bonus' : 'base' });
         
-        if (isBonus) {
-           setBonusToast({ id: Date.now(), points: pts });
-           try {
-             if (audioRef.current) {
-               audioRef.current.currentTime = 0;
-               audioRef.current.play().catch(() => {});
-             }
-           } catch(e) {}
+        setJuiceToast({ id: Date.now(), points: pts, isCombo: comboEarned });
+
+        if (comboEarned) {
+          const blastId = Date.now();
+          setJackpotBlast({ id: blastId, active: true, count: newCount });
+          setTimeout(() => setJackpotBlast(curr => curr?.id === blastId ? null : curr), 800);
+        }
+
+        if (isBonus || comboEarned) {
+           if (isBonus) setBonusToast({ id: Date.now(), points: pts });
+           playChime(newCount);
         }
         
         setTimeout(() => {
@@ -481,9 +527,26 @@ export default function GameBoard() {
   if (!puzzle) return null;
 
   return (
-    <div className="fixed inset-0 bg-pink-50 flex flex-col items-center select-none font-sans overflow-hidden">
+    <div id="game-container" className="fixed inset-0 bg-pink-50 flex flex-col items-center select-none font-sans overflow-hidden">
       <Sparkles />
       
+      {/* Dynamic Jackpot Flash Background */}
+      {jackpotBlast?.active && (
+         <div className="absolute inset-0 z-10 pointer-events-none animate-bgFlash" />
+      )}
+
+      {/* Massive STREAK BONUS Overlay */}
+      {jackpotBlast?.active && (
+         <div className="absolute top-1/2 left-1/2 z-50 pointer-events-none animate-blastUp flex flex-col items-center justify-center w-full">
+            <span className="text-5xl md:text-7xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-orange-600 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] filter drop-shadow-xl" style={{ WebkitTextStroke: '2px #7c2d12' }}>
+              STREAK BONUS!
+            </span>
+            <span className="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md mt-2">
+              {jackpotBlast.count}X COMBO
+            </span>
+         </div>
+      )}
+
       {/* Intense Final 10 Seconds Overlay */}
       {timeLeft <= 10 && !gameOver && !showWelcome && (
         <div 
@@ -532,14 +595,19 @@ export default function GameBoard() {
           
           <div className="flex flex-col items-center mt-2 relative">
             <span className="text-pink-900 text-xs font-bold mb-1">Score</span>
-            <div className="bg-white border border-pink-200 shadow-sm rounded px-2 py-1 min-w-[60px] text-right">
-              <span className="text-[#d4af37] font-mono font-bold text-xl tracking-widest">{displayScore.toString()}</span>
-            </div>
-            {comboMultiplier > 1 && (
-              <div className="absolute -right-8 top-5 animate-pulse">
-                <span className="text-orange-500 font-black text-lg italic">{comboMultiplier}x</span>
+            <div className="flex items-center gap-2">
+              <div className="bg-white border border-pink-200 shadow-sm rounded px-2 py-1 min-w-[60px] text-right">
+                <span className="text-[#d4af37] font-mono font-bold text-xl tracking-widest">{displayScore.toString()}</span>
               </div>
-            )}
+              <div className={`
+                flex items-center justify-center w-10 h-10 rounded border-2 shadow-sm transition-all duration-300
+                ${comboCount > 0 
+                  ? 'bg-orange-100 border-orange-500 text-orange-600 animate-heartbeat' 
+                  : 'bg-gray-100 border-gray-300 text-gray-400 opacity-60'}
+              `}>
+                <span className="font-black text-lg italic">1.5x</span>
+              </div>
+            </div>
           </div>
 
           <div className="flex flex-col items-center pb-2">
@@ -685,7 +753,21 @@ export default function GameBoard() {
               )}
               
               {/* Current Input Slots */}
-              <div className={`flex justify-center gap-[4px] sm:gap-[6px] w-full h-12 sm:h-14 ${shakeInput ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}>
+              <div className="relative w-full">
+                {/* Floating Juice Toast */}
+                {juiceToast && (
+                  <div 
+                    key={`juice-${juiceToast.id}`} 
+                    className="absolute -top-[40px] left-1/2 transform -translate-x-1/2 z-50 pointer-events-none animate-floatUpFade"
+                  >
+                    <span className={`font-black text-2xl md:text-3xl tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.5)] ${
+                      juiceToast.isCombo ? 'text-[#ff5500] italic' : 'text-[#22c55e]'
+                    }`}>
+                      +{juiceToast.points} {juiceToast.isCombo ? 'SPEED BONUS!' : ''}
+                    </span>
+                  </div>
+                )}
+                <div className={`flex justify-center gap-[4px] sm:gap-[6px] w-full h-12 sm:h-14 ${shakeInput ? 'animate-[shake_0.4s_ease-in-out]' : ''}`}>
                 {Array.from({ length: 6 }).map((_, i) => {
                   // Determine if we should show the success animation char or the real active input char
                   const isSuccessActive = successAnim.active && inputState.currentInput.length === 0;
@@ -709,6 +791,7 @@ export default function GameBoard() {
                     </div>
                   )
                 })}
+                </div>
               </div>
 
               {/* Source Letters */}

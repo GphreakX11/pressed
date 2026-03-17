@@ -18,8 +18,14 @@ export default function GameBoard() {
   const [highScore, setHighScore] = useState(0);
   const [foundWords, setFoundWords] = useState<string[]>([]);
   const [foundBonusWords, setFoundBonusWords] = useState<string[]>([]);
-  
+  const foundBonusWordsRef = useRef<string[]>([]);
+  useEffect(() => { foundBonusWordsRef.current = foundBonusWords; }, [foundBonusWords]);
 
+  const scoreRef = useRef(0);
+  useEffect(() => { scoreRef.current = score; }, [score]);
+  
+  const puzzleRef = useRef<Puzzle | null>(null);
+  useEffect(() => { puzzleRef.current = puzzle; }, [puzzle]);
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [isDailyMode, setIsDailyMode] = useState(false);
   const [stats, setStats] = useState<PlayerStats | null>(null);
@@ -80,6 +86,8 @@ export default function GameBoard() {
   const [gameOver, setGameOver] = useState(false);
   const gameOverRef = useRef(false);
   useEffect(() => { gameOverRef.current = gameOver; }, [gameOver]);
+  
+  const endGameProcessedRef = useRef(false);
 
   // Track words submitted with a ref so endGame closure always has the latest value
   const [wordsSubmitted, setWordsSubmitted] = useState(0);
@@ -261,16 +269,19 @@ export default function GameBoard() {
   }, [puzzle]);
 
   const handleQuitGame = useCallback(() => {
+    if (endGameProcessedRef.current) return;
+    endGameProcessedRef.current = true;
+    
     // Collect final advanced stats for quit 
-    const wordsCorrect = foundWordsRef.current.length + foundBonusWords.length;
-    const gridSeen = puzzle?.validWords.length || 0;
+    const wordsCorrect = foundWordsRef.current.length + foundBonusWordsRef.current.length;
+    const gridSeen = puzzleRef.current?.validWords.length || 0;
     const gridFilled = foundWordsRef.current.length;
     
     // Save current title before recording result
     const currentStats = loadStats();
     const oldTitle = getTitle(currentStats.gamesWon).title;
 
-    recordGameResult(false, score, wordsSubmittedRef.current, wordsCorrect, gridSeen, gridFilled);
+    recordGameResult(false, scoreRef.current, wordsSubmittedRef.current, wordsCorrect, gridSeen, gridFilled);
     
     // Check for rank up
     const newStats = loadStats();
@@ -283,7 +294,7 @@ export default function GameBoard() {
     setGameOver(true);
     setShowWelcome(true);
     setShowQuitConfirm(false);
-  }, [score]);
+  }, []);
 
   // --- Automatic Score Recovery Effect ---
   useEffect(() => {
@@ -315,7 +326,8 @@ export default function GameBoard() {
   // ---------------------------------------
 
   const endGame = useCallback((won: boolean, additionalScore: number = 0) => {
-    if (gameOverRef.current) return;
+    if (endGameProcessedRef.current) return;
+    endGameProcessedRef.current = true;
     setGameOver(true);
     
     // Clear any dangling freeze refund timer so it doesn't fire on the victory screen
@@ -324,54 +336,54 @@ export default function GameBoard() {
       freezeTimeoutRef.current = null;
     }
     
-    setScore(s => {
-      const finalScore = s + additionalScore;
-      setHighScore(h => {
-        if (finalScore > h) {
-          localStorage.setItem('pressedHighScore', finalScore.toString());
-          return finalScore;
-        }
-        return h;
-      });
-
-      // Collect advanced stats 
-      const wordsCorrect = foundWordsRef.current.length + foundBonusWords.length;
-      const gridSeen = puzzle?.validWords.length || 0;
-      const gridFilled = foundWordsRef.current.length;
-
-      // Save current title before recording result
-      const currentStats = loadStats();
-      const oldTitle = getTitle(currentStats.gamesWon).title;
-
-      recordGameResult(won, finalScore, wordsSubmittedRef.current, wordsCorrect, gridSeen, gridFilled);
+    const finalScore = scoreRef.current + additionalScore;
+    if (additionalScore > 0) {
+      setScore(finalScore);
+    }
       
-      // Check for rank up
-      const newStats = loadStats();
-      const newTitle = getTitle(newStats.gamesWon).title;
-      if (newTitle !== oldTitle) {
-        setTimeout(() => setToastMessage(`Rank Up: You are now a ${newTitle}!`), 1000);
+    setHighScore(h => {
+      if (finalScore > h) {
+        localStorage.setItem('pressedHighScore', finalScore.toString());
+        return finalScore;
       }
-      
-      setStats(newStats);
-
-      // Leaderboard Qualification Check
-      if (finalScore > 0) {
-        setDailyLeaderboard(currentLb => {
-          if (currentLb.length < 10 || finalScore > currentLb[currentLb.length - 1].score) {
-            setQualifiesForLeaderboard(true);
-          }
-          return currentLb;
-        });
-        setAllTimeLeaderboard(currentLb => {
-          if (currentLb.length < 10 || finalScore > currentLb[currentLb.length - 1].score) {
-            setQualifiesForLeaderboard(true);
-          }
-          return currentLb;
-        });
-      }
-
-      return finalScore;
+      return h;
     });
+
+    // Collect advanced stats 
+    const wordsCorrect = foundWordsRef.current.length + foundBonusWordsRef.current.length;
+    const gridSeen = puzzleRef.current?.validWords.length || 0;
+    const gridFilled = foundWordsRef.current.length;
+
+    // Save current title before recording result
+    const currentStats = loadStats();
+    const oldTitle = getTitle(currentStats.gamesWon).title;
+
+    recordGameResult(won, finalScore, wordsSubmittedRef.current, wordsCorrect, gridSeen, gridFilled);
+    
+    // Check for rank up
+    const newStats = loadStats();
+    const newTitle = getTitle(newStats.gamesWon).title;
+    if (newTitle !== oldTitle) {
+      setTimeout(() => setToastMessage(`Rank Up: You are now a ${newTitle}!`), 1000);
+    }
+    
+    setStats(newStats);
+
+    // Leaderboard Qualification Check
+    if (finalScore > 0) {
+      setDailyLeaderboard(currentLb => {
+        if (currentLb.length < 10 || finalScore > currentLb[currentLb.length - 1].score) {
+          setQualifiesForLeaderboard(true);
+        }
+        return currentLb;
+      });
+      setAllTimeLeaderboard(currentLb => {
+        if (currentLb.length < 10 || finalScore > currentLb[currentLb.length - 1].score) {
+          setQualifiesForLeaderboard(true);
+        }
+        return currentLb;
+      });
+    }
   }, []);
 
   const handleScoreSubmit = async () => {
@@ -501,6 +513,7 @@ export default function GameBoard() {
       availableSlots: [...newPuzzle.sourceLetters]
     });
     setGameOver(false);
+    endGameProcessedRef.current = false;
     setShowWelcome(false);
     setShakeInput(false);
     setSuccessAnim({ active: false, word: [], type: 'base' });

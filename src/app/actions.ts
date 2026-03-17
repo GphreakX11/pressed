@@ -12,8 +12,10 @@ export type LeaderboardEntry = {
 
 const LEADERBOARD_ALLTIME_KEY = 'apex_global_alltime';
 
+import { getDailyId } from '@/lib/puzzles';
+
 function getDailyKey() {
-  const today = new Date().toISOString().split('T')[0];
+  const today = getDailyId();
   return `apex_global_daily_${today}`;
 }
 
@@ -146,14 +148,13 @@ export async function getConsensusData(words: string[]): Promise<Record<string, 
 }
 
 // Global server puzzle generation to handle consensus
-import { Difficulty, Puzzle, ROOT_WORDS, GRID_CAP, isValidAnagram, xmur3, mulberry32, getPuzzleWithRng, easyNormalWords, hardWords, enable1Fallback } from '@/lib/puzzles';
+import { Difficulty, Puzzle, ROOT_WORDS, GRID_CAP, isValidAnagram, xmur3, mulberry32, getPuzzleWithRng, tier1, tier2, tier3, tier4 } from '@/lib/puzzles';
 
 export async function getGamePuzzle(difficulty: Difficulty = 'normal'): Promise<Puzzle> {
   // We'll perform the root word selection here to keep it async and fetch consensus
   const pool = ROOT_WORDS[difficulty];
   const cap = GRID_CAP[difficulty];
-  const targetDictionary = (difficulty === 'hard' ? hardWords : easyNormalWords) as string[];
-  const fallback = enable1Fallback as string[];
+  const allTiers = [...(tier1 as string[]), ...(tier2 as string[]), ...(tier3 as string[]), ...(tier4 as string[])];
 
   let puzzle: Puzzle | null = null;
   while (!puzzle) {
@@ -161,10 +162,9 @@ export async function getGamePuzzle(difficulty: Difficulty = 'normal'): Promise<
     const rootLetters = rootWord.split('');
     
     // Find potential words to check consensus
-    const mainAnagrams = targetDictionary.filter(w => isValidAnagram(w, rootLetters));
-    const allAnagrams = fallback.filter(w => isValidAnagram(w, rootLetters));
+    const validAnagrams = allTiers.filter(w => isValidAnagram(w, rootLetters));
+    const uniquePotential = Array.from(new Set(validAnagrams));
     
-    const uniquePotential = Array.from(new Set([...mainAnagrams, ...allAnagrams]));
     const consensus = await getConsensusData(uniquePotential);
     
     puzzle = getPuzzleWithRng(Math.random, difficulty, consensus);
@@ -176,25 +176,24 @@ export async function getGamePuzzle(difficulty: Difficulty = 'normal'): Promise<
   return puzzle;
 }
 
-export async function getDailyGamePuzzle(dateStr: string): Promise<Puzzle> {
-  const seedGen = xmur3(dateStr);
+export async function getDailyGamePuzzle(dateStr?: string): Promise<Puzzle> {
+  const actualDateStr = dateStr || getDailyId();
+  const seedGen = xmur3(actualDateStr);
   const seed = seedGen();
   const rng = mulberry32(seed);
   
   const difficulty: Difficulty = 'normal'; // Daily is always normal
   const pool = ROOT_WORDS[difficulty];
-  const targetDictionary = easyNormalWords as string[];
-  const fallback = enable1Fallback as string[];
+  const allTiers = [...(tier1 as string[]), ...(tier2 as string[]), ...(tier3 as string[]), ...(tier4 as string[])];
 
   let puzzle: Puzzle | null = null;
   while (!puzzle) {
     const rootWord = pool[Math.floor(rng() * pool.length)];
     const rootLetters = rootWord.split('');
     
-    const mainAnagrams = targetDictionary.filter(w => isValidAnagram(w, rootLetters));
-    const allAnagrams = fallback.filter(w => isValidAnagram(w, rootLetters));
+    const validAnagrams = allTiers.filter(w => isValidAnagram(w, rootLetters));
+    const uniquePotential = Array.from(new Set(validAnagrams));
     
-    const uniquePotential = Array.from(new Set([...mainAnagrams, ...allAnagrams]));
     const consensus = await getConsensusData(uniquePotential);
     
     puzzle = getPuzzleWithRng(rng, difficulty, consensus);

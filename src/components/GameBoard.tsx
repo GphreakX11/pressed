@@ -494,7 +494,7 @@ export default function GameBoard() {
 
     setPuzzle(null); // Clear old puzzle to show loading or just prevent race
     const newPuzzle = isDaily
-      ? await getDailyGamePuzzle(new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString().split('T')[0])
+      ? await getDailyGamePuzzle()
       : await getGamePuzzle(activeDiff);
     
     setPuzzle(newPuzzle);

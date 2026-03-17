@@ -1,8 +1,9 @@
-import easyNormalWords from './easy_normal_words.json';
-import hardWords from './hard_words.json';
-import enable1Fallback from './enable1_3to6.json';
+import tier1 from './tier1_ef3k.json';
+import tier2 from './tier2_google10k.json';
+import tier3 from './tier3_google20k.json';
+import tier4 from './tier4_enable1.json';
 
-export { easyNormalWords, hardWords, enable1Fallback };
+export { tier1, tier2, tier3, tier4 };
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
@@ -24,20 +25,44 @@ function hasPowerLetter(word: string): boolean {
   return word.split('').some(c => POWER_LETTERS.has(c.toUpperCase()));
 }
 
-// 6-letter roots for easy/normal
-const ROOT_WORDS_EASY_NORMAL = (easyNormalWords as string[]).filter(w => w.length === 6);
-// 6-letter roots for hard
-const ROOT_WORDS_HARD = (hardWords as string[]).filter(w => w.length === 6);
+// 6-letter roots for easy/normal (Tier 1 & Tier 2)
+const ROOT_WORDS_EASY_NORMAL = Array.from(new Set([...(tier1 as string[]), ...(tier2 as string[])])).filter(w => w.length === 6);
+// 6-letter roots for hard (Tier 3)
+const ROOT_WORDS_HARD = (tier3 as string[]).filter(w => w.length === 6);
 
 // Per-difficulty root pools
 export const ROOT_WORDS: Record<Difficulty, string[]> = {
-  // Easy: 3+ vowels → lots of recognizable permutations
+  // Easy: 3+ vowels -> lots of recognizable permutations
   easy:   ROOT_WORDS_EASY_NORMAL.filter(w => countVowels(w) >= 3),
-  // Normal: 2-3 vowels → standard mix
+  // Normal: 2-3 vowels -> standard mix
   normal: ROOT_WORDS_EASY_NORMAL.filter(w => { const v = countVowels(w); return v >= 2 && v <= 3; }),
-  // Hard: ≤2 vowels OR contains a power letter
+  // Hard: <= 2 vowels OR contains a power letter
   hard:   ROOT_WORDS_HARD.filter(w => countVowels(w) <= 2 || hasPowerLetter(w)),
 };
+
+/**
+ * Returns a date string formatted as YYYY-MM-DD that offsets cleanly to 3:00 AM EST.
+ */
+export function getDailyId(): string {
+  const now = new Date();
+  // We offset it by 3 hours back. If it's 2:59 AM EST, it will count as the previous day.
+  // We use America/New_York (EST/EDT) explicitly.
+  const threeHoursAgo = new Date(now.getTime() - (3 * 60 * 60 * 1000));
+  
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'America/New_York',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
+  
+  const parts = formatter.formatToParts(threeHoursAgo);
+  const year = parts.find(p => p.type === 'year')?.value;
+  const month = parts.find(p => p.type === 'month')?.value;
+  const day = parts.find(p => p.type === 'day')?.value;
+  
+  return `${year}-${month}-${day}`;
+}
 
 // Grid caps per difficulty
 export const GRID_CAP: Record<Difficulty, number> = {
@@ -111,80 +136,94 @@ export function getPuzzleWithRng(
   // Require at least enough filtered words to fill the grid
   const minRequired = Math.min(cap, 5);
   
-  // Choose the correct target dictionary for validation
-  const targetDictionary = difficulty === 'hard' ? hardWords : easyNormalWords;
-
   while (validWords.length < minRequired) {
     const rootWord = pool[Math.floor(rng() * pool.length)];
     rootWordObj = rootWord;
     rootLetters = rootWord.split('');
 
-    // Filter the target curated list (10k or 20k) for valid anagrams for the main grid
-    const mainGridAnagrams = (targetDictionary as string[])
-      .filter((word: string) => isValidAnagram(word, rootLetters))
-      .map(w => w.toUpperCase());
+    const getAnagrams = (list: string[]) => Array.from(new Set(
+      list.filter(w => isValidAnagram(w, rootLetters)).map(w => w.toUpperCase())
+    ));
 
-    const deduplicatedMain = Array.from(new Set(mainGridAnagrams));
-    
-    // Fallback: get ALL mathematically possible anagrams that exist in ENABLE1
-    const allBonusAnagrams = (enable1Fallback as string[])
-      .filter((word: string) => isValidAnagram(word, rootLetters))
-      .map(w => w.toUpperCase());
-
-    const deduplicatedAll = Array.from(new Set(allBonusAnagrams));
+    const tier1Words = getAnagrams(tier1 as string[]);
+    const tier2Words = getAnagrams(tier2 as string[]);
+    const tier3Words = getAnagrams(tier3 as string[]);
+    const allBonusAnagrams = getAnagrams(tier4 as string[]);
 
     validWords = [];
     bonusWords = [];
+    
+    const bingoWord = rootWordObj.toUpperCase();
 
-    if (deduplicatedMain.length > 0) {
-      const bingoWord = rootWordObj.toUpperCase();
-      
-      // CONSENSUS LOGIC: Sort and filter by find-rate
-      // 1. Separate words into those with high enough data and those without
-      const scoredWords = deduplicatedMain.map(word => {
+    // Reusable function to filter out words with consensus < 20%
+    const processTier = (words: string[]) => {
+      const scored = words.map(word => {
         const stats = consensusData[word];
         const hasConsensus = stats && stats.appearances >= 50;
         return {
           word,
-          rate: hasConsensus ? stats.rate : -1, // -1 means use Google Frequency fallback
+          rate: hasConsensus ? stats.rate : -1,
           appearances: stats?.appearances || 0
         };
       });
 
-      // 2. Sort by Rate (descending) but preserve Google order for 'Cold Start' words
-      // Since deduplicatedMain is already in Google Frequency order, we can use stable sort
-      const sortedByConsensus = [...scoredWords].sort((a, b) => {
+      // Sort by rate descending (preserving Google/EF implicit ordering for -1)
+      const sorted = [...scored].sort((a, b) => {
         if (a.rate >= 0 && b.rate >= 0) return b.rate - a.rate;
-        if (a.rate >= 0) return -1; // Prioritize consensus words
+        if (a.rate >= 0) return -1;
         if (b.rate >= 0) return 1;
-        return 0; // Keep original order (Google Rank)
+        return 0;
       });
 
-      // 3. Apply Demotion Rule: Rate < 20% moves to bonus
-      const potentialBox = sortedByConsensus.filter(item => {
-        if (item.word === bingoWord) return true; // Bingo word is always a box word
-        if (item.rate >= 0 && item.rate < 0.20) return false; // Demote
-        return true;
-      }).map(i => i.word);
+      const box: string[] = [];
+      const demoted: string[] = [];
 
-      const demotedToBonus = sortedByConsensus.filter(item => {
-        if (item.word === bingoWord) return false;
-        return item.rate >= 0 && item.rate < 0.20;
-      }).map(i => i.word);
+      for (const item of sorted) {
+        if (item.word === bingoWord) {
+           box.push(item.word);
+        } else if (item.rate >= 0 && item.rate < 0.20) {
+           demoted.push(item.word);
+        } else {
+           box.push(item.word);
+        }
+      }
+      return { box, demoted };
+    };
 
-      const nonBingoBox = potentialBox.filter(w => w !== bingoWord);
+    const t1 = processTier(tier1Words);
+    const t2 = processTier(tier2Words);
+    const t3 = processTier(tier3Words);
 
-      // Bingo word first, then fill grid up to the per-difficulty cap
-      const cappedGrid = [bingoWord, ...nonBingoBox.slice(0, cap - 1)];
-      const overflowMain = nonBingoBox.slice(cap - 1);
-      
-      const cappedGridSet = new Set(cappedGrid);
-      const pureBonusOnly = deduplicatedAll.filter(w => !cappedGridSet.has(w));
+    // Build the grid respecting tier hierarchy
+    const boxPool: string[] = [bingoWord];
+    const addDistinct = (words: string[]) => {
+      for (const w of words) {
+        if (!boxPool.includes(w)) boxPool.push(w);
+      }
+    };
 
-      validWords = cappedGrid;
-      // Bonus words = demoted words + overflow from main list + all other valid ENABLE1 anagrams
-      bonusWords = Array.from(new Set([...demotedToBonus, ...overflowMain, ...pureBonusOnly]));
+    addDistinct(t1.box);
+    addDistinct(t2.box);
+    
+    if (difficulty === 'hard') {
+      addDistinct(t3.box);
     }
+
+    const nonBingoBox = boxPool.filter(w => w !== bingoWord);
+
+    // Fill the board up to the cap
+    const cappedGrid = [bingoWord, ...nonBingoBox.slice(0, cap - 1)];
+    const overflowMain = nonBingoBox.slice(cap - 1);
+    
+    // Everything else falls into Bonus
+    const demotedBonus = [...t1.demoted, ...t2.demoted];
+    if (difficulty !== 'hard') demotedBonus.push(...t3.box, ...t3.demoted);
+    else demotedBonus.push(...t3.demoted);
+
+    const allBonus = Array.from(new Set([...overflowMain, ...demotedBonus, ...allBonusAnagrams]));
+
+    validWords = cappedGrid;
+    bonusWords = allBonus.filter(w => !validWords.includes(w));
   }
 
   // Scramble the source letters

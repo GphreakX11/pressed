@@ -2,6 +2,8 @@ import easyNormalWords from './easy_normal_words.json';
 import hardWords from './hard_words.json';
 import enable1Fallback from './enable1_3to6.json';
 
+export { easyNormalWords, hardWords, enable1Fallback };
+
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
 export type Puzzle = {
@@ -28,7 +30,7 @@ const ROOT_WORDS_EASY_NORMAL = (easyNormalWords as string[]).filter(w => w.lengt
 const ROOT_WORDS_HARD = (hardWords as string[]).filter(w => w.length === 6);
 
 // Per-difficulty root pools
-const ROOT_WORDS: Record<Difficulty, string[]> = {
+export const ROOT_WORDS: Record<Difficulty, string[]> = {
   // Easy: 3+ vowels → lots of recognizable permutations
   easy:   ROOT_WORDS_EASY_NORMAL.filter(w => countVowels(w) >= 3),
   // Normal: 2-3 vowels → standard mix
@@ -38,7 +40,7 @@ const ROOT_WORDS: Record<Difficulty, string[]> = {
 };
 
 // Grid caps per difficulty
-const GRID_CAP: Record<Difficulty, number> = {
+export const GRID_CAP: Record<Difficulty, number> = {
   easy:   8,
   normal: 12,
   hard:   15,
@@ -48,7 +50,7 @@ const GRID_CAP: Record<Difficulty, number> = {
  * Helper function to check if a dictionary word can be formed 
  * strictly using the available source letters (accounting for duplicates).
  */
-function isValidAnagram(word: string, sourceLetters: string[]): boolean {
+export function isValidAnagram(word: string, sourceLetters: string[]): boolean {
   // Length Guard: Ensure words are at least 3 letters long.
   if (word.length < 3 || word.length > 6) return false;
   
@@ -74,7 +76,7 @@ function isValidAnagram(word: string, sourceLetters: string[]): boolean {
 }
 
 // PRNG utilities for seeded daily puzzles
-function xmur3(str: string) {
+export function xmur3(str: string) {
     for(var i = 0, h = 1779033703 ^ str.length; i < str.length; i++) {
         h = Math.imul(h ^ str.charCodeAt(i), 3432918353);
         h = h << 13 | h >>> 19;
@@ -85,7 +87,7 @@ function xmur3(str: string) {
     }
 }
 
-function mulberry32(a: number) {
+export function mulberry32(a: number) {
     return function() {
       var t = a += 0x6D2B79F5;
       t = Math.imul(t ^ t >>> 15, t | 1);
@@ -94,7 +96,11 @@ function mulberry32(a: number) {
     }
 }
 
-function getPuzzleWithRng(rng: () => number, difficulty: Difficulty = 'normal'): Puzzle {
+export function getPuzzleWithRng(
+  rng: () => number, 
+  difficulty: Difficulty = 'normal',
+  consensusData: Record<string, { finds: number, appearances: number, rate: number }> = {}
+): Puzzle {
   let rootLetters: string[] = [];
   let rootWordObj: string = "";
   let validWords: string[] = [];
@@ -132,17 +138,52 @@ function getPuzzleWithRng(rng: () => number, difficulty: Difficulty = 'normal'):
 
     if (deduplicatedMain.length > 0) {
       const bingoWord = rootWordObj.toUpperCase();
-      const nonBingo = deduplicatedMain.filter(w => w !== bingoWord);
+      
+      // CONSENSUS LOGIC: Sort and filter by find-rate
+      // 1. Separate words into those with high enough data and those without
+      const scoredWords = deduplicatedMain.map(word => {
+        const stats = consensusData[word];
+        const hasConsensus = stats && stats.appearances >= 50;
+        return {
+          word,
+          rate: hasConsensus ? stats.rate : -1, // -1 means use Google Frequency fallback
+          appearances: stats?.appearances || 0
+        };
+      });
+
+      // 2. Sort by Rate (descending) but preserve Google order for 'Cold Start' words
+      // Since deduplicatedMain is already in Google Frequency order, we can use stable sort
+      const sortedByConsensus = [...scoredWords].sort((a, b) => {
+        if (a.rate >= 0 && b.rate >= 0) return b.rate - a.rate;
+        if (a.rate >= 0) return -1; // Prioritize consensus words
+        if (b.rate >= 0) return 1;
+        return 0; // Keep original order (Google Rank)
+      });
+
+      // 3. Apply Demotion Rule: Rate < 20% moves to bonus
+      const potentialBox = sortedByConsensus.filter(item => {
+        if (item.word === bingoWord) return true; // Bingo word is always a box word
+        if (item.rate >= 0 && item.rate < 0.20) return false; // Demote
+        return true;
+      }).map(i => i.word);
+
+      const demotedToBonus = sortedByConsensus.filter(item => {
+        if (item.word === bingoWord) return false;
+        return item.rate >= 0 && item.rate < 0.20;
+      }).map(i => i.word);
+
+      const nonBingoBox = potentialBox.filter(w => w !== bingoWord);
 
       // Bingo word first, then fill grid up to the per-difficulty cap
-      const cappedGrid = [bingoWord, ...nonBingo.slice(0, cap - 1)];
-      const overflowMain = nonBingo.slice(cap - 1);
+      const cappedGrid = [bingoWord, ...nonBingoBox.slice(0, cap - 1)];
+      const overflowMain = nonBingoBox.slice(cap - 1);
       
       const cappedGridSet = new Set(cappedGrid);
       const pureBonusOnly = deduplicatedAll.filter(w => !cappedGridSet.has(w));
 
       validWords = cappedGrid;
-      bonusWords = Array.from(new Set([...overflowMain, ...pureBonusOnly]));
+      // Bonus words = demoted words + overflow from main list + all other valid ENABLE1 anagrams
+      bonusWords = Array.from(new Set([...demotedToBonus, ...overflowMain, ...pureBonusOnly]));
     }
   }
 
@@ -161,12 +202,12 @@ function getPuzzleWithRng(rng: () => number, difficulty: Difficulty = 'normal'):
   };
 }
 
-export function getRandomPuzzle(difficulty: Difficulty = 'normal'): Puzzle {
-  return getPuzzleWithRng(Math.random, difficulty);
+export function getRandomPuzzle(difficulty: Difficulty = 'normal', consensusData?: any): Puzzle {
+  return getPuzzleWithRng(Math.random, difficulty, consensusData);
 }
 
-export function getDailyPuzzle(dateStr: string): Puzzle {
+export function getDailyPuzzle(dateStr: string, consensusData?: any): Puzzle {
   const seed = xmur3(dateStr)();
   // Daily Trial always uses Normal profile for competitive fairness
-  return getPuzzleWithRng(mulberry32(seed), 'normal');
+  return getPuzzleWithRng(mulberry32(seed), 'normal', consensusData);
 }

@@ -62,7 +62,6 @@ async function buildDictionaries() {
 
     // Normalize to UpperCase and Deduplicate
     const finalWords = Array.from(new Set(filtered.map(w => w.toUpperCase())));
-    finalWords.sort();
     
     console.log(`Final ${listName} size: ${finalWords.length} words`);
     return finalWords;

@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Puzzle, Difficulty, getRandomPuzzle, getDailyPuzzle } from "@/lib/puzzles";
 import { PlayerStats, loadStats, recordGameResult } from "@/lib/stats";
-import { getTopScores, submitScore, type LeaderboardEntry } from '@/app/actions';
+import { getTopScores, submitScore, recordWordStats, getWordRarity, getGamePuzzle, getDailyGamePuzzle, type LeaderboardEntry } from '@/app/actions';
 import Sparkles from './Sparkles';
 
 // Retro font via Next/Google fonts is possible but for simplicity and guaranteeing zero-config, we'll use system fonts that look digital
@@ -43,6 +43,7 @@ export default function GameBoard() {
   const [hasPendingSubmission, setHasPendingSubmission] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [playerId, setPlayerId] = useState("");
+  const [wordRarities, setWordRarities] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let id = localStorage.getItem('apexPlayerId');
@@ -369,6 +370,13 @@ export default function GameBoard() {
     
     setStats(newStats);
 
+    // Record Global Stats
+    const allFound = [...foundWordsRef.current, ...foundBonusWordsRef.current];
+    if (allFound.length > 0) {
+      recordWordStats(allFound, puzzleRef.current?.bingoWord, puzzleRef.current?.validWords.length);
+      getWordRarity(allFound).then(setWordRarities).catch(console.error);
+    }
+
     // Leaderboard Qualification Check
     if (finalScore > 0) {
       setDailyLeaderboard(currentLb => {
@@ -475,8 +483,7 @@ export default function GameBoard() {
     // Easy: 3:00, Normal: 2:30, Hard: 2:00
     return difficulty === 'easy' ? 180 : difficulty === 'hard' ? 120 : 150;
   }, [difficulty]);
-
-  const startNewGame = useCallback((diff?: Difficulty, isDaily?: boolean) => {
+  const startNewGame = useCallback(async (diff?: Difficulty, isDaily?: boolean) => {
     initWebAudio();
     const activeDiff = diff || difficulty;
     setDifficulty(activeDiff);
@@ -485,9 +492,11 @@ export default function GameBoard() {
     // Easy: 3:00 | Normal: 2:30 | Hard: 2:00
     const timeLimit = activeDiff === 'easy' ? 180 : activeDiff === 'hard' ? 120 : 150;
 
+    setPuzzle(null); // Clear old puzzle to show loading or just prevent race
     const newPuzzle = isDaily
-      ? getDailyPuzzle(new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString().split('T')[0])
-      : getRandomPuzzle(activeDiff);
+      ? await getDailyGamePuzzle(new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString().split('T')[0])
+      : await getGamePuzzle(activeDiff);
+    
     setPuzzle(newPuzzle);
     setTimeLeft(timeLimit);
     setEndTime(Date.now() + timeLimit * 1000);
@@ -496,6 +505,7 @@ export default function GameBoard() {
     setTimeBonus(0);
     setComboCount(0);
     setAccuracyStreak(0);
+    setWordRarities({});
     
     if (freezeTimeoutRef.current) {
       clearTimeout(freezeTimeoutRef.current);
@@ -503,23 +513,22 @@ export default function GameBoard() {
     }
     setIsTimeFrozen(false);
     
-    setShowHowToPlay(false);
-    lastWordTime.current = 0;
     setFoundWords([]);
     setFoundBonusWords([]);
     setWordsSubmitted(0);
-    setInputState({
-      currentInput: [],
-      availableSlots: [...newPuzzle.sourceLetters]
-    });
     setGameOver(false);
-    endGameProcessedRef.current = false;
     setShowWelcome(false);
+    endGameProcessedRef.current = false;
     setShakeInput(false);
     setSuccessAnim({ active: false, word: [], type: 'base' });
     setBonusToast(null);
     setJuiceToast(null);
     setToastMessage(null);
+    
+    setInputState({
+      currentInput: [],
+      availableSlots: [...newPuzzle.sourceLetters]
+    });
     
     // The Cut-off: Handled elegantly by the Room-Based Music Logic Effect
     // Safety fallback: if they bypassed the gate somehow, init audio on first game start
@@ -1160,9 +1169,9 @@ export default function GameBoard() {
                 <button onPointerDown={handleShareGame} className="flex-1 bg-white border-2 border-pink-300 text-pink-600 font-extrabold py-2 rounded shadow-sm active:bg-pink-50 transition-all text-[10px] tracking-widest select-none touch-manipulation flex items-center justify-center gap-2 opacity-90"><span className="text-base text-pink-400">🔗</span> SHARE GAME</button>
               </div>
               <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal', true); }} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-1">DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
-              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('easy'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m 30s + Hint)</span></button>
+              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('easy'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m + Hint)</span></button>
               <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY NORMAL <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
-              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('hard'); }} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(1m 30s + 1.5x Pts)</span></button>
+              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('hard'); }} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(2m + 1.5x Pts)</span></button>
             </div>
           </div>
         )}
@@ -1326,9 +1335,22 @@ export default function GameBoard() {
         {/* Bonus Words Indicator */}
         {foundBonusWords.length > 0 && (
           <div className="w-full px-4 mb-2">
-            <div className="text-[10px] sm:text-xs text-[#d4af37] font-bold bg-white/60 py-2 px-3 rounded border border-pink-200 shadow-sm break-words leading-relaxed">
+            <div className="text-[10px] sm:text-xs text-[#d4af37] font-bold bg-white/60 py-2 px-3 rounded border border-pink-200 shadow-sm break-words leading-relaxed flex flex-wrap gap-x-2 gap-y-1">
               <span className="text-pink-600 mr-1 uppercase">Bonus:</span> 
-              {foundBonusWords.map(w => w.toUpperCase()).join(", ")}
+              {foundBonusWords.map(w => {
+                const upper = w.toUpperCase();
+                const rarity = wordRarities[upper];
+                const isApex = !isDailyMode && rarity !== undefined && rarity < 0.05;
+                const isRare = !isDailyMode && rarity !== undefined && rarity < 0.10 && !isApex;
+                
+                return (
+                  <span key={w} className="flex items-center gap-1">
+                    {upper}
+                    {isApex && <span className="text-[8px] bg-purple-500 text-white px-1 rounded-sm leading-tight animate-pulse">APEX</span>}
+                    {isRare && <span className="text-[8px] bg-indigo-500 text-white px-1 rounded-sm leading-tight">RARE</span>}
+                  </span>
+                );
+              })}
             </div>
           </div>
         )}
@@ -1339,7 +1361,7 @@ export default function GameBoard() {
               <div key={len} className="flex flex-col gap-y-2 text-center">
                 {words.map((word, idx) => {
                   const isFound = foundWords.includes(word);
-                  const isMissed = gameOver && !isFound;
+                  const isMissed = gameOver && !isFound && !isDailyMode;
                   // Hint logic for easy
                   const isBingoWord = word === puzzle.bingoWord;
                   const isEasyHint = difficulty === 'easy' && isBingoWord && !isFound && !gameOver;
@@ -1444,7 +1466,12 @@ export default function GameBoard() {
                 ) : (
                   <>
                     <h2 className="text-3xl font-bold text-pink-500 tracking-widest drop-shadow-[0_2px_4px_rgba(236,72,153,0.3)]">TIME'S UP</h2>
-                    <span className="text-pink-900 text-sm font-bold opacity-80">You missed {puzzle.validWords.length - foundWords.length} words</span>
+                    {!isDailyMode && (
+                      <span className="text-pink-900 text-sm font-bold opacity-80">You missed {puzzle.validWords.length - foundWords.length} words</span>
+                    )}
+                    {isDailyMode && (
+                      <span className="text-pink-900 text-sm font-bold opacity-80 italic">Solutions hidden for Daily Trial</span>
+                    )}
                   </>
                 )}
                 
@@ -1468,6 +1495,29 @@ export default function GameBoard() {
                       <span className="text-xl font-black text-orange-600 flex items-center gap-1">
                         {stats.currentStreak} <span className="text-sm">🔥</span>
                       </span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Rare Finds Section (Non-Daily) */}
+                {!isDailyMode && Object.keys(wordRarities).length > 0 && (
+                  <div className="w-full flex flex-col gap-2 bg-purple-50 p-3 rounded-lg border border-purple-100 mt-1">
+                    <span className="text-[10px] font-black text-purple-700 uppercase tracking-widest text-center">Notable Performance</span>
+                    <div className="flex flex-wrap justify-center gap-2">
+                       {Object.entries(wordRarities)
+                         .filter(([_, r]) => r < 0.10)
+                         .map(([word, r]) => (
+                           <div key={word} className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-purple-200 shadow-sm">
+                             <span className="text-xs font-bold text-purple-900 uppercase">{word}</span>
+                             <span className={`text-[8px] px-1 rounded-sm text-white font-black ${r < 0.05 ? 'bg-purple-500 animate-pulse' : 'bg-indigo-500'}`}>
+                               {r < 0.05 ? 'APEX' : 'RARE'}
+                             </span>
+                           </div>
+                         ))
+                       }
+                       {Object.entries(wordRarities).filter(([_, r]) => r < 0.10).length === 0 && (
+                         <span className="text-[10px] text-purple-400 font-bold italic">No rare words found this session.</span>
+                       )}
                     </div>
                   </div>
                 )}

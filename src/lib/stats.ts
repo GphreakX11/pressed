@@ -11,6 +11,8 @@ export interface PlayerStats {
   totalGridBoxesSeen?: number;
   totalGridBoxesFilled?: number;
   highScore?: number;
+  totalAccuracySum?: number;
+  gamesWithWordData?: number;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -45,6 +47,8 @@ export function loadStats(): PlayerStats {
     if (stats.totalGridBoxesSeen === undefined) stats.totalGridBoxesSeen = 0;
     if (stats.totalGridBoxesFilled === undefined) stats.totalGridBoxesFilled = 0;
     if (stats.highScore === undefined) stats.highScore = 0;
+    if (stats.totalAccuracySum === undefined) stats.totalAccuracySum = 0;
+    if (stats.gamesWithWordData === undefined) stats.gamesWithWordData = 0;
     
     const now = new Date();
     
@@ -96,6 +100,13 @@ export function recordGameResult(
   stats.totalGridBoxesSeen = (stats.totalGridBoxesSeen || 0) + gridBoxesSeen;
   stats.totalGridBoxesFilled = (stats.totalGridBoxesFilled || 0) + gridBoxesFilled;
   stats.highScore = Math.max(stats.highScore || 0, score);
+
+  // Track per-game accuracy for averaging (not cumulative ratio)
+  if (wordsSubmitted > 0) {
+    const gameAccuracy = Math.min(100, (wordsCorrect / wordsSubmitted) * 100);
+    stats.totalAccuracySum = (stats.totalAccuracySum || 0) + gameAccuracy;
+    stats.gamesWithWordData = (stats.gamesWithWordData || 0) + 1;
+  }
   
   if (won) {
     stats.gamesWon += 1;

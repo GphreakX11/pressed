@@ -46,9 +46,19 @@ export default function GameBoard() {
     }
     setPlayerId(id);
 
-    // Pre-populate the player name from the last successful submission
+    // Pre-populate the player name — try last_used_handle first, then fall back to pending_score
     const savedHandle = localStorage.getItem('last_used_handle');
-    if (savedHandle) setPlayerName(savedHandle);
+    if (savedHandle) {
+      setPlayerName(savedHandle);
+    } else {
+      try {
+        const pending = localStorage.getItem('pending_score');
+        if (pending) {
+          const parsed = JSON.parse(pending);
+          if (parsed?.name) setPlayerName(parsed.name);
+        }
+      } catch (_) {}
+    }
 
     if (localStorage.getItem('pending_score')) {
       setHasPendingSubmission(true);
@@ -894,7 +904,10 @@ export default function GameBoard() {
 
   if (showWelcome && stats) {
     const winPct = stats.gamesPlayed > 0 ? `${Math.min(100, Math.round((stats.gamesWon / stats.gamesPlayed) * 100))}%` : '0%';
-    const globalAccuracy = stats.totalWordsAttemptedLifetime && stats.totalWordsAttemptedLifetime > 0 ? `${Math.min(100, Math.round(((stats.totalWordsFoundLifetime || 0) / stats.totalWordsAttemptedLifetime) * 100))}%` : '0%';
+    // Average of per-game accuracy (not a cumulative ratio that shrinks with play)
+    const globalAccuracy = stats.gamesWithWordData && stats.gamesWithWordData > 0
+      ? `${Math.min(100, Math.round((stats.totalAccuracySum || 0) / stats.gamesWithWordData))}%`
+      : '0%';
     const rankInfo = getTitle(stats.gamesWon);
     
     // Calculate progress as a percentage between current rank threshold and next rank threshold

@@ -464,7 +464,7 @@ export default function GameBoard() {
     const timeLimit = activeDiff === 'easy' ? 180 : activeDiff === 'hard' ? 120 : 150;
 
     const newPuzzle = isDaily
-      ? getDailyPuzzle((() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; })())
+      ? getDailyPuzzle(new Date(Date.now() - 8 * 60 * 60 * 1000).toISOString().split('T')[0])
       : getRandomPuzzle(activeDiff);
     setPuzzle(newPuzzle);
     setTimeLeft(timeLimit);

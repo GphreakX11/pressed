@@ -46,6 +46,10 @@ export default function GameBoard() {
     }
     setPlayerId(id);
 
+    // Pre-populate the player name from the last successful submission
+    const savedHandle = localStorage.getItem('last_used_handle');
+    if (savedHandle) setPlayerName(savedHandle);
+
     if (localStorage.getItem('pending_score')) {
       setHasPendingSubmission(true);
     }
@@ -381,6 +385,8 @@ export default function GameBoard() {
       const res = await Promise.race([submitPromise, timeoutPromise]) as any;
 
       if (res && res.success) {
+        // Save the handle so it pre-populates next time
+        localStorage.setItem('last_used_handle', playerName.trim());
         localStorage.removeItem('pending_score');
         setHasPendingSubmission(false);
         const refreshedDaily = await getTopScores('daily');

@@ -674,6 +674,12 @@ export default function GameBoard() {
       const isMainWord = puzzle.validWords.includes(word);
       const isBonusWord = puzzle.bonusWords?.includes(word);
       
+      console.log(`Checking word: [${word}] | In Main: ${isMainWord} | In Bonus: ${isBonusWord}`);
+      if (!isMainWord && !isBonusWord) {
+        console.log('Bonus words list count:', puzzle.bonusWords?.length);
+        console.log('Is LIED in bonus words?', puzzle.bonusWords?.includes('LIED'));
+      }
+
       if (isMainWord || isBonusWord) {
         console.log('--- SUBMIT CLICKED ---');
         const now = Date.now();
@@ -1091,7 +1097,7 @@ export default function GameBoard() {
                 <span className="text-base">🏆</span> RANK
               </button>
               <button 
-                onPointerDown={() => initializeAudio()} 
+                onPointerDown={(e) => { e.preventDefault(); initializeAudio(); }} 
                 className="flex-[2] bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-md active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-lg tracking-widest select-none touch-manipulation"
               >
                 ENTER LOBBY
@@ -1150,13 +1156,13 @@ export default function GameBoard() {
           </div>
             <div className="flex flex-col gap-3 w-full mt-1">
               <div className="flex gap-2 w-full">
-                <button onPointerDown={() => setShowHowToPlay(true)} className="flex-1 bg-white border-2 border-pink-300 text-pink-600 font-extrabold py-2 rounded shadow-sm active:bg-pink-50 transition-all text-[10px] tracking-widest select-none touch-manipulation flex items-center justify-center gap-2 opacity-90"><span className="text-base text-pink-400">❓</span> HOW TO PLAY</button>
+                <button onPointerDown={() => { console.log('Current Puzzle State:', puzzle); setShowHowToPlay(true); }} className="flex-1 bg-white border-2 border-pink-300 text-pink-600 font-extrabold py-2 rounded shadow-sm active:bg-pink-50 transition-all text-[10px] tracking-widest select-none touch-manipulation flex items-center justify-center gap-2 opacity-90"><span className="text-base text-pink-400">❓</span> HOW TO PLAY</button>
                 <button onPointerDown={handleShareGame} className="flex-1 bg-white border-2 border-pink-300 text-pink-600 font-extrabold py-2 rounded shadow-sm active:bg-pink-50 transition-all text-[10px] tracking-widest select-none touch-manipulation flex items-center justify-center gap-2 opacity-90"><span className="text-base text-pink-400">🔗</span> SHARE GAME</button>
               </div>
-              <button onPointerDown={() => startNewGame('normal', true)} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-1">DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
-              <button onPointerDown={() => startNewGame('easy')} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m 30s + Hint)</span></button>
-              <button onPointerDown={() => startNewGame('normal')} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY NORMAL <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
-              <button onPointerDown={() => startNewGame('hard')} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(1m 30s + 1.5x Pts)</span></button>
+              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal', true); }} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-1">DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
+              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('easy'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m 30s + Hint)</span></button>
+              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY NORMAL <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
+              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('hard'); }} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(1m 30s + 1.5x Pts)</span></button>
             </div>
           </div>
         )}

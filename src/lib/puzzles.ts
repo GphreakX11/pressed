@@ -1,5 +1,6 @@
 import easyNormalWords from './easy_normal_words.json';
 import hardWords from './hard_words.json';
+import enable1Fallback from './enable1_3to6.json';
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
@@ -112,27 +113,36 @@ function getPuzzleWithRng(rng: () => number, difficulty: Difficulty = 'normal'):
     rootWordObj = rootWord;
     rootLetters = rootWord.split('');
 
-    // Filter the target curated list (10k or 20k) for valid anagrams
-    // Both dictionaries are already sanitized heavily
-    const validAnagrams = (targetDictionary as string[])
+    // Filter the target curated list (10k or 20k) for valid anagrams for the main grid
+    const mainGridAnagrams = (targetDictionary as string[])
       .filter((word: string) => isValidAnagram(word, rootLetters))
       .map(w => w.toUpperCase());
 
-    const deduplicated = Array.from(new Set(validAnagrams));
+    const deduplicatedMain = Array.from(new Set(mainGridAnagrams));
+    
+    // Fallback: get ALL mathematically possible anagrams that exist in ENABLE1
+    const allBonusAnagrams = (enable1Fallback as string[])
+      .filter((word: string) => isValidAnagram(word, rootLetters))
+      .map(w => w.toUpperCase());
+
+    const deduplicatedAll = Array.from(new Set(allBonusAnagrams));
 
     validWords = [];
     bonusWords = [];
 
-    if (deduplicated.length > 0) {
+    if (deduplicatedMain.length > 0) {
       const bingoWord = rootWordObj.toUpperCase();
-      const nonBingo = deduplicated.filter(w => w !== bingoWord);
+      const nonBingo = deduplicatedMain.filter(w => w !== bingoWord);
 
       // Bingo word first, then fill grid up to the per-difficulty cap
       const cappedGrid = [bingoWord, ...nonBingo.slice(0, cap - 1)];
-      const overflow = nonBingo.slice(cap - 1);
+      const overflowMain = nonBingo.slice(cap - 1);
+      
+      const cappedGridSet = new Set(cappedGrid);
+      const pureBonusOnly = deduplicatedAll.filter(w => !cappedGridSet.has(w));
 
       validWords = cappedGrid;
-      bonusWords.push(...overflow);
+      bonusWords = Array.from(new Set([...overflowMain, ...pureBonusOnly]));
     }
   }
 

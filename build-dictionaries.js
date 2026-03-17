@@ -71,16 +71,24 @@ async function buildDictionaries() {
   const easyNormalWords = sanitizeList(english10k, '10k List (Easy/Normal)');
   const hardWords = sanitizeList(english20k, '20k List (Hard)');
 
+  // Filter and save ENABLE1 as the fallback full dictionary
+  const enable1List = enable1.filter(w => w.length >= 3 && w.length <= 6).map(w => w.toUpperCase());
+  const enable1Filtered = Array.from(new Set(enable1List));
+  enable1Filtered.sort();
+
   // Output paths
   const easyNormalPath = path.join(__dirname, 'src', 'lib', 'easy_normal_words.json');
   const hardWordsPath = path.join(__dirname, 'src', 'lib', 'hard_words.json');
+  const enable1Path = path.join(__dirname, 'src', 'lib', 'enable1_3to6.json');
 
   fs.writeFileSync(easyNormalPath, JSON.stringify(easyNormalWords, null, 2));
   fs.writeFileSync(hardWordsPath, JSON.stringify(hardWords, null, 2));
+  fs.writeFileSync(enable1Path, JSON.stringify(enable1Filtered));
 
   console.log(`\nSuccess!`);
   console.log(` - Saved ${easyNormalPath}`);
   console.log(` - Saved ${hardWordsPath}`);
+  console.log(` - Saved ${enable1Path} (${enable1Filtered.length} words)`);
 }
 
 buildDictionaries().catch(console.error);

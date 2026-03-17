@@ -1,6 +1,5 @@
-import sowpods from './sowpods-static.json';
-import english10 from './english-10.json';
-import englishAll from './english-all.json';
+import easyNormalWords from './easy_normal_words.json';
+import hardWords from './hard_words.json';
 
 export type Difficulty = 'easy' | 'normal' | 'hard';
 
@@ -22,19 +21,19 @@ function hasPowerLetter(word: string): boolean {
   return word.split('').some(c => POWER_LETTERS.has(c.toUpperCase()));
 }
 
-// All 6-letter common English roots verified in SOWPODS
-const ROOT_WORDS_ALL = (english10 as string[]).filter((w: string) => {
-  return w.length === 6 && sowpods.includes(w.toUpperCase());
-});
+// 6-letter roots for easy/normal
+const ROOT_WORDS_EASY_NORMAL = (easyNormalWords as string[]).filter(w => w.length === 6);
+// 6-letter roots for hard
+const ROOT_WORDS_HARD = (hardWords as string[]).filter(w => w.length === 6);
 
 // Per-difficulty root pools
 const ROOT_WORDS: Record<Difficulty, string[]> = {
   // Easy: 3+ vowels → lots of recognizable permutations
-  easy:   ROOT_WORDS_ALL.filter(w => countVowels(w) >= 3),
+  easy:   ROOT_WORDS_EASY_NORMAL.filter(w => countVowels(w) >= 3),
   // Normal: 2-3 vowels → standard mix
-  normal: ROOT_WORDS_ALL.filter(w => { const v = countVowels(w); return v >= 2 && v <= 3; }),
+  normal: ROOT_WORDS_EASY_NORMAL.filter(w => { const v = countVowels(w); return v >= 2 && v <= 3; }),
   // Hard: ≤2 vowels OR contains a power letter
-  hard:   ROOT_WORDS_ALL.filter(w => countVowels(w) <= 2 || hasPowerLetter(w)),
+  hard:   ROOT_WORDS_HARD.filter(w => countVowels(w) <= 2 || hasPowerLetter(w)),
 };
 
 // Grid caps per difficulty
@@ -44,17 +43,12 @@ const GRID_CAP: Record<Difficulty, number> = {
   hard:   15,
 };
 
-// Case-Sensitivity Filter: discard proper nouns / acronyms that only appear capitalised.
-function meetsCaseSensitivityFilter(word: string): boolean {
-  return (englishAll as string[]).includes(word.toLowerCase());
-}
-
 /**
  * Helper function to check if a dictionary word can be formed 
  * strictly using the available source letters (accounting for duplicates).
  */
 function isValidAnagram(word: string, sourceLetters: string[]): boolean {
-  // 3. Length Guard: Ensure words are at least 3 letters long.
+  // Length Guard: Ensure words are at least 3 letters long.
   if (word.length < 3 || word.length > 6) return false;
   
   const sourceCounts: Record<string, number> = {};
@@ -109,21 +103,22 @@ function getPuzzleWithRng(rng: () => number, difficulty: Difficulty = 'normal'):
   const cap = GRID_CAP[difficulty];
   // Require at least enough filtered words to fill the grid
   const minRequired = Math.min(cap, 5);
+  
+  // Choose the correct target dictionary for validation
+  const targetDictionary = difficulty === 'hard' ? hardWords : easyNormalWords;
 
   while (validWords.length < minRequired) {
     const rootWord = pool[Math.floor(rng() * pool.length)];
     rootWordObj = rootWord;
     rootLetters = rootWord.split('');
 
-    // SOWPODS base — all mathematically valid anagrams
-    const allSowpodsValid = sowpods.filter((word: string) => isValidAnagram(word, rootLetters));
+    // Filter the target curated list (10k or 20k) for valid anagrams
+    // Both dictionaries are already sanitized heavily
+    const validAnagrams = (targetDictionary as string[])
+      .filter((word: string) => isValidAnagram(word, rootLetters))
+      .map(w => w.toUpperCase());
 
-    // Commonality filter — discard Scrabble-obscure words
-    const filtered = allSowpodsValid
-      .filter((w: string) => meetsCaseSensitivityFilter(w))
-      .map((w: string) => w.toUpperCase());
-
-    const deduplicated = Array.from(new Set(filtered));
+    const deduplicated = Array.from(new Set(validAnagrams));
 
     validWords = [];
     bonusWords = [];

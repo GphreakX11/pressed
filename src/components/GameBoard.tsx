@@ -377,6 +377,8 @@ export default function GameBoard() {
 
     const payload = JSON.stringify({ name: playerName, score, difficulty: diffLabel, isDaily: isDailyMode });
     localStorage.setItem('pending_score', payload);
+    // Save the handle immediately so it persists even if the network call fails
+    localStorage.setItem('last_used_handle', playerName.trim());
 
     try {
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 8000));

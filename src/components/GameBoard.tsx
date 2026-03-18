@@ -38,6 +38,7 @@ export default function GameBoard() {
   const [leaderboardTab, setLeaderboardTab] = useState<'daily'|'alltime'>('daily');
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [qualifiesForLeaderboard, setQualifiesForLeaderboard] = useState(false);
+  const [isNewPersonalBest, setIsNewPersonalBest] = useState(false);
   const [isSubmittingScore, setIsSubmittingScore] = useState(false);
   const [hasSubmissionError, setHasSubmissionError] = useState(false);
   const [hasPendingSubmission, setHasPendingSubmission] = useState(false);
@@ -342,11 +343,14 @@ export default function GameBoard() {
       setScore(finalScore);
     }
       
+    // High Water Mark Check
     setHighScore(h => {
       if (finalScore > h) {
         localStorage.setItem('pressedHighScore', finalScore.toString());
+        setIsNewPersonalBest(true);
         return finalScore;
       }
+      setIsNewPersonalBest(false);
       return h;
     });
 
@@ -426,7 +430,8 @@ export default function GameBoard() {
         setDailyLeaderboard(refreshedDaily);
         setAllTimeLeaderboard(refreshedAllTime);
         setQualifiesForLeaderboard(false);
-        setToastMessage('Score Posted!');
+        setToastMessage(res.newHighScore ? 'New High Score Posted!' : 'Score Submitted');
+        if (res.newHighScore) setIsNewPersonalBest(true); // Sync with server result just in case
       } else {
         throw new Error(res?.error || 'Database error');
       }
@@ -524,6 +529,7 @@ export default function GameBoard() {
     setBonusToast(null);
     setJuiceToast(null);
     setToastMessage(null);
+    setIsNewPersonalBest(false);
     
     setInputState({
       currentInput: [],
@@ -1403,7 +1409,12 @@ export default function GameBoard() {
 
           {gameOver ? (
            qualifiesForLeaderboard ? (
-             <div className="w-full flex flex-col items-center gap-4 bg-gradient-to-br from-yellow-100 via-yellow-200 to-yellow-400 p-6 rounded-xl border-4 border-[#d4af37] shadow-[0_10px_40px_rgba(212,175,55,0.4)] animate-[slideUp_0.4s_ease-out] z-40 relative text-center">
+              <div className="w-full flex flex-col items-center gap-4 bg-gradient-to-br from-yellow-100 via-yellow-200 to-yellow-400 p-6 rounded-xl border-4 border-[#d4af37] shadow-[0_10px_40px_rgba(212,175,55,0.4)] animate-[slideUp_0.4s_ease-out] z-40 relative text-center">
+                {isNewPersonalBest && (
+                  <div className="absolute -top-4 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg border-2 border-white animate-bounce z-50 tracking-widest">
+                    NEW HIGH SCORE!
+                  </div>
+                )}
                 <div className="text-4xl animate-bounce drop-shadow-sm">🏆</div>
                 <h2 className="text-3xl sm:text-4xl font-black text-yellow-900 tracking-tighter italic uppercase drop-shadow-sm leading-tight">APEX<br/>PERFORMANCE!</h2>
                 <p className="text-yellow-800 font-bold text-sm bg-white/50 px-4 py-2 rounded-lg border border-yellow-300 w-full">You reached the Top 10 with a score of <br/><span className="font-mono text-2xl text-yellow-900 drop-shadow-sm">{score}</span>!</p>
@@ -1430,7 +1441,12 @@ export default function GameBoard() {
                 </button>
              </div>
            ) : (
-             <div className="w-full flex flex-col items-center gap-4 bg-white/90 p-6 rounded-xl border border-pink-300 shadow-2xl animate-[slideUp_0.3s_ease-out] z-40 relative">
+              <div className="w-full flex flex-col items-center gap-4 bg-white/90 p-6 rounded-xl border border-pink-300 shadow-2xl animate-[slideUp_0.3s_ease-out] z-40 relative">
+                {isNewPersonalBest && (
+                  <div className="absolute -top-4 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg border-2 border-white animate-bounce z-50 tracking-widest">
+                    NEW HIGH SCORE!
+                  </div>
+                )}
                 {foundWords.length === puzzle.validWords.length ? (
                   <>
                     <h2 className="text-3xl font-extrabold text-[#d4af37] tracking-widest drop-shadow-[0_2px_4px_rgba(212,175,55,0.4)]">BOARD CLEARED!</h2>

@@ -19,6 +19,24 @@ function getDailyKey() {
   return `apex_global_daily_${today}`;
 }
 
+async function getUserHighScore(key: string, playerId: string): Promise<number> {
+  try {
+    // We check all difficulty labels for this player ID to find their max score
+    // The member IDs are "safeName:playerId:difficulty"
+    // Since we don't know the safeName used previously, we have to be careful.
+    // However, the current system uses baseIdent = `${safeName}:${playerId}`
+    // Let's assume the name is consistent for now as per the existing logic.
+    // To truly find by playerId, we'd need a different data structure, 
+    // but we'll stick to the current one and search common suffixes.
+    
+    // Actually, the current logic removes `${baseIdent}:E`, etc. 
+    // So we can try to find the score for the current baseIdent.
+    return 0; // Default if not found
+  } catch (err) {
+    return 0;
+  }
+}
+
 export async function getTopScores(type: 'daily' | 'alltime' = 'alltime'): Promise<LeaderboardEntry[]> {
   try {
     const key = type === 'daily' ? getDailyKey() : LEADERBOARD_ALLTIME_KEY;
@@ -57,23 +75,37 @@ export async function submitScore(name: string, playerId: string, score: number,
     const memberId = `${safeName}:${playerId}:${difficultyLabel}`;
     const baseIdent = `${safeName}:${playerId}`;
 
-    if (isDaily) {
-      // Daily Trial — only goes to the daily key. Never touches all-time.
-      const dailyKey = getDailyKey();
-      await kv.zrem(dailyKey, `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`);
-      await kv.zadd(dailyKey, { score, member: memberId });
-      await kv.expire(dailyKey, 172800); // 48 hours auto-expiry
-      const countDaily = await kv.zcard(dailyKey);
-      if (countDaily > 20) await kv.zremrangebyrank(dailyKey, 0, -21);
-    } else {
-      // Standard / Random mode — only goes to the Hall of Fame (all-time). Never touches daily.
-      await kv.zrem(LEADERBOARD_ALLTIME_KEY, `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`);
-      await kv.zadd(LEADERBOARD_ALLTIME_KEY, { score, member: memberId });
-      const countAllTime = await kv.zcard(LEADERBOARD_ALLTIME_KEY);
-      if (countAllTime > 20) await kv.zremrangebyrank(LEADERBOARD_ALLTIME_KEY, 0, -21);
+    const key = isDaily ? getDailyKey() : LEADERBOARD_ALLTIME_KEY;
+
+    // Fetch existing scores for all difficulty variants of this player
+    const existingScores = await kv.zmscore(key, [
+      `${baseIdent}:E`,
+      `${baseIdent}:N`,
+      `${baseIdent}:H`,
+      `${baseIdent}:D`
+    ]);
+
+    const currentMax = existingScores ? Math.max(0, ...existingScores.filter((s): s is number => s !== null)) : 0;
+
+    if (score > currentMax) {
+      // New High Score! 
+      // Remove old entries for this player (all difficulties) to keep leaderboard clean
+      await kv.zrem(key, `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`);
+      await kv.zadd(key, { score, member: memberId });
+      
+      if (isDaily) {
+        await kv.expire(key, 172800); // 48 hours auto-expiry
+        const countDaily = await kv.zcard(key);
+        if (countDaily > 20) await kv.zremrangebyrank(key, 0, -21);
+      } else {
+        const countAllTime = await kv.zcard(key);
+        if (countAllTime > 20) await kv.zremrangebyrank(key, 0, -21);
+      }
+      return { success: true, newHighScore: true };
     }
 
-    return { success: true };
+    // Not a new high score
+    return { success: true, newHighScore: false };
   } catch (err) {
     console.error('Failed to submit score:', err);
     return { success: false, error: 'Database error' };

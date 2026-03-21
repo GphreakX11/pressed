@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Puzzle, Difficulty, getRandomPuzzle, getDailyPuzzle } from "@/lib/puzzles";
 import { PlayerStats, loadStats, recordGameResult } from "@/lib/stats";
-import { getTopScores, submitScore, recordWordStats, getWordRarity, getGamePuzzle, getDailyGamePuzzle, getUserTrophies, getTournamentPuzzle, recordTournamentRound, type LeaderboardEntry } from '@/app/actions';
+import { getTopScores, submitScore, submitGameStats, recordWordStats, getWordRarity, getGamePuzzle, getDailyGamePuzzle, getUserTrophies, getTournamentPuzzle, recordTournamentRound, type LeaderboardEntry } from '@/app/actions';
 import Sparkles from './Sparkles';
 
 // Retro font via Next/Google fonts is possible but for simplicity and guaranteeing zero-config, we'll use system fonts that look digital
@@ -60,7 +60,10 @@ export default function GameBoard() {
   // Leaderboard State
   const [dailyLeaderboard, setDailyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [allTimeLeaderboard, setAllTimeLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [leaderboardTab, setLeaderboardTab] = useState<'daily'|'alltime'>('daily');
+  const [accuracyLeaderboard, setAccuracyLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [tourneyLeaderboard, setTourneyLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardTab, setLeaderboardTab] = useState<'daily'|'alltime'|'accuracy'|'tourney'>('daily');
+  const [showTrophyCase, setShowTrophyCase] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [qualifiesForLeaderboard, setQualifiesForLeaderboard] = useState(false);
   const [isNewPersonalBest, setIsNewPersonalBest] = useState(false);
@@ -74,7 +77,7 @@ export default function GameBoard() {
 
   const [wordRarities, setWordRarities] = useState<Record<string, number>>({});
   const [serverRankResult, setServerRankResult] = useState<{ rankStatus: string, rank: number | null } | null>(null);
-  const [userTrophies, setUserTrophies] = useState<{ isGold: boolean, silverWins: number } | null>(null);
+  const [userTrophies, setUserTrophies] = useState<{ isGold: boolean, silverWins: number, isSniper?: boolean, isSurvivalist?: boolean } | null>(null);
 
   useEffect(() => {
     if (playerId) {
@@ -415,10 +418,22 @@ export default function GameBoard() {
     
     setStats(newStats);
 
+    // Sync stats to global leaderboard
+    submitGameStats(
+      playerIdRef.current,
+      playerName || 'ANONYMOUS',
+      { 
+        gamesWon: newStats.gamesWon, 
+        totalAccuracySum: newStats.totalAccuracySum || 0, 
+        gamesWithWordData: newStats.gamesWithWordData || 0 
+      },
+      newStats.highestTournamentRound || 0
+    ).catch(console.error);
+
     // Record Global Stats
     const allFound = [...foundWordsRef.current, ...foundBonusWordsRef.current];
     if (allFound.length > 0) {
-      recordWordStats(allFound, puzzleRef.current?.bingoWord, puzzleRef.current?.validWords.length);
+      recordWordStats(allFound, puzzleRef.current?.bingoWord || '', puzzleRef.current?.validWords.length || 0);
       getWordRarity(allFound).then(setWordRarities).catch(console.error);
     }
 
@@ -468,8 +483,12 @@ export default function GameBoard() {
         setHasPendingSubmission(false);
         const refreshedDaily = await getTopScores('daily');
         const refreshedAllTime = await getTopScores('alltime');
+        const refreshedAcc = await getTopScores('accuracy');
+        const refreshedTourney = await getTopScores('tourney');
         setDailyLeaderboard(refreshedDaily);
         setAllTimeLeaderboard(refreshedAllTime);
+        setAccuracyLeaderboard(refreshedAcc);
+        setTourneyLeaderboard(refreshedTourney);
         
         // Update server result state
         setServerRankResult({
@@ -673,6 +692,8 @@ export default function GameBoard() {
     setStats(loadStats());
     getTopScores('daily').then(setDailyLeaderboard).catch(console.error);
     getTopScores('alltime').then(setAllTimeLeaderboard).catch(console.error);
+    getTopScores('accuracy').then(setAccuracyLeaderboard).catch(console.error);
+    getTopScores('tourney').then(setTourneyLeaderboard).catch(console.error);
     // Welcome screen shows on mount, so we don't automatically trigger startNewGame
   }, []);
 
@@ -1158,7 +1179,75 @@ export default function GameBoard() {
           </div>
         )}
 
-        {/* Leaderboard Modal Removed (Now rendered Inline below) */}
+        {/* Trophy Case Modal */}
+        {showTrophyCase && (
+          <div className="absolute inset-0 z-[250] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+            <div className="w-full max-w-md bg-gradient-to-br from-slate-900 to-black border-4 border-[#d4af37] rounded-3xl p-6 shadow-2xl animate-[slideUp_0.3s_ease-out] flex flex-col h-auto max-h-[90vh]">
+              <div className="flex justify-between items-center border-b-2 border-[#d4af37] pb-3 mb-4">
+                <h2 className="text-xl sm:text-2xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 tracking-tighter uppercase flex items-center gap-2">
+                  <span className="text-3xl font-normal drop-shadow-sm">🏆</span> TROPHY CASE
+                </h2>
+                <button onPointerDown={() => setShowTrophyCase(false)} className="text-yellow-600 font-black text-xl w-8 h-8 rounded-full bg-yellow-900/40 flex items-center justify-center active:bg-yellow-800 transition-colors touch-manipulation pb-1">✕</button>
+              </div>
+              
+              <div className="flex bg-slate-800 border border-slate-700 p-1 rounded-xl mb-4 gap-1">
+                 <button 
+                   onPointerDown={() => setLeaderboardTab('daily')}
+                   className={`flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'daily' ? 'bg-gradient-to-b from-slate-600 to-slate-700 text-white shadow-inner border border-slate-500' : 'text-slate-400 opacity-70'}`}
+                 >
+                   <span className="text-lg mb-1 leading-none drop-shadow-md">🥈</span>
+                   Daily Trial
+                 </button>
+                 <button 
+                   onPointerDown={() => setLeaderboardTab('alltime')}
+                   className={`flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'alltime' ? 'bg-gradient-to-b from-yellow-700 to-yellow-900 text-white shadow-inner border border-yellow-600' : 'text-slate-400 opacity-70'}`}
+                 >
+                   <span className="text-lg mb-1 leading-none drop-shadow-md">🏆</span>
+                   Hall of Fame
+                 </button>
+                 <button 
+                   onPointerDown={() => setLeaderboardTab('accuracy')}
+                   className={`flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'accuracy' ? 'bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-inner border border-blue-600' : 'text-slate-400 opacity-70'}`}
+                 >
+                   <span className="text-lg mb-1 leading-none drop-shadow-md">🎯</span>
+                   Sniper's
+                 </button>
+                 <button 
+                   onPointerDown={() => setLeaderboardTab('tourney')}
+                   className={`flex-1 flex flex-col items-center py-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'tourney' ? 'bg-gradient-to-b from-emerald-700 to-emerald-900 text-white shadow-inner border border-emerald-600' : 'text-slate-400 opacity-70'}`}
+                 >
+                   <span className="text-lg mb-1 leading-none drop-shadow-md">🛡️</span>
+                   Survivalist
+                 </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto w-full px-2 py-1 flex flex-col gap-2 min-h-[150px]">
+                {leaderboardTab === 'daily' && dailyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Daily Trial.</p>}
+                {leaderboardTab === 'alltime' && allTimeLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Hall of Fame.</p>}
+                {leaderboardTab === 'accuracy' && accuracyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Sniper's Nest.</p>}
+                {leaderboardTab === 'tourney' && tourneyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Survivalists.</p>}
+                
+                {(leaderboardTab === 'daily' ? dailyLeaderboard : leaderboardTab === 'accuracy' ? accuracyLeaderboard : leaderboardTab === 'tourney' ? tourneyLeaderboard : allTimeLeaderboard).map((entry, idx) => (
+                  <div key={idx} className="flex justify-between items-center py-2 border-b border-slate-800 last:border-0">
+                    <div className="flex items-center gap-3 overflow-hidden">
+                      <span className={`font-black italic w-6 text-center ${idx === 0 ? 'text-[#d4af37] text-lg drop-shadow-md' : idx === 1 ? 'text-gray-400 text-md' : idx === 2 ? 'text-amber-700 text-md' : 'text-slate-600 text-xs'}`}>
+                        #{idx + 1}
+                      </span>
+                      <div className="flex items-center gap-1 min-w-0">
+                        {entry.isGold && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="All-Time Apex Leader">🏆</span>}
+                        {entry.silverWins ? <span className="text-[10px] font-black text-slate-800 bg-slate-300 rounded px-[2px] flex items-center shadow-sm border border-slate-400 truncate flex-shrink-0" title="Daily Trial Champion">🥈<span className="text-[8px] ml-[1px]">x{entry.silverWins}</span></span> : null}
+                        {entry.isSniper && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Highest Accuracy">🎯</span>}
+                        {entry.isSurvivalist && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Highest Tournament Round">🛡️</span>}
+                        <span className="font-extrabold text-slate-300 tracking-wider uppercase text-xs truncate max-w-[100px] sm:max-w-[150px]">{entry.name}</span>
+                      </div>
+                    </div>
+                    <span className="font-mono font-bold text-sm text-[#d4af37] flex-shrink-0 ml-2">{leaderboardTab === 'accuracy' ? `${entry.score}%` : entry.score}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
 
         {!isAudioEnabled ? (
           <div className="bg-white p-8 rounded-2xl border border-pink-200 w-full max-w-sm flex flex-col items-center gap-4 shadow-2xl z-10 text-center animate-[slideUp_0.3s_ease-out]">
@@ -1171,10 +1260,12 @@ export default function GameBoard() {
                 <p className="text-pink-900 font-bold">Welcome to the Speed Dictionary.<br/>Ready to test your limits?</p>
               ) : (
                 <>
-                  <p className="text-pink-900 font-bold mb-1 flex items-center justify-center gap-1">
+                  <p className="text-pink-900 font-bold mb-1 flex items-center justify-center gap-1 flex-wrap">
                     {userTrophies?.isGold && <span className="text-xl leading-none drop-shadow-sm cursor-help" title="All-Time Apex Leader">🏆</span>}
                     {userTrophies?.silverWins ? <span className="text-xs font-black text-slate-600 bg-slate-100 rounded px-1 flex items-center shadow-sm border border-slate-300 cursor-help" title="Daily Trial Champion"><span className="text-sm drop-shadow-sm">🥈</span><span className="text-[9px] ml-[2px]">x{userTrophies.silverWins}</span></span> : null}
-                    <span className="ml-1">Welcome Back, {playerName || 'Player'}!</span>
+                    {userTrophies?.isSniper && <span className="text-xl leading-none drop-shadow-sm cursor-help" title="Sniper's Nest (Accuracy Leader)">🎯</span>}
+                    {userTrophies?.isSurvivalist && <span className="text-xl leading-none drop-shadow-sm cursor-help" title="Survivalist Leader (Tourney)">🛡️</span>}
+                    <span className="ml-1 justify-self-center w-full mt-1">Welcome Back, {playerName || 'Player'}!</span>
                   </p>
                   <span className="text-xl font-black text-[#d4af37] uppercase tracking-widest">{rankInfo.title}</span>
                   <span className="text-pink-600 font-bold">Current Daily Streak: {stats.currentStreak} 🔥</span>
@@ -1214,6 +1305,8 @@ export default function GameBoard() {
              <div className="absolute -top-4 bg-white px-3 py-1 rounded-full border border-pink-200 shadow-sm flex items-center gap-1.5 z-20">
                {userTrophies?.isGold && <span className="text-lg leading-none drop-shadow-sm cursor-help" title="All-Time Apex Leader">🏆</span>}
                {userTrophies?.silverWins ? <span className="text-[10px] font-black text-slate-600 bg-slate-100 rounded px-1 flex items-center shadow-sm border border-slate-300 cursor-help" title="Daily Trial Champion"><span className="text-[14px] drop-shadow-sm">🥈</span><span className="text-[9px] ml-[1px]">x{userTrophies.silverWins}</span></span> : null}
+               {userTrophies?.isSniper && <span className="text-lg leading-none drop-shadow-sm cursor-help" title="Sniper's Nest (Accuracy Leader)">🎯</span>}
+               {userTrophies?.isSurvivalist && <span className="text-lg leading-none drop-shadow-sm cursor-help" title="Survivalist Leader (Tourney)">🛡️</span>}
                <span className="text-xs font-black text-pink-900 uppercase tracking-widest ml-1">{playerName || 'PLAYER'}</span>
              </div>
              <span className="text-[10px] text-pink-600 font-bold uppercase tracking-widest mb-1 mt-1">Rank</span>
@@ -1258,41 +1351,13 @@ export default function GameBoard() {
             </div>
           </div>
             <div className="flex flex-col gap-2 w-full mt-1">
-              {/* Leaderboard Inline Section */}
-              <div className="w-full bg-white border-2 border-[#d4af37] rounded-xl flex flex-col overflow-hidden max-h-[22vh]">
-                <div className="flex bg-pink-50 border-b border-pink-100 p-1">
-                   <button 
-                     onPointerDown={() => setLeaderboardTab('daily')}
-                     className={`flex-1 py-1 text-[10px] font-black uppercase tracking-widest rounded transition-all touch-manipulation ${leaderboardTab === 'daily' ? 'bg-white text-pink-900 shadow-sm border border-pink-200' : 'text-pink-500'}`}
-                   >Daily Trial</button>
-                   <button 
-                     onPointerDown={() => setLeaderboardTab('alltime')}
-                     className={`flex-1 py-1 text-[10px] font-black uppercase tracking-widest rounded transition-all touch-manipulation ${leaderboardTab === 'alltime' ? 'bg-white text-pink-900 shadow-sm border border-pink-200' : 'text-pink-500'}`}
-                   >Hall of Fame</button>
-                </div>
-                <div className="flex-1 overflow-y-auto w-full px-2 py-1 flex flex-col gap-1 min-h-[100px]">
-                  {(leaderboardTab === 'daily' ? dailyLeaderboard : allTimeLeaderboard).length === 0 ? (
-                    <p className="text-center text-pink-600 font-bold py-4 text-[10px]">No scores recorded yet!</p>
-                  ) : (
-                    (leaderboardTab === 'daily' ? dailyLeaderboard : allTimeLeaderboard).map((entry, idx) => (
-                      <div key={idx} className="flex justify-between items-center py-1 border-b border-pink-50 last:border-0">
-                        <div className="flex items-center gap-2 overflow-hidden">
-                          <span className={`font-black italic w-4 text-center ${idx === 0 ? 'text-[#d4af37] text-sm drop-shadow-sm' : idx === 1 ? 'text-gray-400 text-xs' : idx === 2 ? 'text-amber-700 text-xs' : 'text-pink-400 text-[10px]'}`}>
-                            #{idx + 1}
-                          </span>
-                          <div className="flex items-center gap-1 min-w-0">
-                            {entry.isGold && <span className="text-[10px] leading-none drop-shadow-sm truncate flex-shrink-0" title="All-Time Apex Leader">🏆</span>}
-                            {entry.silverWins ? <span className="text-[8px] font-black text-slate-600 bg-slate-100 rounded px-[2px] flex items-center shadow-sm border border-slate-300 truncate flex-shrink-0" title="Daily Trial Champion">🥈<span className="text-[6px] ml-[1px]">x{entry.silverWins}</span></span> : null}
-                            <span className="font-extrabold text-pink-900 tracking-wider uppercase text-[10px] truncate max-w-[80px] sm:max-w-max">{entry.name}</span>
-                          </div>
-                        </div>
-                        <span className="font-mono font-bold text-xs text-[#d4af37] flex-shrink-0 ml-2">{entry.score}</span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal', false, true); }} className="bg-slate-800 border-b-4 border-r-2 border-slate-900 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-2">PLAY TOURNAMENT <span className="text-cyan-400 block text-xs tracking-normal mt-1 opacity-90">(Arcade Survival)</span></button>
+              <button 
+                onPointerDown={() => setShowTrophyCase(true)} 
+                className="w-full bg-white border-2 border-[#d4af37] text-yellow-700 font-extrabold py-3 rounded-xl shadow-sm active:bg-yellow-50 transition-all text-sm tracking-widest select-none touch-manipulation flex items-center justify-center gap-2 mb-1"
+              >
+                <span className="text-xl drop-shadow-sm">🏆</span> TROPHY CASE & LEADERBOARDS
+              </button>
+              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal', false, true); }} className="bg-slate-800 border-b-4 border-r-2 border-slate-900 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-1">PLAY TOURNAMENT <span className="text-cyan-400 block text-xs tracking-normal mt-1 opacity-90">(Arcade Survival)</span></button>
               <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal', true); }} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-1">DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
               <button onPointerDown={(e) => { e.preventDefault(); startNewGame('easy'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1">PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m + Hint)</span></button>
               <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1">PLAY NORMAL <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>

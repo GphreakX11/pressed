@@ -13,6 +13,7 @@ export interface PlayerStats {
   highScore?: number;
   totalAccuracySum?: number;
   gamesWithWordData?: number;
+  highestTournamentRound?: number;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -49,6 +50,7 @@ export function loadStats(): PlayerStats {
     if (stats.highScore === undefined) stats.highScore = 0;
     if (stats.totalAccuracySum === undefined) stats.totalAccuracySum = 0;
     if (stats.gamesWithWordData === undefined) stats.gamesWithWordData = 0;
+    if (stats.highestTournamentRound === undefined) stats.highestTournamentRound = 0;
     
     const now = new Date();
     
@@ -87,7 +89,8 @@ export function recordGameResult(
   wordsSubmitted: number,
   wordsCorrect: number,
   gridBoxesSeen: number,
-  gridBoxesFilled: number
+  gridBoxesFilled: number,
+  tournamentRound?: number
 ) {
   const stats = loadStats();
   
@@ -135,6 +138,10 @@ export function recordGameResult(
       stats.currentStreak = 1;
     }
     // If daysDiff === 0, they already played today, streak remains the same
+  }
+
+  if (tournamentRound !== undefined) {
+    stats.highestTournamentRound = Math.max(stats.highestTournamentRound || 0, tournamentRound);
   }
 
   stats.lastPlayedDate = now.getTime();

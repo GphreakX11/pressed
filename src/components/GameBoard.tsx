@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Puzzle, Difficulty, getRandomPuzzle, getDailyPuzzle } from "@/lib/puzzles";
 import { PlayerStats, loadStats, recordGameResult } from "@/lib/stats";
-import { getTopScores, submitScore, recordWordStats, getWordRarity, getGamePuzzle, getDailyGamePuzzle, type LeaderboardEntry } from '@/app/actions';
+import { getTopScores, submitScore, recordWordStats, getWordRarity, getGamePuzzle, getDailyGamePuzzle, getUserTrophies, getTournamentPuzzle, recordTournamentRound, type LeaderboardEntry } from '@/app/actions';
 import Sparkles from './Sparkles';
 
 // Retro font via Next/Google fonts is possible but for simplicity and guaranteeing zero-config, we'll use system fonts that look digital
@@ -32,6 +32,21 @@ export default function GameBoard() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
 
+  // Tournament State
+  const [isTournamentMode, setIsTournamentMode] = useState(false);
+  const isTournamentModeRef = useRef(false);
+  useEffect(() => { isTournamentModeRef.current = isTournamentMode; }, [isTournamentMode]);
+  
+  const [tournamentRound, setTournamentRound] = useState(1);
+  const tournamentRoundRef = useRef(1);
+  useEffect(() => { tournamentRoundRef.current = tournamentRound; }, [tournamentRound]);
+
+  const [targetScore, setTargetScore] = useState(400);
+  const targetScoreRef = useRef(400);
+  useEffect(() => { targetScoreRef.current = targetScore; }, [targetScore]);
+
+  const [tournamentOverlay, setTournamentOverlay] = useState<'none' | 'passed' | 'next'>('none');
+
   // Leaderboard State
   const [dailyLeaderboard, setDailyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [allTimeLeaderboard, setAllTimeLeaderboard] = useState<LeaderboardEntry[]>([]);
@@ -44,7 +59,18 @@ export default function GameBoard() {
   const [hasPendingSubmission, setHasPendingSubmission] = useState(false);
   const [playerName, setPlayerName] = useState("");
   const [playerId, setPlayerId] = useState("");
+  const playerIdRef = useRef("");
+  useEffect(() => { playerIdRef.current = playerId; }, [playerId]);
+
   const [wordRarities, setWordRarities] = useState<Record<string, number>>({});
+  const [serverRankResult, setServerRankResult] = useState<{ isTopTen: boolean, isPersonalBest: boolean, rank: number | null } | null>(null);
+  const [userTrophies, setUserTrophies] = useState<{ isGold: boolean, silverWins: number } | null>(null);
+
+  useEffect(() => {
+    if (playerId) {
+      getUserTrophies(playerId).then(setUserTrophies).catch(console.error);
+    }
+  }, [playerId]);
 
   useEffect(() => {
     let id = localStorage.getItem('apexPlayerId');
@@ -363,7 +389,12 @@ export default function GameBoard() {
     const currentStats = loadStats();
     const oldTitle = getTitle(currentStats.gamesWon).title;
 
-    recordGameResult(won, finalScore, wordsSubmittedRef.current, wordsCorrect, gridSeen, gridFilled);
+    const tRound = isTournamentModeRef.current ? tournamentRoundRef.current : undefined;
+    recordGameResult(won, finalScore, wordsSubmittedRef.current, wordsCorrect, gridSeen, gridFilled, tRound);
+
+    if (isTournamentModeRef.current) {
+      recordTournamentRound(playerIdRef.current, tournamentRoundRef.current).catch(console.error);
+    }
     
     // Check for rank up
     const newStats = loadStats();
@@ -429,9 +460,24 @@ export default function GameBoard() {
         const refreshedAllTime = await getTopScores('alltime');
         setDailyLeaderboard(refreshedDaily);
         setAllTimeLeaderboard(refreshedAllTime);
-        setQualifiesForLeaderboard(false);
-        setToastMessage(res.newHighScore ? 'New High Score Posted!' : 'Score Submitted');
-        if (res.newHighScore) setIsNewPersonalBest(true); // Sync with server result just in case
+        
+        // Update server result state
+        setServerRankResult({
+          isTopTen: res.isTopTen,
+          isPersonalBest: res.isPersonalBest,
+          rank: res.rank
+        });
+
+        // Strictly Gate UI: If neither Top 10 nor Personal Best, transition to results immediately
+        if (!res.isTopTen && !res.isPersonalBest) {
+          setQualifiesForLeaderboard(false);
+          setToastMessage('Score Submitted');
+        } else {
+          // Keep the form open (as a "Rank Claimed" view) or just update the message
+          setToastMessage(res.isTopTen ? 'TOP 10 SCORE!' : 'Personal Best!');
+        }
+        
+        if (res.isPersonalBest) setIsNewPersonalBest(true); 
       } else {
         throw new Error(res?.error || 'Database error');
       }
@@ -484,23 +530,83 @@ export default function GameBoard() {
     }
   };
 
+  const startNextRound = useCallback(async () => {
+    const nextRound = tournamentRoundRef.current + 1;
+    const nextTarget = targetScoreRef.current + 100;
+    
+    setTournamentRound(nextRound);
+    setTargetScore(nextTarget);
+    setTournamentOverlay('none');
+    
+    setPuzzle(null);
+    const newPuzzle = await getTournamentPuzzle(nextTarget);
+    setPuzzle(newPuzzle);
+    
+    // Hardcode Tournament time per round to 2m 30s
+    const timeLimit = 150; 
+    setTimeLeft(timeLimit);
+    setEndTime(Date.now() + timeLimit * 1000);
+    
+    setScore(0);
+    setDisplayScore(0);
+    setTimeBonus(0);
+    setComboCount(0);
+    setAccuracyStreak(0);
+    
+    setFoundWords([]);
+    setFoundBonusWords([]);
+    setWordsSubmitted(0);
+    setShakeInput(false);
+    setSuccessAnim({ active: false, word: [], type: 'base' });
+    setBonusToast(null);
+    setJuiceToast(null);
+    setToastMessage(null);
+    
+    setInputState({
+      currentInput: [],
+      availableSlots: [...newPuzzle.sourceLetters]
+    });
+  }, []);
+
+  const handleTournamentRoundPassed = useCallback(() => {
+    setTournamentOverlay('passed');
+    
+    setTimeout(() => {
+      setTournamentOverlay('next');
+    }, 1000);
+    
+    setTimeout(() => {
+      startNextRound();
+    }, 2500);
+  }, [startNextRound]);
+
   const totalTimeLimit = useMemo(() => {
     // Easy: 3:00, Normal: 2:30, Hard: 2:00
     return difficulty === 'easy' ? 180 : difficulty === 'hard' ? 120 : 150;
   }, [difficulty]);
-  const startNewGame = useCallback(async (diff?: Difficulty, isDaily?: boolean) => {
+  const startNewGame = useCallback(async (diff?: Difficulty, isDaily?: boolean, isTournament?: boolean) => {
     initWebAudio();
     const activeDiff = diff || difficulty;
     setDifficulty(activeDiff);
     setIsDailyMode(!!isDaily);
+    setIsTournamentMode(!!isTournament);
     
     // Easy: 3:00 | Normal: 2:30 | Hard: 2:00
     const timeLimit = activeDiff === 'easy' ? 180 : activeDiff === 'hard' ? 120 : 150;
 
     setPuzzle(null); // Clear old puzzle to show loading or just prevent race
-    const newPuzzle = isDaily
-      ? await getDailyGamePuzzle()
-      : await getGamePuzzle(activeDiff);
+    let newPuzzle;
+    
+    if (isTournament) {
+       setTournamentRound(1);
+       setTargetScore(400);
+       setTournamentOverlay('none');
+       newPuzzle = await getTournamentPuzzle(400);
+    } else if (isDaily) {
+       newPuzzle = await getDailyGamePuzzle();
+    } else {
+       newPuzzle = await getGamePuzzle(activeDiff);
+    }
     
     setPuzzle(newPuzzle);
     setTimeLeft(timeLimit);
@@ -530,6 +636,7 @@ export default function GameBoard() {
     setJuiceToast(null);
     setToastMessage(null);
     setIsNewPersonalBest(false);
+    setServerRankResult(null);
     
     setInputState({
       currentInput: [],
@@ -559,8 +666,16 @@ export default function GameBoard() {
       setTimeLeft(remaining);
 
       if (remaining <= 0) {
-        const isWin = foundWordsRef.current.length === puzzle.validWords.length;
-        endGame(isWin);
+        if (isTournamentModeRef.current) {
+          if (scoreRef.current >= targetScoreRef.current) {
+             handleTournamentRoundPassed();
+          } else {
+             endGame(false);
+          }
+        } else {
+          const isWin = foundWordsRef.current.length === puzzle.validWords.length;
+          endGame(isWin);
+        }
       }
     };
 
@@ -1048,6 +1163,8 @@ export default function GameBoard() {
                           #{idx + 1}
                         </span>
                         <div className="flex items-center gap-1 group relative">
+                          {entry.isGold && <span className="text-xl leading-none drop-shadow-sm cursor-help" title="All-Time Apex Leader">🏆</span>}
+                          {entry.silverWins ? <span className="text-xs font-black text-slate-600 bg-slate-100 rounded px-1 flex items-center shadow-sm border border-slate-300 cursor-help" title="Daily Trial Champion"><span className="text-sm drop-shadow-sm">🥈</span><span className="text-[9px] ml-[2px]">x{entry.silverWins}</span></span> : null}
                           <span className="font-extrabold text-pink-900 tracking-wider uppercase text-sm truncate max-w-[120px]">{entry.name}</span>
                           {entry.difficulty && (
                             <span 
@@ -1079,7 +1196,11 @@ export default function GameBoard() {
                 <p className="text-pink-900 font-bold">Welcome to the Speed Dictionary.<br/>Ready to test your limits?</p>
               ) : (
                 <>
-                  <p className="text-pink-900 font-bold mb-1">Welcome Back!</p>
+                  <p className="text-pink-900 font-bold mb-1 flex items-center justify-center gap-1">
+                    {userTrophies?.isGold && <span className="text-xl leading-none drop-shadow-sm cursor-help" title="All-Time Apex Leader">🏆</span>}
+                    {userTrophies?.silverWins ? <span className="text-xs font-black text-slate-600 bg-slate-100 rounded px-1 flex items-center shadow-sm border border-slate-300 cursor-help" title="Daily Trial Champion"><span className="text-sm drop-shadow-sm">🥈</span><span className="text-[9px] ml-[2px]">x{userTrophies.silverWins}</span></span> : null}
+                    <span className="ml-1">Welcome Back, {playerName || 'Player'}!</span>
+                  </p>
                   <span className="text-xl font-black text-[#d4af37] uppercase tracking-widest">{rankInfo.title}</span>
                   <span className="text-pink-600 font-bold">Current Daily Streak: {stats.currentStreak} 🔥</span>
                 </>
@@ -1126,8 +1247,13 @@ export default function GameBoard() {
               <img src="/apex-branding-full.png" alt="Apex Anagrams" className="w-[90%] max-w-[240px] drop-shadow-md mb-2" />
             </div>
             
-            <div className="w-full flex flex-col items-center border border-pink-200 bg-pink-50 rounded-lg p-3 shadow-inner mb-2">
-             <span className="text-[10px] text-pink-600 font-bold uppercase tracking-widest mb-1">Rank</span>
+            <div className="w-full flex flex-col items-center border border-pink-200 bg-pink-50 rounded-lg p-3 shadow-inner mb-2 relative mt-4">
+             <div className="absolute -top-4 bg-white px-3 py-1 rounded-full border border-pink-200 shadow-sm flex items-center gap-1.5 z-20">
+               {userTrophies?.isGold && <span className="text-lg leading-none drop-shadow-sm cursor-help" title="All-Time Apex Leader">🏆</span>}
+               {userTrophies?.silverWins ? <span className="text-[10px] font-black text-slate-600 bg-slate-100 rounded px-1 flex items-center shadow-sm border border-slate-300 cursor-help" title="Daily Trial Champion"><span className="text-[14px] drop-shadow-sm">🥈</span><span className="text-[9px] ml-[1px]">x{userTrophies.silverWins}</span></span> : null}
+               <span className="text-xs font-black text-pink-900 uppercase tracking-widest ml-1">{playerName || 'PLAYER'}</span>
+             </div>
+             <span className="text-[10px] text-pink-600 font-bold uppercase tracking-widest mb-1 mt-1">Rank</span>
              <span className="text-xl font-black text-[#d4af37] drop-shadow-sm uppercase">{rankInfo.title}</span>
              {rankInfo.next ? (
                <div 
@@ -1408,43 +1534,71 @@ export default function GameBoard() {
           )}
 
           {gameOver ? (
-           qualifiesForLeaderboard ? (
+            qualifiesForLeaderboard ? (
               <div className="w-full flex flex-col items-center gap-4 bg-gradient-to-br from-yellow-100 via-yellow-200 to-yellow-400 p-6 rounded-xl border-4 border-[#d4af37] shadow-[0_10px_40px_rgba(212,175,55,0.4)] animate-[slideUp_0.4s_ease-out] z-40 relative text-center">
-                {isNewPersonalBest && (
+                {(serverRankResult?.isPersonalBest || (isNewPersonalBest && !serverRankResult)) && (
                   <div className="absolute -top-4 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg border-2 border-white animate-bounce z-50 tracking-widest">
-                    NEW HIGH SCORE!
+                    PERSONAL BEST!
                   </div>
                 )}
                 <div className="text-4xl animate-bounce drop-shadow-sm">🏆</div>
-                <h2 className="text-3xl sm:text-4xl font-black text-yellow-900 tracking-tighter italic uppercase drop-shadow-sm leading-tight">APEX<br/>PERFORMANCE!</h2>
-                <p className="text-yellow-800 font-bold text-sm bg-white/50 px-4 py-2 rounded-lg border border-yellow-300 w-full">You reached the Top 10 with a score of <br/><span className="font-mono text-2xl text-yellow-900 drop-shadow-sm">{score}</span>!</p>
-                <input 
-                  type="text" 
-                  maxLength={12}
-                  placeholder="ENTER NAME" 
-                  value={playerName}
-                  onChange={e => setPlayerName(e.target.value)}
-                  className="w-full text-center text-xl font-black text-yellow-900 bg-white border-2 border-yellow-500 rounded-xl p-3 uppercase tracking-widest placeholder-yellow-600/40 focus:outline-none focus:border-yellow-700 focus:bg-white transition-all shadow-inner"
-                />
-                <button 
-                  onPointerDown={handleScoreSubmit}
-                  disabled={isSubmittingScore || !playerName.trim()}
-                  className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 border-b-4 border-r-2 border-yellow-800 text-white font-extrabold py-4 rounded-xl shadow-md active:border-0 active:translate-y-[4px] transition-all tracking-widest text-lg touch-manipulation disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
-                >
-                  {isSubmittingScore ? 'SUBMITTING...' : hasSubmissionError ? 'RETRY SUBMISSION' : 'CLAIM RANK'}
-                </button>
+                <h2 className="text-3xl sm:text-4xl font-black text-yellow-900 tracking-tighter italic uppercase drop-shadow-sm leading-tight">
+                  {serverRankResult?.isTopTen ? 'TOP 10 SCORE!' : (serverRankResult?.isPersonalBest ? 'PERSONAL BEST!' : 'APEX PERFORMANCE!')}
+                </h2>
+                
+                {serverRankResult ? (
+                  <p className="text-yellow-800 font-bold text-sm bg-white/50 px-4 py-2 rounded-lg border border-yellow-300 w-full animate-pulse">
+                    VERIFIED RANK: #{serverRankResult.rank}<br/>
+                    <span className="font-mono text-2xl text-yellow-900 drop-shadow-sm">{score}</span>
+                  </p>
+                ) : (
+                  <p className="text-yellow-800 font-bold text-sm bg-white/50 px-4 py-2 rounded-lg border border-yellow-300 w-full">
+                    Potential Top 10 detected! <br/>
+                    <span className="font-mono text-2xl text-yellow-900 drop-shadow-sm">{score}</span>
+                  </p>
+                )}
+
+                {!serverRankResult && (
+                  <>
+                    <input 
+                      type="text" 
+                      maxLength={12}
+                      placeholder="ENTER NAME" 
+                      value={playerName}
+                      onChange={e => setPlayerName(e.target.value)}
+                      className="w-full text-center text-xl font-black text-yellow-900 bg-white border-2 border-yellow-500 rounded-xl p-3 uppercase tracking-widest placeholder-yellow-600/40 focus:outline-none focus:border-yellow-700 focus:bg-white transition-all shadow-inner"
+                    />
+                    <button 
+                      onPointerDown={handleScoreSubmit}
+                      disabled={isSubmittingScore || !playerName.trim()}
+                      className="w-full bg-gradient-to-r from-yellow-500 to-yellow-600 border-b-4 border-r-2 border-yellow-800 text-white font-extrabold py-4 rounded-xl shadow-md active:border-0 active:translate-y-[4px] transition-all tracking-widest text-lg touch-manipulation disabled:opacity-50 disabled:active:border-b-4 disabled:active:translate-y-0"
+                    >
+                      {isSubmittingScore ? 'VERIFYING...' : hasSubmissionError ? 'RETRY SUBMISSION' : 'CLAIM RANK'}
+                    </button>
+                  </>
+                )}
+
+                {serverRankResult && (
+                  <button 
+                    onPointerDown={() => setQualifiesForLeaderboard(false)}
+                    className="w-full bg-yellow-900 text-white font-extrabold py-4 rounded-xl shadow-md active:translate-y-[4px] transition-all tracking-widest text-lg touch-manipulation"
+                  >
+                    VIEW SUMMARY
+                  </button>
+                )}
+
                 <button 
                   onPointerDown={() => setQualifiesForLeaderboard(false)}
                   className="text-yellow-700 text-xs font-bold uppercase tracking-widest mt-1 underline opacity-80 active:opacity-100 touch-manipulation p-2"
                 >
-                  Skip
+                  {serverRankResult ? 'Done' : 'Skip'}
                 </button>
              </div>
            ) : (
               <div className="w-full flex flex-col items-center gap-4 bg-white/90 p-6 rounded-xl border border-pink-300 shadow-2xl animate-[slideUp_0.3s_ease-out] z-40 relative">
-                {isNewPersonalBest && (
+                {(serverRankResult?.isPersonalBest || (isNewPersonalBest && !serverRankResult)) && (
                   <div className="absolute -top-4 bg-red-500 text-white text-[10px] font-black px-3 py-1 rounded-full shadow-lg border-2 border-white animate-bounce z-50 tracking-widest">
-                    NEW HIGH SCORE!
+                    PERSONAL BEST!
                   </div>
                 )}
                 {foundWords.length === puzzle.validWords.length ? (

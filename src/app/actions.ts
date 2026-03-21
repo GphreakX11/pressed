@@ -8,6 +8,8 @@ export type LeaderboardEntry = {
   score: number;
   date: number;
   difficulty?: string;
+  isGold?: boolean;
+  silverWins?: number;
 };
 
 const LEADERBOARD_ALLTIME_KEY = 'apex_global_alltime';
@@ -37,12 +39,71 @@ async function getUserHighScore(key: string, playerId: string): Promise<number> 
   }
 }
 
+export async function resolvePastDailyWinners() {
+  try {
+    const today = getDailyId();
+    
+    // Calculate yesterday's date string
+    const d = new Date(today + 'T12:00:00Z');
+    d.setDate(d.getDate() - 1);
+    const yesterday = d.toISOString().split('T')[0];
+    
+    const awardedKey = `apex_daily_awarded_${yesterday}`;
+    // Lock effectively prevents multiple simultaneous executions
+    const setSuccess = await kv.set(awardedKey, 'true', { nx: true, ex: 604800 });
+    
+    if (setSuccess) {
+      const dailyKey = `apex_global_daily_${yesterday}`;
+      const topEntry = await kv.zrange(dailyKey, 0, 0, { rev: true });
+      if (topEntry && topEntry.length > 0) {
+        const memberStr = topEntry[0] as string;
+        const parts = memberStr.split(':');
+        const playerId = parts[1];
+        if (playerId) {
+          await kv.hincrby('apex_user_daily_wins', playerId, 1);
+        }
+      }
+    }
+  } catch (err) {
+    console.error('Failed to resolve past daily winners:', err);
+  }
+}
+
+export async function getUserTrophies(playerId: string) {
+  try {
+    const allTimeTop = await kv.zrange(LEADERBOARD_ALLTIME_KEY, 0, 0, { rev: true });
+    let isGold = false;
+    if (allTimeTop && allTimeTop.length > 0) {
+       const allTimeLeaderId = (allTimeTop[0] as string).split(':')[1];
+       isGold = (allTimeLeaderId === playerId);
+    }
+    
+    const wins = await kv.hget('apex_user_daily_wins', playerId) as string | null;
+    const silverWins = Number(wins || 0);
+    
+    return { isGold, silverWins };
+  } catch (err) {
+    return { isGold: false, silverWins: 0 };
+  }
+}
+
 export async function getTopScores(type: 'daily' | 'alltime' = 'alltime'): Promise<LeaderboardEntry[]> {
   try {
+    // Lazily resolve yesterday's winner
+    await resolvePastDailyWinners();
+
     const key = type === 'daily' ? getDailyKey() : LEADERBOARD_ALLTIME_KEY;
     const results = await kv.zrange(key, 0, 9, { rev: true, withScores: true });
     
+    // Fetch all-time leader to determine Gold Trophy
+    const allTimeTop = await kv.zrange(LEADERBOARD_ALLTIME_KEY, 0, 0, { rev: true });
+    let allTimeLeaderId: string | null = null;
+    if (allTimeTop && allTimeTop.length > 0) {
+       allTimeLeaderId = (allTimeTop[0] as string).split(':')[1];
+    }
+
     const entries: LeaderboardEntry[] = [];
+    const playerIds: string[] = [];
     
     for (let i = 0; i < results.length; i += 2) {
       const memberStr = results[i] as string;
@@ -52,12 +113,23 @@ export async function getTopScores(type: 'daily' | 'alltime' = 'alltime'): Promi
       const playerId = parts[1] || 'Temp';
       const difficulty = parts.length > 2 ? parts[2] : 'N';
       
+      playerIds.push(playerId);
+      
       entries.push({
         rank: entries.length + 1,
         name,
         score,
         date: Date.now(), // No longer parsed from string
-        difficulty
+        difficulty,
+        isGold: allTimeLeaderId === playerId,
+        silverWins: 0 // Default, filled next
+      });
+    }
+    
+    if (playerIds.length > 0) {
+      const winCounts = await kv.hmget('apex_user_daily_wins', ...playerIds) as unknown as (string | null)[];
+      entries.forEach((e, i) => {
+         e.silverWins = Number(winCounts[i] || 0);
       });
     }
     
@@ -86,8 +158,9 @@ export async function submitScore(name: string, playerId: string, score: number,
     ]);
 
     const currentMax = existingScores ? Math.max(0, ...existingScores.filter((s): s is number => s !== null)) : 0;
+    const isPersonalBest = score > currentMax;
 
-    if (score > currentMax) {
+    if (isPersonalBest) {
       // New High Score! 
       // Remove old entries for this player (all difficulties) to keep leaderboard clean
       await kv.zrem(key, `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`);
@@ -101,11 +174,19 @@ export async function submitScore(name: string, playerId: string, score: number,
         const countAllTime = await kv.zcard(key);
         if (countAllTime > 20) await kv.zremrangebyrank(key, 0, -21);
       }
-      return { success: true, newHighScore: true };
     }
 
-    // Not a new high score
-    return { success: true, newHighScore: false };
+    // Always get the final rank after submission (or non-submission)
+    const rank = await kv.zrevrank(key, memberId);
+    const isTopTen = rank !== null && rank <= 9;
+
+    return { 
+      success: true, 
+      newHighScore: isPersonalBest, // Maintaining backward compatibility for a moment
+      isPersonalBest,
+      isTopTen,
+      rank: rank !== null ? rank + 1 : null
+    };
   } catch (err) {
     console.error('Failed to submit score:', err);
     return { success: false, error: 'Database error' };
@@ -252,5 +333,41 @@ export async function getWordRarity(words: string[]): Promise<Record<string, num
   } catch (err) {
     console.error('Failed to get word rarity:', err);
     return {};
+  }
+}
+
+export async function getTournamentPuzzle(targetScore: number): Promise<Puzzle> {
+  // Loop to find a puzzle that satisfies the minimum score threshold
+  while (true) {
+    const puzzle = await getGamePuzzle('normal');
+    
+    // Calculate absolute maximum base score possible natively
+    let totalPossibleScore = 0;
+    for (const word of puzzle.validWords) {
+      totalPossibleScore += Math.floor(word.length * 10 * 1.2);
+    }
+    for (const word of puzzle.bonusWords) {
+      totalPossibleScore += Math.floor(word.length * 10 * 1.2);
+    }
+    
+    // Safety Valve: Total possible points must exceed target by at least 10%
+    if (totalPossibleScore >= targetScore * 1.10) {
+      return puzzle;
+    }
+    // Loop continues if it fails the safety check
+  }
+}
+
+export async function recordTournamentRound(playerId: string, round: number) {
+  try {
+    const existing = await kv.hget('apex_user_tourney_rounds', playerId) as number | null;
+    if (!existing || round > Number(existing)) {
+       await kv.hset('apex_user_tourney_rounds', { [playerId]: round });
+       return { success: true, newMax: true };
+    }
+    return { success: true, newMax: false };
+  } catch (err) {
+    console.error('Failed to record tournament round:', err);
+    return { success: false };
   }
 }

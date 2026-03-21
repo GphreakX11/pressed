@@ -1346,6 +1346,7 @@ export default function GameBoard() {
             <span className="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md mt-2">
               {jackpotBlast.count}X COMBO
             </span>
+         </div>
       )}
 
       {/* Street Fighter Tournament Transition Overlay */}

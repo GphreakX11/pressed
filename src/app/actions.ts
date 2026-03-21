@@ -146,9 +146,24 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tou
     const entries: LeaderboardEntry[] = [];
     const playerIds: string[] = [];
     
-    for (let i = 0; i < results.length; i += 2) {
-      const memberStr = results[i] as string;
-      const score = Number(results[i + 1]);
+    for (let i = 0; i < results.length; i++) {
+      let memberStr = "";
+      let score = 0;
+      const item = results[i];
+      
+      if (typeof item === 'object' && item !== null && 'member' in item) {
+        memberStr = String((item as any).member);
+        score = Number((item as any).score);
+      } else {
+        memberStr = String(item);
+        if (i + 1 < results.length) {
+          score = Number(results[i + 1]);
+          i++; // skip score field
+        }
+      }
+      
+      if (!memberStr) continue;
+
       const parts = memberStr.split(':');
       const name = parts[0] || 'Unknown';
       const playerId = parts[1] || 'Temp';
@@ -216,12 +231,21 @@ export async function submitScore(name: string, playerId: string, score: number,
     let previousLeaderScore = 0;
     let secondPlaceScore = 0;
     
-    if (currentLeaders.length >= 2) {
-      previousLeaderId = (currentLeaders[0] as string).split(':')[1];
-      previousLeaderScore = Number(currentLeaders[1]);
-    }
-    if (currentLeaders.length >= 4) {
-      secondPlaceScore = Number(currentLeaders[3]);
+    if (currentLeaders.length > 0) {
+      const first = currentLeaders[0];
+      if (typeof first === 'object' && first !== null && 'member' in first) {
+        previousLeaderId = String((first as any).member).split(':')[1];
+        previousLeaderScore = Number((first as any).score);
+        if (currentLeaders.length > 1) {
+          secondPlaceScore = Number((currentLeaders[1] as any).score);
+        }
+      } else {
+        previousLeaderId = String(currentLeaders[0]).split(':')[1];
+        previousLeaderScore = Number(currentLeaders[1]);
+        if (currentLeaders.length >= 4) {
+          secondPlaceScore = Number(currentLeaders[3]);
+        }
+      }
     }
 
     if (isPersonalBest) {

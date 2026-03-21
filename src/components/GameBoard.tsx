@@ -406,7 +406,7 @@ export default function GameBoard() {
     recordGameResult(won, finalScore, wordsSubmittedRef.current, wordsCorrect, gridSeen, gridFilled, tRound);
 
     if (isTournamentModeRef.current) {
-      recordTournamentRound(playerIdRef.current, tournamentRoundRef.current).catch(console.error);
+      recordTournamentRound(playerIdRef.current, playerName || 'ANONYMOUS', tournamentRoundRef.current).catch(console.error);
     }
     
     // Check for rank up
@@ -689,7 +689,26 @@ export default function GameBoard() {
   useEffect(() => {
     const saved = localStorage.getItem('pressedHighScore');
     if (saved) setHighScore(parseInt(saved, 10));
-    setStats(loadStats());
+    
+    const loadedStats = loadStats();
+    setStats(loadedStats);
+    
+    // Silent Background Catch-Up Sync (Legacy Data Sync)
+    const handle = localStorage.getItem('last_used_handle');
+    const pid = localStorage.getItem('pressed_player_id');
+    if (handle && pid && ((loadedStats.highestTournamentRound || 0) > 0 || loadedStats.gamesWon >= 25)) {
+      submitGameStats(
+        pid,
+        handle,
+        {
+          gamesWon: loadedStats.gamesWon,
+          totalAccuracySum: loadedStats.totalAccuracySum || 0,
+          gamesWithWordData: loadedStats.gamesWithWordData || 0
+        },
+        loadedStats.highestTournamentRound || 0
+      ).catch(console.error);
+    }
+
     getTopScores('daily').then(setDailyLeaderboard).catch(console.error);
     getTopScores('alltime').then(setAllTimeLeaderboard).catch(console.error);
     getTopScores('accuracy').then(setAccuracyLeaderboard).catch(console.error);
@@ -1141,33 +1160,24 @@ export default function GameBoard() {
               
               <div className="flex-1 overflow-y-auto pr-2 flex flex-col gap-4 text-sm text-pink-900 font-medium">
                 <div className="bg-white p-3 rounded-xl border border-pink-200 shadow-sm">
-                  <span className="font-extrabold text-pink-700 block mb-1">🎯 The Goal:</span>
-                  Find as many anagrams as possible before time runs out. Easy: 3:00 (1.0x pts). Normal: 2:30 (1.2x pts). Hard: 2:00 (1.5x pts).
+                  <span className="font-extrabold text-pink-700 block mb-1">🕹️ Game Modes:</span>
+                  <strong>Standard:</strong> Find as many anagrams as possible before time runs out. Easy: 3:00. Normal: 2:30. Hard: 2:00.<br/>
+                  <strong>Tournament:</strong> Arcade Survival. Reach the target score before time runs out. The target increases by 100 points every round!
                 </div>
                 
                 <div className="bg-orange-50 p-3 rounded-xl border border-orange-200 shadow-sm">
                   <span className="font-extrabold text-orange-600 block mb-1 flex items-center gap-2"><span className="animate-pulse">🔥</span> Apex Streak:</span>
-                  Find 2 words within 5 seconds to trigger a 1.5x Score Multiplier.
-                </div>
-
-                <div className="bg-blue-50 p-3 rounded-xl border border-blue-200 shadow-sm">
-                  <span className="font-extrabold text-blue-600 block mb-1">🧊 Time Freeze (5-Word Streak):</span>
-                  Find 5 words in a row without a mistake to stop the clock for 10 seconds!
-                </div>
-                
-                <div className="bg-purple-50 p-3 rounded-xl border border-purple-200 shadow-sm">
-                  <span className="font-extrabold text-purple-600 block mb-1">🔮 Clarity Bonus (10-Word Streak):</span>
-                  Find 10 words in a row without a single mistake or duplicate — the longest unfound word is revealed and scored for you.
-                </div>
-
-                <div className="bg-indigo-50 p-3 rounded-xl border border-indigo-200 shadow-sm">
-                  <span className="font-extrabold text-indigo-600 block mb-1">⚡ Overdrive (11+ Word Streak):</span>
-                  Keep the streak going past 10! Every word you find correctly after that scores a massive <strong>3x multiplier</strong> — until you make a mistake or repeat a word.
+                  Find 2 words within 5 seconds to trigger a 1.5x Multiplier. 5 words freezes the clock for 10s. 10 words reveals a free word! 11+ gives a 3x Multiplier!
                 </div>
 
                 <div className="bg-[#fff9e6] p-3 rounded-xl border border-[#d4af37] shadow-sm">
-                  <span className="font-extrabold text-[#d4af37] block mb-1">🌍 Daily Trial:</span>
-                  Compete on the exact same board as everyone else for the top spot on the Daily Leaderboard!
+                  <span className="font-extrabold text-[#d4af37] block mb-2">🌟 The Trophy System:</span>
+                  <div className="flex flex-col gap-2 text-xs">
+                    <div className="flex items-center gap-2"><span className="text-lg">🏆</span> <span><strong>Gold Crown:</strong> Held by the #1 All-Time High Score player.</span></div>
+                    <div className="flex items-center gap-2"><span className="text-lg">🥈</span> <span><strong>Silver Medal:</strong> Awarded to the winner of the Daily Trial (resets at 3 AM EST).</span></div>
+                    <div className="flex items-center gap-2"><span className="text-lg">🎯</span> <span><strong>Sniper's Crosshair:</strong> Highest All-Time Accuracy (Must clear 25+ boards).</span></div>
+                    <div className="flex items-center gap-2"><span className="text-lg">🛡️</span> <span><strong>Survivalist Shield:</strong> Player who has survived the most Tournament rounds.</span></div>
+                  </div>
                 </div>
 
                 <div className="bg-emerald-50 p-3 rounded-xl border border-emerald-200 shadow-sm">
@@ -1228,20 +1238,20 @@ export default function GameBoard() {
                 {leaderboardTab === 'tourney' && tourneyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Survivalists.</p>}
                 
                 {(leaderboardTab === 'daily' ? dailyLeaderboard : leaderboardTab === 'accuracy' ? accuracyLeaderboard : leaderboardTab === 'tourney' ? tourneyLeaderboard : allTimeLeaderboard).map((entry, idx) => (
-                  <div key={idx} className="flex justify-between items-center py-2 border-b border-slate-800 last:border-0">
-                    <div className="flex items-center gap-3 overflow-hidden">
-                      <span className={`font-black italic w-6 text-center ${idx === 0 ? 'text-[#d4af37] text-lg drop-shadow-md' : idx === 1 ? 'text-gray-400 text-md' : idx === 2 ? 'text-amber-700 text-md' : 'text-slate-600 text-xs'}`}>
-                        #{idx + 1}
-                      </span>
-                      <div className="flex items-center gap-1 min-w-0">
-                        {entry.isGold && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="All-Time Apex Leader">🏆</span>}
-                        {entry.silverWins ? <span className="text-[10px] font-black text-slate-800 bg-slate-300 rounded px-[2px] flex items-center shadow-sm border border-slate-400 truncate flex-shrink-0" title="Daily Trial Champion">🥈<span className="text-[8px] ml-[1px]">x{entry.silverWins}</span></span> : null}
-                        {entry.isSniper && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Highest Accuracy">🎯</span>}
-                        {entry.isSurvivalist && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Highest Tournament Round">🛡️</span>}
-                        <span className="font-extrabold text-slate-300 tracking-wider uppercase text-xs truncate max-w-[100px] sm:max-w-[150px]">{entry.name}</span>
-                      </div>
+                  <div key={idx} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center py-2 border-b border-slate-800 last:border-0 w-full">
+                    <span className={`font-black italic w-6 text-center ${idx === 0 ? 'text-[#d4af37] text-lg drop-shadow-md' : idx === 1 ? 'text-gray-400 text-md' : idx === 2 ? 'text-amber-700 text-md' : 'text-slate-600 text-xs'}`}>
+                      #{idx + 1}
+                    </span>
+                    <div className="flex items-center gap-1 min-w-0 overflow-hidden">
+                      {entry.isGold && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="All-Time Apex Leader">🏆</span>}
+                      {entry.silverWins ? <span className="text-[10px] font-black text-slate-800 bg-slate-300 rounded px-[2px] flex items-center shadow-sm border border-slate-400 truncate flex-shrink-0" title="Daily Trial Champion">🥈<span className="text-[8px] ml-[1px]">x{entry.silverWins}</span></span> : null}
+                      {entry.isSniper && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Highest Accuracy">🎯</span>}
+                      {entry.isSurvivalist && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Highest Tournament Round">🛡️</span>}
+                      <span className="font-extrabold text-slate-300 tracking-wider uppercase text-xs truncate">{entry.name}</span>
                     </div>
-                    <span className="font-mono font-bold text-sm text-[#d4af37] flex-shrink-0 ml-2">{leaderboardTab === 'accuracy' ? `${entry.score}%` : entry.score}</span>
+                    <span className="font-mono font-bold text-sm text-[#d4af37] flex-shrink-0 text-right tracking-widest leading-none mt-1">
+                      {leaderboardTab === 'accuracy' ? `${entry.score}%` : (leaderboardTab === 'tourney' ? `R${entry.score}` : entry.score.toLocaleString())}
+                    </span>
                   </div>
                 ))}
               </div>

@@ -76,7 +76,7 @@ export async function getUserTrophies(playerId: string) {
     const [allTimeTop, accTop, tourneyTop, wins] = await Promise.all([
       kv.zrange(LEADERBOARD_ALLTIME_KEY, 0, 0, { rev: true }),
       kv.zrange('apex_leaderboard_accuracy', 0, 0, { rev: true }),
-      kv.zrange('apex_leaderboard_tourney', 0, 0, { rev: true }),
+      kv.zrange('leaderboard_survivalist', 0, 0, { rev: true }),
       kv.hget('apex_user_daily_wins', playerId)
     ]);
     
@@ -100,14 +100,14 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tou
     let key = LEADERBOARD_ALLTIME_KEY;
     if (type === 'daily') key = getDailyKey();
     if (type === 'accuracy') key = 'apex_leaderboard_accuracy';
-    if (type === 'tourney') key = 'apex_leaderboard_tourney';
+    if (type === 'tourney') key = 'leaderboard_survivalist';
 
     const results = await kv.zrange(key, 0, 9, { rev: true, withScores: true });
     
     const [allTimeTop, accTop, tourneyTop] = await Promise.all([
       kv.zrange(LEADERBOARD_ALLTIME_KEY, 0, 0, { rev: true }),
       kv.zrange('apex_leaderboard_accuracy', 0, 0, { rev: true }),
-      kv.zrange('apex_leaderboard_tourney', 0, 0, { rev: true })
+      kv.zrange('leaderboard_survivalist', 0, 0, { rev: true })
     ]);
 
     const getTopId = (topList: unknown[]) => topList && topList.length > 0 ? (topList[0] as string).split(':')[1] : null;
@@ -396,17 +396,26 @@ export async function getTournamentPuzzle(targetScore: number): Promise<Puzzle> 
   }
 }
 
-export async function recordTournamentRound(playerId: string, round: number) {
+export async function recordTournamentRound(playerId: string, name: string, round: number) {
   try {
+    const cleanName = name.trim().substring(0, 12) || 'ANONYMOUS';
+    const safeName = cleanName.replace(/:/g, '');
+    const memberId = `${safeName}:${playerId}`;
+
     const existing = await kv.hget('apex_user_tourney_rounds', playerId) as number | null;
+    let newMax = false;
     if (!existing || round > Number(existing)) {
        await kv.hset('apex_user_tourney_rounds', { [playerId]: round });
-       return { success: true, newMax: true };
+       newMax = true;
     }
-    return { success: true, newMax: false };
+    
+    // Natively sync to new global leaderboard_survivalist using ZADD whenever a game ends
+    await kv.zadd('leaderboard_survivalist', { score: round, member: memberId });
+
+    return { success: true, newMax };
   } catch (err) {
     console.error('Failed to record tournament round:', err);
-    return { success: false };
+    return { success: false, newMax: false };
   }
 }
 
@@ -433,7 +442,7 @@ export async function submitGameStats(
     }
 
     if (highestTournamentRound > 0) {
-       pipeline.zadd('apex_leaderboard_tourney', { score: highestTournamentRound, member: memberId });
+       pipeline.zadd('leaderboard_survivalist', { score: highestTournamentRound, member: memberId });
     }
 
     await pipeline.exec();

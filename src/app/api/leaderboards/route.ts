@@ -7,13 +7,13 @@ export const revalidate = 0;
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const type = searchParams.get('type') || 'alltime';
+    const category = searchParams.get('category') || 'alltime';
     
-    if (!['daily', 'alltime', 'accuracy', 'tourney', 'champions'].includes(type)) {
-      return NextResponse.json({ error: 'Invalid type' }, { status: 400 });
+    if (!['daily', 'alltime', 'accuracy', 'tourney', 'champions'].includes(category)) {
+      return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
     }
 
-    const scores = await getTopScores(type as any);
+    const scores = await getTopScores(category as any);
     
     return NextResponse.json(scores, {
       headers: {
@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       }
     });
   } catch (err) {
-    console.error('API Leaderboard Error:', err);
+    console.error('API Leaderboards Error:', err);
     return NextResponse.json({ error: 'Failed to fetch leaderboard' }, { status: 500 });
   }
 }

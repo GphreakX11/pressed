@@ -488,20 +488,9 @@ export default function GameBoard() {
       const res = await Promise.race([submitPromise, timeoutPromise]) as any;
 
       if (res && res.success) {
-        // Save the handle so it pre-populates next time
         localStorage.setItem('last_used_handle', playerName.trim());
         localStorage.removeItem('pending_score');
         setHasPendingSubmission(false);
-        const [refreshedDaily, refreshedAllTime, refreshedAcc, refreshedTourney] = await Promise.all([
-          fetch('/api/leaderboard?type=daily').then(r => r.json()),
-          fetch('/api/leaderboard?type=alltime').then(r => r.json()),
-          fetch('/api/leaderboard?type=accuracy').then(r => r.json()),
-          fetch('/api/leaderboard?type=tourney').then(r => r.json())
-        ]);
-        setDailyLeaderboard(Array.isArray(refreshedDaily) ? refreshedDaily : []);
-        setAllTimeLeaderboard(Array.isArray(refreshedAllTime) ? refreshedAllTime : []);
-        setAccuracyLeaderboard(Array.isArray(refreshedAcc) ? refreshedAcc : []);
-        setTourneyLeaderboard(Array.isArray(refreshedTourney) ? refreshedTourney : []);
         
         // Update server result state
         setServerRankResult({
@@ -554,12 +543,6 @@ export default function GameBoard() {
       if (res && res.success) {
         localStorage.removeItem('pending_score');
         setHasPendingSubmission(false);
-        const [refreshedDaily, refreshedAllTime] = await Promise.all([
-          fetch('/api/leaderboard?type=daily').then(r => r.json()),
-          fetch('/api/leaderboard?type=alltime').then(r => r.json())
-        ]);
-        setDailyLeaderboard(Array.isArray(refreshedDaily) ? refreshedDaily : []);
-        setAllTimeLeaderboard(Array.isArray(refreshedAllTime) ? refreshedAllTime : []);
         setToastMessage('Score Posted!');
       } else {
         throw new Error(res?.error || 'Database error');
@@ -733,7 +716,7 @@ export default function GameBoard() {
   useEffect(() => {
     if (showTrophyCase) {
       setIsLeaderboardLoading(true);
-      fetch(`/api/leaderboard?type=${leaderboardTab}`)
+      fetch(`/api/leaderboards?category=${leaderboardTab}`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {
@@ -1276,7 +1259,7 @@ export default function GameBoard() {
                 {isLeaderboardLoading ? (
                   <div className="flex flex-col items-center justify-center h-32 w-full animate-[fadeIn_0.2s_ease-out]">
                     <div className="w-8 h-8 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin"></div>
-                    <span className="text-yellow-600 font-bold uppercase tracking-widest text-[10px] mt-3 animate-pulse text-center">ACCESSING RECORDS...</span>
+                    <span className="text-yellow-600 font-bold uppercase tracking-widest text-[10px] mt-3 animate-pulse text-center">LOADING APEX RECORDS...</span>
                   </div>
                 ) : (
                   <>

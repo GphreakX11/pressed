@@ -213,6 +213,8 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tou
 
 export async function submitScore(name: string, playerId: string, score: number, difficultyLabel: string = 'N', isDaily: boolean = false, boardsCleared: number = 0) {
   try {
+    console.log('Game Over. Incoming Score Submission:', { name, playerId, score, difficultyLabel, isDaily, boardsCleared });
+
     const cleanName = name.trim().substring(0, 12) || 'ANONYMOUS';
     const safeName = cleanName.replace(/:/g, '');
     const memberId = `${safeName}:${playerId}:${difficultyLabel}`;
@@ -225,6 +227,7 @@ export async function submitScore(name: string, playerId: string, score: number,
     await kv.hset('apex_player_names', { [playerId]: safeName });
 
     if (boardsCleared > 0 && score > 0) {
+      console.log('Executing ZADD for leaderboard_clears key: leaderboard_clears with score:', boardsCleared);
       await kv.zadd('leaderboard_clears', { score: boardsCleared, member: `${safeName}:${playerId}` });
     }
 
@@ -275,6 +278,7 @@ export async function submitScore(name: string, playerId: string, score: number,
       // New High Score! 
       // Remove old entries for this player (all handle variants) to keep leaderboard clean
       await kv.zrem(key, ...uniqueMembers);
+      console.log('Executing ZADD for generic key:', key, 'with score:', score);
       await kv.zadd(key, { score, member: memberId });
       
       if (isDaily) {

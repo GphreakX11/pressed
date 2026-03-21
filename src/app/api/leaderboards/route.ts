@@ -7,13 +7,21 @@ export const revalidate = 0;
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const category = searchParams.get('category') || 'alltime';
+    const type = searchParams.get('category') || 'alltime';
     
-    if (!['daily', 'alltime', 'accuracy', 'tourney', 'champions', 'veteran'].includes(category)) {
+    console.log('API Hit: Fetching category ->', type);
+    
+    if (type === 'daily') {
+      const { getDailyId } = await import('@/lib/puzzles');
+      console.log('Daily ID generated for GET:', getDailyId());
+    }
+
+    if (!['daily', 'alltime', 'accuracy', 'tourney', 'champions', 'veteran'].includes(type)) {
       return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
     }
 
-    const scores = await getTopScores(category as any);
+    const scores = await getTopScores(type as any);
+    console.log('Redis Return Data:', scores);
     
     return NextResponse.json(scores, {
       headers: {

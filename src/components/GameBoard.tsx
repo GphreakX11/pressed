@@ -719,6 +719,7 @@ export default function GameBoard() {
   // Active Refetch on Modal Open or Tab Switch
   useEffect(() => {
     if (showTrophyCase) {
+      console.log('Fetching data for tab:', leaderboardTab);
       setIsLeaderboardLoading(true);
       fetch(`/api/leaderboards?category=${leaderboardTab}`)
         .then(res => res.json())
@@ -1420,6 +1421,24 @@ export default function GameBoard() {
               <button onPointerDown={(e) => { e.preventDefault(); startNewGame('easy'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1">PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m + Hint)</span></button>
               <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1">PLAY NORMAL <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
               <button onPointerDown={(e) => { e.preventDefault(); startNewGame('hard'); }} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(2m + 1.5x Pts)</span></button>
+              
+              <button 
+                id="diagnostics-btn"
+                onPointerDown={async (e) => { 
+                  e.preventDefault(); 
+                  console.log('Running Pretend Play Diagnostics...');
+                  try {
+                    const res = await submitScore('TestUser', playerId, 9999, 'N', false, 0);
+                    console.log('Diagnostic Server Response:', res);
+                  } catch (err) {
+                    console.error('Diagnostic Error:', err);
+                  }
+                }} 
+                className="hidden"
+                style={{ display: 'none' }}
+              >
+                Run Diagnostics
+              </button>
             </div>
           </div>
         )}

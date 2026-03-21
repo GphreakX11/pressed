@@ -1289,10 +1289,9 @@ export default function GameBoard() {
               <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Best Score</span>
               <span className="text-pink-900 text-2xl font-mono">{stats.highScore}</span>
             </div>
-            <div className="flex flex-col items-center flex-[1.2] border-l border-pink-200 relative cursor-pointer active:opacity-80 touch-manipulation" onPointerDown={() => setShowLeaderboard(true)}>
-              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1">Leaderboard</span>
-              <span className="text-pink-900 text-2xl font-mono absolute -top-1 right-0 opacity-20">🏆</span>
-              <div className="mt-1 bg-white border border-[#d4af37] text-yellow-600 text-[8px] font-black px-1 py-1 rounded shadow-sm tracking-widest uppercase">View Top 10</div>
+            <div className="flex flex-col items-center flex-[1.2] border-l border-pink-200">
+              <span className="text-pink-600 text-[10px] font-bold uppercase tracking-wider mb-1 text-center leading-none">Tourney<br/>Round</span>
+              <span className="text-pink-900 text-2xl font-mono">{stats.highestTournamentRound || 0}</span>
             </div>
           </div>
             <div className="flex flex-col gap-3 w-full mt-1">
@@ -1300,10 +1299,11 @@ export default function GameBoard() {
                 <button onPointerDown={() => { console.log('Current Puzzle State:', puzzle); setShowHowToPlay(true); }} className="flex-1 bg-white border-2 border-pink-300 text-pink-600 font-extrabold py-2 rounded shadow-sm active:bg-pink-50 transition-all text-[10px] tracking-widest select-none touch-manipulation flex items-center justify-center gap-2 opacity-90"><span className="text-base text-pink-400">❓</span> HOW TO PLAY</button>
                 <button onPointerDown={handleShareGame} className="flex-1 bg-white border-2 border-pink-300 text-pink-600 font-extrabold py-2 rounded shadow-sm active:bg-pink-50 transition-all text-[10px] tracking-widest select-none touch-manipulation flex items-center justify-center gap-2 opacity-90"><span className="text-base text-pink-400">🔗</span> SHARE GAME</button>
               </div>
+              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal', false, true); }} className="bg-slate-800 border-b-4 border-r-2 border-slate-900 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-2">PLAY TOURNAMENT <span className="text-cyan-400 block text-xs tracking-normal mt-1 opacity-90">(Arcade Survival)</span></button>
               <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal', true); }} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-1">DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
-              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('easy'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m + Hint)</span></button>
-              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY NORMAL <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
-              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('hard'); }} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(2m + 1.5x Pts)</span></button>
+              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('easy'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1">PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m + Hint)</span></button>
+              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1">PLAY NORMAL <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
+              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('hard'); }} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(2m + 1.5x Pts)</span></button>
             </div>
           </div>
         )}
@@ -1346,7 +1346,15 @@ export default function GameBoard() {
             <span className="text-3xl md:text-4xl font-extrabold text-white drop-shadow-md mt-2">
               {jackpotBlast.count}X COMBO
             </span>
-         </div>
+      )}
+
+      {/* Street Fighter Tournament Transition Overlay */}
+      {tournamentOverlay !== 'none' && (
+        <div className="absolute inset-0 z-[300] bg-zinc-900 flex flex-col items-center justify-center animate-[fadeIn_0.2s_ease-out]">
+          <span className="text-6xl md:text-8xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-orange-600 drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] filter drop-shadow-xl animate-bounce" style={{ WebkitTextStroke: '3px #7c2d12' }}>
+            {tournamentOverlay === 'passed' ? 'ROUND PASSED!' : `ROUND ${tournamentRound + 1}... FIGHT!`}
+          </span>
+        </div>
       )}
 
       {/* Intense Final 10 Seconds Overlay */}
@@ -1432,6 +1440,11 @@ export default function GameBoard() {
           </div>
 
           <div className="flex flex-col items-center pb-2 relative">
+            {isTournamentModeRef.current && (
+              <div className="absolute -top-6 text-center w-full">
+                <span className="text-[10px] text-pink-500 font-bold uppercase tracking-widest leading-none">Target: <span className="text-[#d4af37] text-xs font-black">{targetScoreRef.current}</span></span>
+              </div>
+            )}
             {isTimeFrozen && (
               <div className="absolute -top-4 bg-blue-100 text-blue-700 font-bold px-2 py-1 text-[10px] rounded-full animate-bounce shadow-sm border border-blue-300">FROZEN</div>
             )}

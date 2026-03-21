@@ -93,9 +93,37 @@ export async function getUserTrophies(playerId: string) {
   }
 }
 
-export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tourney' = 'alltime'): Promise<LeaderboardEntry[]> {
+export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tourney' | 'champions' = 'alltime'): Promise<LeaderboardEntry[]> {
   try {
     if (type === 'daily') await resolvePastDailyWinners();
+
+    if (type === 'champions') {
+      const allWins = await kv.hgetall('apex_user_daily_wins') as Record<string, string | number>;
+      if (!allWins) return [];
+      
+      const arr = Object.keys(allWins).map(k => ({
+         playerId: k,
+         wins: Number(allWins[k])
+      })).filter(x => x.wins > 0).sort((a, b) => b.wins - a.wins).slice(0, 10);
+      
+      const playerIds = arr.map(a => a.playerId);
+      let names: (string | null)[] = [];
+      if (playerIds.length > 0) {
+        names = await kv.hmget('apex_player_names', ...playerIds) as unknown as (string | null)[];
+      }
+
+      return arr.map((x, i) => ({
+         rank: i + 1,
+         name: names[i] || 'PLAYER',
+         score: x.wins,
+         date: Date.now(),
+         difficulty: undefined,
+         silverWins: x.wins,
+         isGold: false,
+         isSniper: false,
+         isSurvivalist: false
+      }));
+    }
 
     let key = LEADERBOARD_ALLTIME_KEY;
     if (type === 'daily') key = getDailyKey();
@@ -161,6 +189,8 @@ export async function submitScore(name: string, playerId: string, score: number,
     const safeName = cleanName.replace(/:/g, '');
     const memberId = `${safeName}:${playerId}:${difficultyLabel}`;
     const baseIdent = `${safeName}:${playerId}`;
+
+    await kv.hset('apex_player_names', { [playerId]: safeName });
 
     const key = isDaily ? getDailyKey() : LEADERBOARD_ALLTIME_KEY;
 
@@ -429,6 +459,8 @@ export async function submitGameStats(
     const cleanName = name.trim().substring(0, 12) || 'ANONYMOUS';
     const safeName = cleanName.replace(/:/g, '');
     const memberId = `${safeName}:${playerId}`;
+
+    await kv.hset('apex_player_names', { [playerId]: safeName });
 
     const pipeline = kv.pipeline();
 

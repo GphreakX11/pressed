@@ -60,9 +60,10 @@ export default function GameBoard() {
   // Leaderboard State
   const [dailyLeaderboard, setDailyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [allTimeLeaderboard, setAllTimeLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [championsLeaderboard, setChampionsLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [accuracyLeaderboard, setAccuracyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [tourneyLeaderboard, setTourneyLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [leaderboardTab, setLeaderboardTab] = useState<'daily'|'alltime'|'accuracy'|'tourney'>('daily');
+  const [leaderboardTab, setLeaderboardTab] = useState<'daily'|'champions'|'alltime'|'accuracy'|'tourney'>('daily');
   const [showTrophyCase, setShowTrophyCase] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [qualifiesForLeaderboard, setQualifiesForLeaderboard] = useState(false);
@@ -418,17 +419,21 @@ export default function GameBoard() {
     
     setStats(newStats);
 
-    // Sync stats to global leaderboard
-    submitGameStats(
-      playerIdRef.current,
-      playerName || 'ANONYMOUS',
-      { 
-        gamesWon: newStats.gamesWon, 
-        totalAccuracySum: newStats.totalAccuracySum || 0, 
-        gamesWithWordData: newStats.gamesWithWordData || 0 
-      },
-      newStats.highestTournamentRound || 0
-    ).catch(console.error);
+    // Sync stats to global leaderboard via background API Endpoint
+    fetch('/api/sync-stats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        playerId: playerIdRef.current,
+        name: playerName || 'ANONYMOUS',
+        accuracyStats: { 
+          gamesWon: newStats.gamesWon, 
+          totalAccuracySum: newStats.totalAccuracySum || 0, 
+          gamesWithWordData: newStats.gamesWithWordData || 0 
+        },
+        highestTournamentRound: newStats.highestTournamentRound || 0
+      })
+    }).catch(console.error);
 
     // Record Global Stats
     const allFound = [...foundWordsRef.current, ...foundBonusWordsRef.current];
@@ -697,22 +702,32 @@ export default function GameBoard() {
     const handle = localStorage.getItem('last_used_handle');
     const pid = localStorage.getItem('pressed_player_id');
     if (handle && pid && ((loadedStats.highestTournamentRound || 0) > 0 || loadedStats.gamesWon >= 25)) {
-      submitGameStats(
-        pid,
-        handle,
-        {
-          gamesWon: loadedStats.gamesWon,
-          totalAccuracySum: loadedStats.totalAccuracySum || 0,
-          gamesWithWordData: loadedStats.gamesWithWordData || 0
-        },
-        loadedStats.highestTournamentRound || 0
-      ).catch(console.error);
+      fetch('/api/sync-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerId: pid,
+          name: handle,
+          accuracyStats: {
+            gamesWon: loadedStats.gamesWon,
+            totalAccuracySum: loadedStats.totalAccuracySum || 0,
+            gamesWithWordData: loadedStats.gamesWithWordData || 0
+          },
+          highestTournamentRound: loadedStats.highestTournamentRound || 0
+        })
+      }).catch(console.error);
     }
+  }, []);
 
-    getTopScores('daily').then(setDailyLeaderboard).catch(console.error);
-    getTopScores('alltime').then(setAllTimeLeaderboard).catch(console.error);
-    getTopScores('accuracy').then(setAccuracyLeaderboard).catch(console.error);
-    getTopScores('tourney').then(setTourneyLeaderboard).catch(console.error);
+  // Active Refetch on Modal Open or Tab Switch
+  useEffect(() => {
+    if (showTrophyCase) {
+      if (leaderboardTab === 'daily') getTopScores('daily').then(setDailyLeaderboard).catch(console.error);
+      else if (leaderboardTab === 'champions') getTopScores('champions').then(setChampionsLeaderboard).catch(console.error);
+      else if (leaderboardTab === 'alltime') getTopScores('alltime').then(setAllTimeLeaderboard).catch(console.error);
+      else if (leaderboardTab === 'accuracy') getTopScores('accuracy').then(setAccuracyLeaderboard).catch(console.error);
+      else if (leaderboardTab === 'tourney') getTopScores('tourney').then(setTourneyLeaderboard).catch(console.error);
+    }
     // Welcome screen shows on mount, so we don't automatically trigger startNewGame
   }, []);
 
@@ -1200,31 +1215,38 @@ export default function GameBoard() {
                 <button onPointerDown={() => setShowTrophyCase(false)} className="text-yellow-600 font-black text-xl w-8 h-8 rounded-full bg-yellow-900/40 flex items-center justify-center active:bg-yellow-800 transition-colors touch-manipulation pb-1">✕</button>
               </div>
               
-              <div className="flex bg-slate-800 border border-slate-700 p-1 rounded-xl mb-4 gap-1">
+              <div className="flex bg-slate-800 border border-slate-700 p-1 rounded-xl mb-4 gap-1 overflow-x-auto hide-scrollbar">
                  <button 
                    onPointerDown={() => setLeaderboardTab('daily')}
-                   className={`flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'daily' ? 'bg-gradient-to-b from-slate-600 to-slate-700 text-white shadow-inner border border-slate-500' : 'text-slate-400 opacity-70'}`}
+                   className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'daily' ? 'bg-gradient-to-b from-slate-600 to-slate-700 text-white shadow-inner border border-slate-500' : 'text-slate-400 opacity-70'}`}
+                 >
+                   <span className="text-lg mb-1 leading-none drop-shadow-md">⏱️</span>
+                   Today's
+                 </button>
+                 <button 
+                   onPointerDown={() => setLeaderboardTab('champions')}
+                   className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'champions' ? 'bg-gradient-to-b from-slate-600 to-slate-700 text-white shadow-inner border border-slate-500' : 'text-slate-400 opacity-70'}`}
                  >
                    <span className="text-lg mb-1 leading-none drop-shadow-md">🥈</span>
-                   Daily Trial
+                   Champions
                  </button>
                  <button 
                    onPointerDown={() => setLeaderboardTab('alltime')}
-                   className={`flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'alltime' ? 'bg-gradient-to-b from-yellow-700 to-yellow-900 text-white shadow-inner border border-yellow-600' : 'text-slate-400 opacity-70'}`}
+                   className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'alltime' ? 'bg-gradient-to-b from-yellow-700 to-yellow-900 text-white shadow-inner border border-yellow-600' : 'text-slate-400 opacity-70'}`}
                  >
                    <span className="text-lg mb-1 leading-none drop-shadow-md">🏆</span>
                    Hall of Fame
                  </button>
                  <button 
                    onPointerDown={() => setLeaderboardTab('accuracy')}
-                   className={`flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'accuracy' ? 'bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-inner border border-blue-600' : 'text-slate-400 opacity-70'}`}
+                   className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'accuracy' ? 'bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-inner border border-blue-600' : 'text-slate-400 opacity-70'}`}
                  >
                    <span className="text-lg mb-1 leading-none drop-shadow-md">🎯</span>
-                   Sniper's
+                   Sniper
                  </button>
                  <button 
                    onPointerDown={() => setLeaderboardTab('tourney')}
-                   className={`flex-1 flex flex-col items-center py-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'tourney' ? 'bg-gradient-to-b from-emerald-700 to-emerald-900 text-white shadow-inner border border-emerald-600' : 'text-slate-400 opacity-70'}`}
+                   className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'tourney' ? 'bg-gradient-to-b from-emerald-700 to-emerald-900 text-white shadow-inner border border-emerald-600' : 'text-slate-400 opacity-70'}`}
                  >
                    <span className="text-lg mb-1 leading-none drop-shadow-md">🛡️</span>
                    Survivalist
@@ -1232,12 +1254,13 @@ export default function GameBoard() {
               </div>
 
               <div className="flex-1 overflow-y-auto w-full px-2 py-1 flex flex-col gap-2 min-h-[150px]">
-                {leaderboardTab === 'daily' && dailyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Daily Trial.</p>}
+                {leaderboardTab === 'daily' && dailyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Today's Board.</p>}
+                {leaderboardTab === 'champions' && championsLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Champions.</p>}
                 {leaderboardTab === 'alltime' && allTimeLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Hall of Fame.</p>}
                 {leaderboardTab === 'accuracy' && accuracyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Sniper's Nest.</p>}
                 {leaderboardTab === 'tourney' && tourneyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Survivalists.</p>}
                 
-                {(leaderboardTab === 'daily' ? dailyLeaderboard : leaderboardTab === 'accuracy' ? accuracyLeaderboard : leaderboardTab === 'tourney' ? tourneyLeaderboard : allTimeLeaderboard).map((entry, idx) => (
+                {(leaderboardTab === 'daily' ? dailyLeaderboard : leaderboardTab === 'champions' ? championsLeaderboard : leaderboardTab === 'accuracy' ? accuracyLeaderboard : leaderboardTab === 'tourney' ? tourneyLeaderboard : allTimeLeaderboard).map((entry, idx) => (
                   <div key={idx} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center py-2 border-b border-slate-800 last:border-0 w-full">
                     <span className={`font-black italic w-6 text-center ${idx === 0 ? 'text-[#d4af37] text-lg drop-shadow-md' : idx === 1 ? 'text-gray-400 text-md' : idx === 2 ? 'text-amber-700 text-md' : 'text-slate-600 text-xs'}`}>
                       #{idx + 1}

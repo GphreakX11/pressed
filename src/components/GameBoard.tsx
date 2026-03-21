@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Puzzle, Difficulty, getRandomPuzzle, getDailyPuzzle } from "@/lib/puzzles";
 import { PlayerStats, loadStats, recordGameResult } from "@/lib/stats";
-import { getTopScores, submitScore, submitGameStats, recordWordStats, getWordRarity, getGamePuzzle, getDailyGamePuzzle, getUserTrophies, getTournamentPuzzle, recordTournamentRound, type LeaderboardEntry } from '@/app/actions';
+import { submitScore, submitGameStats, recordWordStats, getWordRarity, getGamePuzzle, getDailyGamePuzzle, getUserTrophies, getTournamentPuzzle, recordTournamentRound, type LeaderboardEntry } from '@/app/actions';
 import Sparkles from './Sparkles';
 
 // Retro font via Next/Google fonts is possible but for simplicity and guaranteeing zero-config, we'll use system fonts that look digital
@@ -354,8 +354,6 @@ export default function GameBoard() {
                 localStorage.removeItem('pending_score');
                 setHasPendingSubmission(false);
                 setToastMessage('Score Posted!');
-                getTopScores('daily').then(setDailyLeaderboard);
-                getTopScores('alltime').then(setAllTimeLeaderboard);
               }
             })
             .catch(() => {

@@ -12,6 +12,7 @@ export type LeaderboardEntry = {
   silverWins?: number;
   isSniper?: boolean;
   isSurvivalist?: boolean;
+  isVeteran?: boolean;
 };
 
 const LEADERBOARD_ALLTIME_KEY = 'apex_global_alltime';
@@ -73,10 +74,11 @@ export async function resolvePastDailyWinners() {
 
 export async function getUserTrophies(playerId: string) {
   try {
-    const [allTimeTop, accTop, tourneyTop, wins] = await Promise.all([
+    const [allTimeTop, accTop, tourneyTop, clearsTop, wins] = await Promise.all([
       kv.zrange(LEADERBOARD_ALLTIME_KEY, 0, 0, { rev: true }),
       kv.zrange('apex_leaderboard_accuracy', 0, 0, { rev: true }),
       kv.zrange('leaderboard_survivalist', 0, 0, { rev: true }),
+      kv.zrange('leaderboard_clears', 0, 0, { rev: true }),
       kv.hget('apex_user_daily_wins', playerId)
     ]);
     
@@ -86,14 +88,15 @@ export async function getUserTrophies(playerId: string) {
       isGold: checkId(allTimeTop), 
       silverWins: Number(wins || 0),
       isSniper: checkId(accTop),
-      isSurvivalist: checkId(tourneyTop)
+      isSurvivalist: checkId(tourneyTop),
+      isVeteran: checkId(clearsTop)
     };
   } catch (err) {
-    return { isGold: false, silverWins: 0, isSniper: false, isSurvivalist: false };
+    return { isGold: false, silverWins: 0, isSniper: false, isSurvivalist: false, isVeteran: false };
   }
 }
 
-export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tourney' | 'champions' = 'alltime'): Promise<LeaderboardEntry[]> {
+export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tourney' | 'champions' | 'veteran' = 'alltime'): Promise<LeaderboardEntry[]> {
   try {
     if (type === 'daily') await resolvePastDailyWinners();
 
@@ -121,7 +124,8 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tou
          silverWins: x.wins,
          isGold: false,
          isSniper: false,
-         isSurvivalist: false
+         isSurvivalist: false,
+         isVeteran: false
       }));
     }
 
@@ -129,6 +133,7 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tou
     if (type === 'daily') key = getDailyKey();
     if (type === 'accuracy') key = 'apex_leaderboard_accuracy';
     if (type === 'tourney') key = 'leaderboard_survivalist';
+    if (type === 'veteran') key = 'leaderboard_clears';
 
     let results = await kv.zrange(key, 0, 9, { rev: true, withScores: true });
     
@@ -137,16 +142,18 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tou
        results = [results] as any;
     }
 
-    const [allTimeTop, accTop, tourneyTop] = await Promise.all([
+    const [allTimeTop, accTop, tourneyTop, clearsTop] = await Promise.all([
       kv.zrange(LEADERBOARD_ALLTIME_KEY, 0, 0, { rev: true }),
       kv.zrange('apex_leaderboard_accuracy', 0, 0, { rev: true }),
-      kv.zrange('leaderboard_survivalist', 0, 0, { rev: true })
+      kv.zrange('leaderboard_survivalist', 0, 0, { rev: true }),
+      kv.zrange('leaderboard_clears', 0, 0, { rev: true })
     ]);
 
     const getTopId = (topList: unknown[]) => topList && topList.length > 0 ? (topList[0] as string).split(':')[1] : null;
     const allTimeLeaderId = getTopId(allTimeTop);
     const sniperLeaderId = getTopId(accTop);
     const survLeaderId = getTopId(tourneyTop);
+    const veteranLeaderId = getTopId(clearsTop);
 
     const entries: LeaderboardEntry[] = [];
     const playerIds: string[] = [];
@@ -181,10 +188,11 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tou
         name,
         score,
         date: Date.now(), // No longer parsed from string
-        difficulty: type === 'accuracy' || type === 'tourney' ? undefined : difficulty,
+        difficulty: type === 'accuracy' || type === 'tourney' || type === 'veteran' ? undefined : difficulty,
         isGold: allTimeLeaderId === playerId,
         isSniper: sniperLeaderId === playerId,
         isSurvivalist: survLeaderId === playerId,
+        isVeteran: veteranLeaderId === playerId,
         silverWins: 0 // Default, filled next
       });
     }
@@ -203,7 +211,7 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tou
   }
 }
 
-export async function submitScore(name: string, playerId: string, score: number, difficultyLabel: string = 'N', isDaily: boolean = false) {
+export async function submitScore(name: string, playerId: string, score: number, difficultyLabel: string = 'N', isDaily: boolean = false, boardsCleared: number = 0) {
   try {
     const cleanName = name.trim().substring(0, 12) || 'ANONYMOUS';
     const safeName = cleanName.replace(/:/g, '');
@@ -215,6 +223,10 @@ export async function submitScore(name: string, playerId: string, score: number,
     const oldBaseIdent = oldName ? `${oldName.replace(/:/g, '')}:${playerId}` : baseIdent;
 
     await kv.hset('apex_player_names', { [playerId]: safeName });
+
+    if (boardsCleared > 0 && score > 0) {
+      await kv.zadd('leaderboard_clears', { score: boardsCleared, member: `${safeName}:${playerId}` });
+    }
 
     const key = isDaily ? getDailyKey() : LEADERBOARD_ALLTIME_KEY;
 
@@ -513,12 +525,12 @@ export async function submitGameStats(
     const pipeline = kv.pipeline();
 
     if (accuracyStats.gamesWon >= 25 && accuracyStats.gamesWithWordData > 0) {
-       const avgAcc = Math.min(100, Math.round(accuracyStats.totalAccuracySum / accuracyStats.gamesWithWordData));
-       // Also optionally delete existing accuracy to prevent multiple distinct entries per player ID if their name changes? 
-       // We can rely on baseIdent like submitScore does.
-       const baseIdent = `${safeName}:${playerId}`;
-       // actually the best way is to zrem it first or set appropriately, but memberId includes name.
-       pipeline.zadd('apex_leaderboard_accuracy', { score: avgAcc, member: memberId });
+       const accuracy = Math.round(accuracyStats.totalAccuracySum / accuracyStats.gamesWithWordData);
+       pipeline.zadd('apex_leaderboard_accuracy', { score: accuracy, member: memberId });
+    }
+
+    if (accuracyStats.gamesWon > 0) {
+      pipeline.zadd('leaderboard_clears', { score: accuracyStats.gamesWon, member: memberId });
     }
 
     if (highestTournamentRound > 0) {

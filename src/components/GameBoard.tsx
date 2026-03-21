@@ -59,11 +59,12 @@ export default function GameBoard() {
 
   // Leaderboard State
   const [dailyLeaderboard, setDailyLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [allTimeLeaderboard, setAllTimeLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [championsLeaderboard, setChampionsLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [allTimeLeaderboard, setAllTimeLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [accuracyLeaderboard, setAccuracyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [tourneyLeaderboard, setTourneyLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [leaderboardTab, setLeaderboardTab] = useState<'daily'|'champions'|'alltime'|'accuracy'|'tourney'>('daily');
+  const [veteranLeaderboard, setVeteranLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardTab, setLeaderboardTab] = useState<'daily'|'champions'|'alltime'|'accuracy'|'tourney'|'veteran'>('daily');
   const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
   const [showTrophyCase, setShowTrophyCase] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -79,7 +80,7 @@ export default function GameBoard() {
 
   const [wordRarities, setWordRarities] = useState<Record<string, number>>({});
   const [serverRankResult, setServerRankResult] = useState<{ rankStatus: string, rank: number | null } | null>(null);
-  const [userTrophies, setUserTrophies] = useState<{ isGold: boolean, silverWins: number, isSniper?: boolean, isSurvivalist?: boolean } | null>(null);
+  const [userTrophies, setUserTrophies] = useState<{ isGold: boolean, silverWins: number, isSniper?: boolean, isSurvivalist?: boolean, isVeteran?: boolean } | null>(null);
 
   useEffect(() => {
     if (playerId) {
@@ -483,7 +484,9 @@ export default function GameBoard() {
 
     try {
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 8000));
-      const submitPromise = submitScore(playerName, playerId, score, diffLabel, isDailyMode);
+      const stats = loadStats();
+      const currentBoardsCleared = stats.gamesWon || 0;
+      const submitPromise = submitScore(playerName, playerId, score, diffLabel, isDailyMode, currentBoardsCleared);
 
       const res = await Promise.race([submitPromise, timeoutPromise]) as any;
 
@@ -536,7 +539,9 @@ export default function GameBoard() {
       const data = JSON.parse(pendingJson);
       
       const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 8000));
-      const submitPromise = submitScore(data.name, playerId, data.score, data.difficulty, data.isDaily);
+      const stats = loadStats();
+      const currentBoardsCleared = stats.gamesWon || 0;
+      const submitPromise = submitScore(data.name, playerId, data.score, data.difficulty, data.isDaily, currentBoardsCleared);
       
       const res = await Promise.race([submitPromise, timeoutPromise]) as any;
       
@@ -693,13 +698,12 @@ export default function GameBoard() {
     
     // Silent Background Catch-Up Sync (Legacy Data Sync)
     const handle = localStorage.getItem('last_used_handle');
-    const pid = localStorage.getItem('pressed_player_id');
-    if (handle && pid && ((loadedStats.highestTournamentRound || 0) > 0 || loadedStats.gamesWon >= 25)) {
+    if (handle && playerId && ((loadedStats.highestTournamentRound || 0) > 0 || loadedStats.gamesWon > 0)) {
       fetch('/api/sync-stats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          playerId: pid,
+          playerId: playerId,
           name: handle,
           accuracyStats: {
             gamesWon: loadedStats.gamesWon,
@@ -710,7 +714,7 @@ export default function GameBoard() {
         })
       }).catch(console.error);
     }
-  }, []);
+  }, [playerId]);
 
   // Active Refetch on Modal Open or Tab Switch
   useEffect(() => {
@@ -725,13 +729,14 @@ export default function GameBoard() {
             else if (leaderboardTab === 'alltime') setAllTimeLeaderboard(data);
             else if (leaderboardTab === 'accuracy') setAccuracyLeaderboard(data);
             else if (leaderboardTab === 'tourney') setTourneyLeaderboard(data);
+            else if (leaderboardTab === 'veteran') setVeteranLeaderboard(data);
           }
         })
         .catch(console.error)
         .finally(() => setIsLeaderboardLoading(false));
     }
     // Welcome screen shows on mount, so we don't automatically trigger startNewGame
-  }, []);
+  }, [showTrophyCase, leaderboardTab]);
 
   useEffect(() => {
     if (!puzzle || gameOver || !endTime || showWelcome) return;
@@ -773,7 +778,7 @@ export default function GameBoard() {
       clearInterval(timer);
       document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [endTime, gameOver, puzzle, showWelcome, endGame, isTimeFrozen]);
+  }, [endTime, gameOver, puzzle, showWelcome, endGame, isTimeFrozen, handleTournamentRoundPassed]);
 
   const formatTime = (seconds: number) => {
     if (seconds < 0) return "0:00";
@@ -1253,6 +1258,13 @@ export default function GameBoard() {
                    <span className="text-lg mb-1 leading-none drop-shadow-md">🛡️</span>
                    Survivalist
                  </button>
+                 <button 
+                   onPointerDown={() => setLeaderboardTab('veteran')}
+                   className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'veteran' ? 'bg-gradient-to-b from-purple-700 to-purple-900 text-white shadow-inner border border-purple-600' : 'text-slate-400 opacity-70'}`}
+                 >
+                   <span className="text-lg mb-1 leading-none drop-shadow-md">🎖️</span>
+                   Veterans
+                 </button>
               </div>
 
               <div className="flex-1 overflow-y-auto w-full px-2 py-1 flex flex-col gap-2 min-h-[150px]">
@@ -1268,8 +1280,9 @@ export default function GameBoard() {
                     {leaderboardTab === 'alltime' && allTimeLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Hall of Fame.</p>}
                     {leaderboardTab === 'accuracy' && accuracyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Sniper's Nest.</p>}
                     {leaderboardTab === 'tourney' && tourneyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Survivalists.</p>}
+                    {leaderboardTab === 'veteran' && veteranLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Veterans.</p>}
                 
-                {(leaderboardTab === 'daily' ? dailyLeaderboard : leaderboardTab === 'champions' ? championsLeaderboard : leaderboardTab === 'accuracy' ? accuracyLeaderboard : leaderboardTab === 'tourney' ? tourneyLeaderboard : allTimeLeaderboard).map((entry, idx) => (
+                {(leaderboardTab === 'daily' ? dailyLeaderboard : leaderboardTab === 'champions' ? championsLeaderboard : leaderboardTab === 'accuracy' ? accuracyLeaderboard : leaderboardTab === 'tourney' ? tourneyLeaderboard : leaderboardTab === 'veteran' ? veteranLeaderboard : allTimeLeaderboard).map((entry, idx) => (
                   <div key={idx} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center py-2 border-b border-slate-800 last:border-0 w-full animate-[fadeIn_0.2s_ease-out]">
                     <span className={`font-black italic w-6 text-center ${idx === 0 ? 'text-[#d4af37] text-lg drop-shadow-md' : idx === 1 ? 'text-gray-400 text-md' : idx === 2 ? 'text-amber-700 text-md' : 'text-slate-600 text-xs'}`}>
                       #{idx + 1}
@@ -1279,6 +1292,7 @@ export default function GameBoard() {
                       {entry.silverWins ? <span className="text-[10px] font-black text-slate-800 bg-slate-300 rounded px-[2px] flex items-center shadow-sm border border-slate-400 truncate flex-shrink-0" title="Daily Trial Champion">🥈<span className="text-[8px] ml-[1px]">x{entry.silverWins}</span></span> : null}
                       {entry.isSniper && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Highest Accuracy">🎯</span>}
                       {entry.isSurvivalist && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Highest Tournament Round">🛡️</span>}
+                      {entry.isVeteran && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Most Boards Cleared">🎖️</span>}
                       <span className="font-extrabold text-slate-300 tracking-wider uppercase text-xs truncate">{entry.name}</span>
                     </div>
                     <span className="font-mono font-bold text-sm text-[#d4af37] flex-shrink-0 text-right tracking-widest leading-none mt-1">

@@ -9,7 +9,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const category = searchParams.get('category') || 'alltime';
     
-    if (!['daily', 'alltime', 'accuracy', 'tourney', 'champions'].includes(category)) {
+    if (!['daily', 'alltime', 'accuracy', 'tourney', 'champions', 'veteran'].includes(category)) {
       return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
     }
 

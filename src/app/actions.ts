@@ -160,6 +160,20 @@ export async function submitScore(name: string, playerId: string, score: number,
     const currentMax = existingScores ? Math.max(0, ...existingScores.filter((s): s is number => s !== null)) : 0;
     const isPersonalBest = score > currentMax;
 
+    // Get current top 2 leaders BEFORE we add the new score (to see if they conquer them)
+    const currentLeaders = await kv.zrange(key, 0, 1, { rev: true, withScores: true });
+    let previousLeaderId: string | null = null;
+    let previousLeaderScore = 0;
+    let secondPlaceScore = 0;
+    
+    if (currentLeaders.length >= 2) {
+      previousLeaderId = (currentLeaders[0] as string).split(':')[1];
+      previousLeaderScore = Number(currentLeaders[1]);
+    }
+    if (currentLeaders.length >= 4) {
+      secondPlaceScore = Number(currentLeaders[3]);
+    }
+
     if (isPersonalBest) {
       // New High Score! 
       // Remove old entries for this player (all difficulties) to keep leaderboard clean
@@ -180,11 +194,20 @@ export async function submitScore(name: string, playerId: string, score: number,
     const rank = await kv.zrevrank(key, memberId);
     const isTopTen = rank !== null && rank <= 9;
 
+    let rankStatus = 'NONE';
+    if (isPersonalBest && previousLeaderId !== playerId && score > previousLeaderScore) {
+       rankStatus = 'NEW_LEADER';
+    } else if (isPersonalBest && previousLeaderId === playerId && currentLeaders.length >= 4 && score > secondPlaceScore) {
+       rankStatus = 'STILL_LEADER';
+    } else if (isTopTen) {
+       rankStatus = 'TOP_TEN';
+    } else if (isPersonalBest) {
+       rankStatus = 'PERSONAL_BEST';
+    }
+
     return { 
       success: true, 
-      newHighScore: isPersonalBest, // Maintaining backward compatibility for a moment
-      isPersonalBest,
-      isTopTen,
+      rankStatus,
       rank: rank !== null ? rank + 1 : null
     };
   } catch (err) {

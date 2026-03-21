@@ -215,7 +215,13 @@ export async function submitScore(name: string, playerId: string, score: number,
   try {
     console.log('Game Over. Incoming Score Submission:', { name, playerId, score, difficultyLabel, isDaily, boardsCleared });
 
-    const cleanName = name.trim().substring(0, 12) || 'ANONYMOUS';
+    // Ghost Clone Deadbolt: reject empty/anonymous handles
+    if (!name || name.trim() === '' || name.trim().toUpperCase() === 'ANONYMOUS') {
+      console.log('BLOCKED: Anonymous submission rejected');
+      return { success: false, error: 'Invalid handle' };
+    }
+
+    const cleanName = name.trim().substring(0, 12);
     const safeName = cleanName.replace(/:/g, '');
     const memberId = `${safeName}:${playerId}:${difficultyLabel}`;
     const baseIdent = `${safeName}:${playerId}`;
@@ -520,7 +526,13 @@ export async function submitGameStats(
   highestTournamentRound: number
 ) {
   try {
-    const cleanName = name.trim().substring(0, 12) || 'ANONYMOUS';
+    // Ghost Clone Deadbolt: reject empty/anonymous handles
+    if (!name || name.trim() === '' || name.trim().toUpperCase() === 'ANONYMOUS') {
+      console.log('BLOCKED: Anonymous background sync rejected');
+      return { success: false };
+    }
+
+    const cleanName = name.trim().substring(0, 12);
     const safeName = cleanName.replace(/:/g, '');
     const memberId = `${safeName}:${playerId}`;
 

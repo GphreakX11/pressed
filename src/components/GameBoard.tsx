@@ -696,7 +696,8 @@ export default function GameBoard() {
     
     // Silent Background Catch-Up Sync (Legacy Data Sync)
     const handle = localStorage.getItem('last_used_handle');
-    if (handle && playerId && ((loadedStats.highestTournamentRound || 0) > 0 || loadedStats.gamesWon > 0)) {
+    const isValidHandle = handle && handle.trim() !== '' && handle.trim().toUpperCase() !== 'ANONYMOUS';
+    if (isValidHandle && playerId && ((loadedStats.highestTournamentRound || 0) > 0 || loadedStats.gamesWon > 0)) {
       fetch('/api/sync-stats', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

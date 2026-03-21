@@ -10,6 +10,11 @@ export async function POST(req: Request) {
       return NextResponse.json({ success: false, error: 'Missing credentials' }, { status: 400 });
     }
 
+    // Ghost Clone Deadbolt: reject empty/anonymous handles
+    if (!name.trim() || name.trim().toUpperCase() === 'ANONYMOUS') {
+      return NextResponse.json({ success: false, error: 'Invalid handle' }, { status: 400 });
+    }
+
     const res = await submitGameStats(
       playerId, 
       name, 

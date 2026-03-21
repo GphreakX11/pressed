@@ -190,17 +190,22 @@ export async function submitScore(name: string, playerId: string, score: number,
     const memberId = `${safeName}:${playerId}:${difficultyLabel}`;
     const baseIdent = `${safeName}:${playerId}`;
 
+    // Get old handle to prevent duplication if name changes
+    const oldName = await kv.hget('apex_player_names', playerId) as string | null;
+    const oldBaseIdent = oldName ? `${oldName.replace(/:/g, '')}:${playerId}` : baseIdent;
+
     await kv.hset('apex_player_names', { [playerId]: safeName });
 
     const key = isDaily ? getDailyKey() : LEADERBOARD_ALLTIME_KEY;
 
-    // Fetch existing scores for all difficulty variants of this player
-    const existingScores = await kv.zmscore(key, [
-      `${baseIdent}:E`,
-      `${baseIdent}:N`,
-      `${baseIdent}:H`,
-      `${baseIdent}:D`
-    ]);
+    // Fetch existing scores for all difficulty variants of this player (old and new name)
+    const membersToMatch = [
+      `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`,
+      `${oldBaseIdent}:E`, `${oldBaseIdent}:N`, `${oldBaseIdent}:H`, `${oldBaseIdent}:D`
+    ];
+    const uniqueMembers = Array.from(new Set(membersToMatch));
+
+    const existingScores = await kv.zmscore(key, uniqueMembers);
 
     const currentMax = existingScores ? Math.max(0, ...existingScores.filter((s): s is number => s !== null)) : 0;
     const isPersonalBest = score > currentMax;
@@ -221,22 +226,30 @@ export async function submitScore(name: string, playerId: string, score: number,
 
     if (isPersonalBest) {
       // New High Score! 
-      // Remove old entries for this player (all difficulties) to keep leaderboard clean
-      await kv.zrem(key, `${baseIdent}:E`, `${baseIdent}:N`, `${baseIdent}:H`, `${baseIdent}:D`);
+      // Remove old entries for this player (all handle variants) to keep leaderboard clean
+      await kv.zrem(key, ...uniqueMembers);
       await kv.zadd(key, { score, member: memberId });
       
       if (isDaily) {
-        await kv.expire(key, 172800); // 48 hours auto-expiry
+        await kv.expire(key, 172800); 
         const countDaily = await kv.zcard(key);
-        if (countDaily > 20) await kv.zremrangebyrank(key, 0, -21);
+        if (countDaily > 25) await kv.zremrangebyrank(key, 0, -26);
       } else {
         const countAllTime = await kv.zcard(key);
-        if (countAllTime > 20) await kv.zremrangebyrank(key, 0, -21);
+        if (countAllTime > 100) await kv.zremrangebyrank(key, 0, -101);
       }
     }
 
-    // Always get the final rank after submission (or non-submission)
-    const rank = await kv.zrevrank(key, memberId);
+    // Always find the actual member string that holds their MAX score to get its rank
+    // (In case this latest run wasn't their best)
+    let bestMemberStr = memberId;
+    if (!isPersonalBest && currentMax > 0 && existingScores) {
+       const maxIdx = existingScores.indexOf(currentMax);
+       if (maxIdx !== -1) bestMemberStr = uniqueMembers[maxIdx];
+    }
+
+    // Get the final verified rank
+    const rank = await kv.zrevrank(key, bestMemberStr);
     const isTopTen = rank !== null && rank <= 9;
 
     let rankStatus = 'NONE';

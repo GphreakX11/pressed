@@ -444,18 +444,23 @@ export default function GameBoard() {
 
     // Leaderboard Qualification Check
     if (finalScore > 0) {
-      setDailyLeaderboard(currentLb => {
-        if (currentLb.length < 10 || finalScore > currentLb[currentLb.length - 1].score) {
-          setQualifiesForLeaderboard(true);
-        }
-        return currentLb;
-      });
-      setAllTimeLeaderboard(currentLb => {
-        if (currentLb.length < 10 || finalScore > currentLb[currentLb.length - 1].score) {
-          setQualifiesForLeaderboard(true);
-        }
-        return currentLb;
-      });
+      if (isDailyMode) {
+        // Daily Trial participants ALWAYS get to verify/submit their rank
+        setQualifiesForLeaderboard(true);
+      } else {
+        setDailyLeaderboard(currentLb => {
+          if (currentLb.length < 10 || finalScore >= currentLb[currentLb.length - 1].score) {
+            setQualifiesForLeaderboard(true);
+          }
+          return currentLb;
+        });
+        setAllTimeLeaderboard(currentLb => {
+          if (currentLb.length < 10 || finalScore >= currentLb[currentLb.length - 1].score) {
+            setQualifiesForLeaderboard(true);
+          }
+          return currentLb;
+        });
+      }
     }
   }, []);
 

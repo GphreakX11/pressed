@@ -498,10 +498,10 @@ export default function GameBoard() {
           fetch('/api/leaderboard?type=accuracy').then(r => r.json()),
           fetch('/api/leaderboard?type=tourney').then(r => r.json())
         ]);
-        setDailyLeaderboard(refreshedDaily);
-        setAllTimeLeaderboard(refreshedAllTime);
-        setAccuracyLeaderboard(refreshedAcc);
-        setTourneyLeaderboard(refreshedTourney);
+        setDailyLeaderboard(Array.isArray(refreshedDaily) ? refreshedDaily : []);
+        setAllTimeLeaderboard(Array.isArray(refreshedAllTime) ? refreshedAllTime : []);
+        setAccuracyLeaderboard(Array.isArray(refreshedAcc) ? refreshedAcc : []);
+        setTourneyLeaderboard(Array.isArray(refreshedTourney) ? refreshedTourney : []);
         
         // Update server result state
         setServerRankResult({
@@ -558,8 +558,8 @@ export default function GameBoard() {
           fetch('/api/leaderboard?type=daily').then(r => r.json()),
           fetch('/api/leaderboard?type=alltime').then(r => r.json())
         ]);
-        setDailyLeaderboard(refreshedDaily);
-        setAllTimeLeaderboard(refreshedAllTime);
+        setDailyLeaderboard(Array.isArray(refreshedDaily) ? refreshedDaily : []);
+        setAllTimeLeaderboard(Array.isArray(refreshedAllTime) ? refreshedAllTime : []);
         setToastMessage('Score Posted!');
       } else {
         throw new Error(res?.error || 'Database error');

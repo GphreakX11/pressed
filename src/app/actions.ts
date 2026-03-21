@@ -130,8 +130,13 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tou
     if (type === 'accuracy') key = 'apex_leaderboard_accuracy';
     if (type === 'tourney') key = 'leaderboard_survivalist';
 
-    const results = await kv.zrange(key, 0, 9, { rev: true, withScores: true });
+    let results = await kv.zrange(key, 0, 9, { rev: true, withScores: true });
     
+    // Failsafe: Vercel KV may unwrap single-element arrays into raw objects
+    if (results && !Array.isArray(results) && typeof results === 'object') {
+       results = [results] as any;
+    }
+
     const [allTimeTop, accTop, tourneyTop] = await Promise.all([
       kv.zrange(LEADERBOARD_ALLTIME_KEY, 0, 0, { rev: true }),
       kv.zrange('apex_leaderboard_accuracy', 0, 0, { rev: true }),
@@ -226,7 +231,13 @@ export async function submitScore(name: string, playerId: string, score: number,
     const isPersonalBest = score > currentMax;
 
     // Get current top 2 leaders BEFORE we add the new score (to see if they conquer them)
-    const currentLeaders = await kv.zrange(key, 0, 1, { rev: true, withScores: true });
+    let currentLeaders = await kv.zrange(key, 0, 1, { rev: true, withScores: true });
+    
+    // Failsafe: Vercel KV unwrapping
+    if (currentLeaders && !Array.isArray(currentLeaders) && typeof currentLeaders === 'object') {
+      currentLeaders = [currentLeaders] as any;
+    }
+
     let previousLeaderId: string | null = null;
     let previousLeaderScore = 0;
     let secondPlaceScore = 0;

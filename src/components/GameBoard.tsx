@@ -64,6 +64,7 @@ export default function GameBoard() {
   const [accuracyLeaderboard, setAccuracyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [tourneyLeaderboard, setTourneyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [leaderboardTab, setLeaderboardTab] = useState<'daily'|'champions'|'alltime'|'accuracy'|'tourney'>('daily');
+  const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
   const [showTrophyCase, setShowTrophyCase] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [qualifiesForLeaderboard, setQualifiesForLeaderboard] = useState(false);
@@ -491,10 +492,12 @@ export default function GameBoard() {
         localStorage.setItem('last_used_handle', playerName.trim());
         localStorage.removeItem('pending_score');
         setHasPendingSubmission(false);
-        const refreshedDaily = await getTopScores('daily');
-        const refreshedAllTime = await getTopScores('alltime');
-        const refreshedAcc = await getTopScores('accuracy');
-        const refreshedTourney = await getTopScores('tourney');
+        const [refreshedDaily, refreshedAllTime, refreshedAcc, refreshedTourney] = await Promise.all([
+          fetch('/api/leaderboard?type=daily').then(r => r.json()),
+          fetch('/api/leaderboard?type=alltime').then(r => r.json()),
+          fetch('/api/leaderboard?type=accuracy').then(r => r.json()),
+          fetch('/api/leaderboard?type=tourney').then(r => r.json())
+        ]);
         setDailyLeaderboard(refreshedDaily);
         setAllTimeLeaderboard(refreshedAllTime);
         setAccuracyLeaderboard(refreshedAcc);
@@ -551,8 +554,10 @@ export default function GameBoard() {
       if (res && res.success) {
         localStorage.removeItem('pending_score');
         setHasPendingSubmission(false);
-        const refreshedDaily = await getTopScores('daily');
-        const refreshedAllTime = await getTopScores('alltime');
+        const [refreshedDaily, refreshedAllTime] = await Promise.all([
+          fetch('/api/leaderboard?type=daily').then(r => r.json()),
+          fetch('/api/leaderboard?type=alltime').then(r => r.json())
+        ]);
         setDailyLeaderboard(refreshedDaily);
         setAllTimeLeaderboard(refreshedAllTime);
         setToastMessage('Score Posted!');
@@ -727,11 +732,20 @@ export default function GameBoard() {
   // Active Refetch on Modal Open or Tab Switch
   useEffect(() => {
     if (showTrophyCase) {
-      if (leaderboardTab === 'daily') getTopScores('daily').then(setDailyLeaderboard).catch(console.error);
-      else if (leaderboardTab === 'champions') getTopScores('champions').then(setChampionsLeaderboard).catch(console.error);
-      else if (leaderboardTab === 'alltime') getTopScores('alltime').then(setAllTimeLeaderboard).catch(console.error);
-      else if (leaderboardTab === 'accuracy') getTopScores('accuracy').then(setAccuracyLeaderboard).catch(console.error);
-      else if (leaderboardTab === 'tourney') getTopScores('tourney').then(setTourneyLeaderboard).catch(console.error);
+      setIsLeaderboardLoading(true);
+      fetch(`/api/leaderboard?type=${leaderboardTab}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            if (leaderboardTab === 'daily') setDailyLeaderboard(data);
+            else if (leaderboardTab === 'champions') setChampionsLeaderboard(data);
+            else if (leaderboardTab === 'alltime') setAllTimeLeaderboard(data);
+            else if (leaderboardTab === 'accuracy') setAccuracyLeaderboard(data);
+            else if (leaderboardTab === 'tourney') setTourneyLeaderboard(data);
+          }
+        })
+        .catch(console.error)
+        .finally(() => setIsLeaderboardLoading(false));
     }
     // Welcome screen shows on mount, so we don't automatically trigger startNewGame
   }, []);
@@ -1259,14 +1273,21 @@ export default function GameBoard() {
               </div>
 
               <div className="flex-1 overflow-y-auto w-full px-2 py-1 flex flex-col gap-2 min-h-[150px]">
-                {leaderboardTab === 'daily' && dailyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Today's Board.</p>}
-                {leaderboardTab === 'champions' && championsLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Champions.</p>}
-                {leaderboardTab === 'alltime' && allTimeLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Hall of Fame.</p>}
-                {leaderboardTab === 'accuracy' && accuracyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Sniper's Nest.</p>}
-                {leaderboardTab === 'tourney' && tourneyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs">No records found for Survivalists.</p>}
+                {isLeaderboardLoading ? (
+                  <div className="flex flex-col items-center justify-center h-32 w-full animate-[fadeIn_0.2s_ease-out]">
+                    <div className="w-8 h-8 border-4 border-yellow-500/30 border-t-yellow-500 rounded-full animate-spin"></div>
+                    <span className="text-yellow-600 font-bold uppercase tracking-widest text-[10px] mt-3 animate-pulse text-center">ACCESSING RECORDS...</span>
+                  </div>
+                ) : (
+                  <>
+                    {leaderboardTab === 'daily' && dailyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Today's Board.</p>}
+                    {leaderboardTab === 'champions' && championsLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Champions.</p>}
+                    {leaderboardTab === 'alltime' && allTimeLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Hall of Fame.</p>}
+                    {leaderboardTab === 'accuracy' && accuracyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Sniper's Nest.</p>}
+                    {leaderboardTab === 'tourney' && tourneyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Survivalists.</p>}
                 
                 {(leaderboardTab === 'daily' ? dailyLeaderboard : leaderboardTab === 'champions' ? championsLeaderboard : leaderboardTab === 'accuracy' ? accuracyLeaderboard : leaderboardTab === 'tourney' ? tourneyLeaderboard : allTimeLeaderboard).map((entry, idx) => (
-                  <div key={idx} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center py-2 border-b border-slate-800 last:border-0 w-full">
+                  <div key={idx} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center py-2 border-b border-slate-800 last:border-0 w-full animate-[fadeIn_0.2s_ease-out]">
                     <span className={`font-black italic w-6 text-center ${idx === 0 ? 'text-[#d4af37] text-lg drop-shadow-md' : idx === 1 ? 'text-gray-400 text-md' : idx === 2 ? 'text-amber-700 text-md' : 'text-slate-600 text-xs'}`}>
                       #{idx + 1}
                     </span>
@@ -1282,6 +1303,8 @@ export default function GameBoard() {
                     </span>
                   </div>
                 ))}
+                  </>
+                )}
               </div>
             </div>
           </div>

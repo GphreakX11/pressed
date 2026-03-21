@@ -1207,10 +1207,11 @@ export default function GameBoard() {
                 <div className="bg-[#fff9e6] p-3 rounded-xl border border-[#d4af37] shadow-sm">
                   <span className="font-extrabold text-[#d4af37] block mb-2">🌟 The Trophy System:</span>
                   <div className="flex flex-col gap-2 text-xs">
-                    <div className="flex items-center gap-2"><span className="text-lg">🏆</span> <span><strong>Gold Crown:</strong> Held by the #1 All-Time High Score player.</span></div>
-                    <div className="flex items-center gap-2"><span className="text-lg">🥈</span> <span><strong>Silver Medal:</strong> Awarded to the winner of the Daily Trial (resets at 3 AM EST).</span></div>
-                    <div className="flex items-center gap-2"><span className="text-lg">🎯</span> <span><strong>Sniper's Crosshair:</strong> Highest All-Time Accuracy (Must clear 25+ boards).</span></div>
-                    <div className="flex items-center gap-2"><span className="text-lg">🛡️</span> <span><strong>Survivalist Shield:</strong> Player who has survived the most Tournament rounds.</span></div>
+                    <div className="flex items-center gap-2"><span className="text-lg">🏆</span> <span><strong>Gold Crown:</strong> Active #1 All-Time High Score leader.</span></div>
+                    <div className="flex items-center gap-2"><span className="text-lg">🥈</span> <span><strong>Daily Champ:</strong> Winner of the most recent Daily Trial.</span></div>
+                    <div className="flex items-center gap-2"><span className="text-lg">🎯</span> <span><strong>Sniper's Eye:</strong> Highest All-Time Accuracy (25+ boards minimum).</span></div>
+                    <div className="flex items-center gap-2"><span className="text-lg">🛡️</span> <span><strong>Survivalist:</strong> Player with the highest Tournament round reached.</span></div>
+                    <div className="flex items-center gap-2"><span className="text-lg">🎖️</span> <span><strong>Veteran:</strong> Global leader with the most total board clears.</span></div>
                   </div>
                 </div>
 

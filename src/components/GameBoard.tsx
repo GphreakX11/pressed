@@ -1335,6 +1335,7 @@ export default function GameBoard() {
                     {userTrophies?.silverWins ? <span className="text-xs font-black text-slate-600 bg-slate-100 rounded px-1 flex items-center shadow-sm border border-slate-300 cursor-help" title="Daily Trial Champion"><span className="text-sm drop-shadow-sm">🥈</span><span className="text-[9px] ml-[2px]">x{userTrophies.silverWins}</span></span> : null}
                     {userTrophies?.isSniper && <span className="text-xl leading-none drop-shadow-sm cursor-help" title="Sniper's Nest (Accuracy Leader)">🎯</span>}
                     {userTrophies?.isSurvivalist && <span className="text-xl leading-none drop-shadow-sm cursor-help" title="Survivalist Leader (Tourney)">🛡️</span>}
+                    {userTrophies?.isVeteran && <span className="text-xl leading-none drop-shadow-sm cursor-help" title="Most Boards Cleared (Veteran)">🎖️</span>}
                     <span className="ml-1 justify-self-center w-full mt-1">Welcome Back, {playerName || 'Player'}!</span>
                   </p>
                   <span className="text-xl font-black text-[#d4af37] uppercase tracking-widest">{rankInfo.title}</span>
@@ -1377,6 +1378,7 @@ export default function GameBoard() {
                {userTrophies?.silverWins ? <span className="text-[10px] font-black text-slate-600 bg-slate-100 rounded px-1 flex items-center shadow-sm border border-slate-300 cursor-help" title="Daily Trial Champion"><span className="text-[14px] drop-shadow-sm">🥈</span><span className="text-[9px] ml-[1px]">x{userTrophies.silverWins}</span></span> : null}
                {userTrophies?.isSniper && <span className="text-lg leading-none drop-shadow-sm cursor-help" title="Sniper's Nest (Accuracy Leader)">🎯</span>}
                {userTrophies?.isSurvivalist && <span className="text-lg leading-none drop-shadow-sm cursor-help" title="Survivalist Leader (Tourney)">🛡️</span>}
+               {userTrophies?.isVeteran && <span className="text-lg leading-none drop-shadow-sm cursor-help" title="Most Boards Cleared (Veteran)">🎖️</span>}
                <span className="text-xs font-black text-pink-900 uppercase tracking-widest ml-1">{playerName || 'PLAYER'}</span>
              </div>
              <span className="text-[10px] text-pink-600 font-bold uppercase tracking-widest mb-1 mt-1">Rank</span>

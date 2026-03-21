@@ -238,6 +238,7 @@ export async function submitScore(name: string, playerId: string, score: number,
     }
 
     const key = isDaily ? getDailyKey() : LEADERBOARD_ALLTIME_KEY;
+    console.log('[submitScore] Key:', key, '| isDaily:', isDaily);
 
     // Fetch existing scores for all difficulty variants of this player (old and new name)
     const membersToMatch = [
@@ -247,9 +248,11 @@ export async function submitScore(name: string, playerId: string, score: number,
     const uniqueMembers = Array.from(new Set(membersToMatch));
 
     const existingScores = await kv.zmscore(key, uniqueMembers);
+    console.log('[submitScore] Existing scores for variants:', uniqueMembers.map((m, i) => `${m}=${existingScores?.[i]}`).join(', '));
 
     const currentMax = existingScores ? Math.max(0, ...existingScores.filter((s): s is number => s !== null)) : 0;
     const isPersonalBest = score > currentMax;
+    console.log('[submitScore] currentMax:', currentMax, '| newScore:', score, '| isPersonalBest:', isPersonalBest);
 
     // Get current top 2 leaders BEFORE we add the new score (to see if they conquer them)
     let currentLeaders = await kv.zrange(key, 0, 1, { rev: true, withScores: true });
@@ -280,34 +283,30 @@ export async function submitScore(name: string, playerId: string, score: number,
       }
     }
 
-    if (isPersonalBest) {
-      // New High Score! 
-      // Remove old entries for this player (all handle variants) to keep leaderboard clean
-      await kv.zrem(key, ...uniqueMembers);
-      console.log('Executing ZADD for generic key:', key, 'with score:', score);
-      await kv.zadd(key, { score, member: memberId });
-      
-      if (isDaily) {
-        await kv.expire(key, 172800); 
-        const countDaily = await kv.zcard(key);
-        if (countDaily > 25) await kv.zremrangebyrank(key, 0, -26);
-      } else {
-        const countAllTime = await kv.zcard(key);
-        if (countAllTime > 100) await kv.zremrangebyrank(key, 0, -101);
-      }
+    // ── ALWAYS clean up old variants and insert the score ──
+    // Remove ALL old member variants for this player first
+    await kv.zrem(key, ...uniqueMembers);
+    
+    // Insert the score — use the HIGHER of newScore vs currentMax
+    const scoreToInsert = Math.max(score, currentMax);
+    console.log('[submitScore] ZADD key:', key, '| member:', memberId, '| score:', scoreToInsert);
+    await kv.zadd(key, { score: scoreToInsert, member: memberId });
+    
+    if (isDaily) {
+      await kv.expire(key, 172800); 
+      const countDaily = await kv.zcard(key);
+      if (countDaily > 25) await kv.zremrangebyrank(key, 0, -26);
+    } else {
+      const countAllTime = await kv.zcard(key);
+      if (countAllTime > 100) await kv.zremrangebyrank(key, 0, -101);
     }
 
-    // Always find the actual member string that holds their MAX score to get its rank
-    // (In case this latest run wasn't their best)
-    let bestMemberStr = memberId;
-    if (!isPersonalBest && currentMax > 0 && existingScores) {
-       const maxIdx = existingScores.indexOf(currentMax);
-       if (maxIdx !== -1) bestMemberStr = uniqueMembers[maxIdx];
-    }
-
-    // Get the final verified rank
-    const rank = await kv.zrevrank(key, bestMemberStr);
-    const isTopTen = rank !== null && rank <= 9;
+    // ── True Rank Resolution ──
+    // We just inserted memberId, so query it directly
+    const verifiedRank = await kv.zrevrank(key, memberId);
+    const isTopTen = verifiedRank !== null && verifiedRank <= 9;
+    const humanRank = verifiedRank !== null ? verifiedRank + 1 : null;
+    console.log('[submitScore] ZREVRANK result:', verifiedRank, '→ humanRank:', humanRank, '| isTopTen:', isTopTen);
 
     let rankStatus = 'NONE';
     if (isPersonalBest && previousLeaderId !== playerId && score > previousLeaderScore) {
@@ -320,10 +319,12 @@ export async function submitScore(name: string, playerId: string, score: number,
        rankStatus = 'PERSONAL_BEST';
     }
 
+    console.log('[submitScore] Final result:', { rankStatus, humanRank });
+
     return { 
       success: true, 
       rankStatus,
-      rank: rank !== null ? rank + 1 : null
+      rank: humanRank
     };
   } catch (err) {
     console.error('Failed to submit score:', err);

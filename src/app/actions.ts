@@ -96,7 +96,7 @@ export async function getUserTrophies(playerId: string) {
   }
 }
 
-export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tourney' | 'champions' | 'veteran' = 'alltime'): Promise<LeaderboardEntry[]> {
+export async function getTopScores(type: 'daily' | 'alltime' | 'sniper' | 'survivalist' | 'champions' | 'veteran' = 'alltime'): Promise<LeaderboardEntry[]> {
   try {
     if (type === 'daily') await resolvePastDailyWinners();
 
@@ -131,8 +131,8 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tou
 
     let key = LEADERBOARD_ALLTIME_KEY;
     if (type === 'daily') key = getDailyKey();
-    if (type === 'accuracy') key = 'apex_leaderboard_accuracy';
-    if (type === 'tourney') key = 'leaderboard_survivalist';
+    if (type === 'sniper') key = 'apex_leaderboard_accuracy';
+    if (type === 'survivalist') key = 'leaderboard_survivalist';
     if (type === 'veteran') key = 'leaderboard_clears';
 
     let results = await kv.zrange(key, 0, 9, { rev: true, withScores: true });
@@ -188,7 +188,7 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'accuracy' | 'tou
         name,
         score,
         date: Date.now(), // No longer parsed from string
-        difficulty: type === 'accuracy' || type === 'tourney' || type === 'veteran' ? undefined : difficulty,
+        difficulty: type === 'sniper' || type === 'survivalist' || type === 'veteran' ? undefined : difficulty,
         isGold: allTimeLeaderId === playerId,
         isSniper: sniperLeaderId === playerId,
         isSurvivalist: survLeaderId === playerId,

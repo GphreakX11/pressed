@@ -721,7 +721,19 @@ export default function GameBoard() {
     if (showTrophyCase) {
       console.log('Fetching data for tab:', leaderboardTab);
       setIsLeaderboardLoading(true);
-      fetch(`/api/leaderboards?category=${leaderboardTab}`)
+      
+      const categoryMap: Record<string, string> = {
+        "daily": "daily",
+        "champions": "champions",
+        "alltime": "alltime",
+        "accuracy": "sniper",
+        "tourney": "survivalist",
+        "veteran": "veteran"
+      };
+      
+      const apiCategory = categoryMap[leaderboardTab];
+      
+      fetch(`/api/leaderboards?category=${apiCategory}`)
         .then(res => res.json())
         .then(data => {
           if (Array.isArray(data)) {

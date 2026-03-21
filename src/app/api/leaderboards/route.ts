@@ -16,11 +16,34 @@ export async function GET(request: Request) {
       console.log('Daily ID generated for GET:', getDailyId());
     }
 
-    if (!['daily', 'alltime', 'accuracy', 'tourney', 'champions', 'veteran'].includes(type)) {
+    if (!['daily', 'alltime', 'sniper', 'survivalist', 'champions', 'veteran'].includes(type)) {
       return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
     }
 
-    const scores = await getTopScores(type as any);
+    let scores;
+    switch(type) {
+      case 'daily':
+        scores = await getTopScores('daily');
+        break;
+      case 'champions':
+        scores = await getTopScores('champions');
+        break;
+      case 'alltime':
+        scores = await getTopScores('alltime');
+        break;
+      case 'sniper':
+        scores = await getTopScores('sniper');
+        break;
+      case 'survivalist':
+        scores = await getTopScores('survivalist');
+        break;
+      case 'veteran':
+        scores = await getTopScores('veteran');
+        break;
+      default:
+        return NextResponse.json([]);
+    }
+    
     console.log('Redis Return Data:', scores);
     
     return NextResponse.json(scores, {

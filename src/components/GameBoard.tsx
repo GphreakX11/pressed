@@ -407,7 +407,10 @@ export default function GameBoard() {
     recordGameResult(won, finalScore, wordsSubmittedRef.current, wordsCorrect, gridSeen, gridFilled, tRound);
 
     if (isTournamentModeRef.current) {
-      recordTournamentRound(playerIdRef.current, playerName || 'ANONYMOUS', tournamentRoundRef.current).catch(console.error);
+      const handle = playerName?.trim();
+      if (handle && handle.toUpperCase() !== 'ANONYMOUS' && handle.toUpperCase() !== 'PLAYER') {
+        recordTournamentRound(playerIdRef.current, handle, tournamentRoundRef.current).catch(console.error);
+      }
     }
     
     // Check for rank up
@@ -420,20 +423,23 @@ export default function GameBoard() {
     setStats(newStats);
 
     // Sync stats to global leaderboard via background API Endpoint
-    fetch('/api/sync-stats', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        playerId: playerIdRef.current,
-        name: playerName || 'ANONYMOUS',
-        accuracyStats: { 
-          gamesWon: newStats.gamesWon, 
-          totalAccuracySum: newStats.totalAccuracySum || 0, 
-          gamesWithWordData: newStats.gamesWithWordData || 0 
-        },
-        highestTournamentRound: newStats.highestTournamentRound || 0
-      })
-    }).catch(console.error);
+    const syncHandle = playerName?.trim();
+    if (syncHandle && syncHandle.toUpperCase() !== 'ANONYMOUS' && syncHandle.toUpperCase() !== 'PLAYER') {
+      fetch('/api/sync-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerId: playerIdRef.current,
+          name: syncHandle,
+          accuracyStats: { 
+            gamesWon: newStats.gamesWon, 
+            totalAccuracySum: newStats.totalAccuracySum || 0, 
+            gamesWithWordData: newStats.gamesWithWordData || 0 
+          },
+          highestTournamentRound: newStats.highestTournamentRound || 0
+        })
+      }).catch(console.error);
+    }
 
     // Record Global Stats
     const allFound = [...foundWordsRef.current, ...foundBonusWordsRef.current];
@@ -1295,7 +1301,9 @@ export default function GameBoard() {
                     {leaderboardTab === 'tourney' && tourneyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Survivalists.</p>}
                     {leaderboardTab === 'veteran' && veteranLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Veterans.</p>}
                 
-                {(leaderboardTab === 'daily' ? dailyLeaderboard : leaderboardTab === 'champions' ? championsLeaderboard : leaderboardTab === 'accuracy' ? accuracyLeaderboard : leaderboardTab === 'tourney' ? tourneyLeaderboard : leaderboardTab === 'veteran' ? veteranLeaderboard : allTimeLeaderboard).map((entry, idx) => (
+                {(leaderboardTab === 'daily' ? dailyLeaderboard : leaderboardTab === 'champions' ? championsLeaderboard : leaderboardTab === 'accuracy' ? accuracyLeaderboard : leaderboardTab === 'tourney' ? tourneyLeaderboard : leaderboardTab === 'veteran' ? veteranLeaderboard : allTimeLeaderboard)
+                  .filter(entry => entry.name && entry.name.toUpperCase() !== 'ANONYMOUS' && entry.name.toUpperCase() !== 'PLAYER')
+                  .map((entry, idx) => (
                   <div key={idx} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center py-2 border-b border-slate-800 last:border-0 w-full animate-[fadeIn_0.2s_ease-out]">
                     <span className={`font-black italic w-6 text-center ${idx === 0 ? 'text-[#d4af37] text-lg drop-shadow-md' : idx === 1 ? 'text-gray-400 text-md' : idx === 2 ? 'text-amber-700 text-md' : 'text-slate-600 text-xs'}`}>
                       #{idx + 1}
@@ -1306,7 +1314,16 @@ export default function GameBoard() {
                       {entry.isSniper && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Highest Accuracy">🎯</span>}
                       {entry.isSurvivalist && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Highest Tournament Round">🛡️</span>}
                       {entry.isVeteran && <span className="text-[12px] leading-none drop-shadow-sm truncate flex-shrink-0" title="Most Boards Cleared">🎖️</span>}
-                      <span className="font-extrabold text-slate-300 tracking-wider uppercase text-xs truncate">{entry.name}</span>
+                      <span className={`font-extrabold tracking-wider uppercase text-xs truncate ${
+                        leaderboardTab === 'alltime'
+                          ? entry.difficulty === 'E' ? 'text-emerald-400'
+                          : entry.difficulty === 'H' ? 'text-red-400'
+                          : entry.difficulty === 'D' ? 'text-purple-400'
+                          : 'text-orange-400'
+                        : 'text-slate-300'
+                      }`} title={leaderboardTab === 'alltime' ? (
+                        entry.difficulty === 'E' ? 'Easy Mode' : entry.difficulty === 'H' ? 'Hard Mode' : entry.difficulty === 'D' ? 'Daily Trial' : 'Normal Mode'
+                      ) : undefined}>{entry.name}</span>
                     </div>
                     <span className="font-mono font-bold text-sm text-[#d4af37] flex-shrink-0 text-right tracking-widest leading-none mt-1">
                       {leaderboardTab === 'accuracy' ? `${entry.score}%` : (leaderboardTab === 'tourney' ? `R${entry.score}` : entry.score.toLocaleString())}

@@ -29,23 +29,29 @@ function parseZrangeResults(results: any[]): { member: string; score: number }[]
 }
 
 // Convert parsed entries into the LeaderboardEntry format the frontend expects
+const GHOST_NAMES = ['ANONYMOUS', 'PLAYER', ''];
+
 function toLeaderboardEntries(parsed: { member: string; score: number }[]) {
-  return parsed.map((entry, idx) => {
-    const parts = entry.member.split(':');
-    return {
-      rank: idx + 1,
-      name: parts[0] || 'Unknown',
-      playerId: parts[1] || '',
-      score: entry.score,
-      date: Date.now(),
-      difficulty: parts.length > 2 ? parts[2] : undefined,
-      isGold: false,
-      silverWins: 0,
-      isSniper: false,
-      isSurvivalist: false,
-      isVeteran: false,
-    };
-  });
+  return parsed
+    .map((entry, idx) => {
+      const parts = entry.member.split(':');
+      const name = parts[0] || '';
+      return {
+        rank: idx + 1,
+        name,
+        playerId: parts[1] || '',
+        score: entry.score,
+        date: Date.now(),
+        difficulty: parts.length > 2 ? parts[2] : undefined,
+        isGold: false,
+        silverWins: 0,
+        isSniper: false,
+        isSurvivalist: false,
+        isVeteran: false,
+      };
+    })
+    .filter(e => !GHOST_NAMES.includes(e.name.toUpperCase()))
+    .map((e, i) => ({ ...e, rank: i + 1 })); // Re-rank after filtering
 }
 
 // Non-blocking enrichment: attach trophy badges to entries
@@ -124,17 +130,21 @@ export async function GET(request: Request) {
           names = (await kv.hmget('apex_player_names', ...pids)) as unknown as (string | null)[];
         }
 
-        const entries = sorted.map((x, i) => ({
-          rank: i + 1,
-          name: names[i] || 'PLAYER',
-          score: x.wins,
-          date: Date.now(),
-          silverWins: x.wins,
-          isGold: false,
-          isSniper: false,
-          isSurvivalist: false,
-          isVeteran: false,
-        }));
+        const entries = sorted
+          .map((x, i) => ({
+            rank: i + 1,
+            name: names[i] || '',
+            playerId: x.pid,
+            score: x.wins,
+            date: Date.now(),
+            silverWins: x.wins,
+            isGold: false,
+            isSniper: false,
+            isSurvivalist: false,
+            isVeteran: false,
+          }))
+          .filter(e => e.name && !GHOST_NAMES.includes(e.name.toUpperCase()))
+          .map((e, i) => ({ ...e, rank: i + 1 }));
 
         console.log('[Leaderboard API] champions results:', entries.length);
         return json(entries);

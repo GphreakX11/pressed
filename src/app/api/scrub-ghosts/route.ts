@@ -4,14 +4,11 @@ import { getDailyId } from '@/lib/puzzles';
 
 export const dynamic = 'force-dynamic';
 
+// Blocklist: names that should NEVER appear on leaderboards
+const BLOCKED_NAMES = ['ANONYMOUS', 'PLAYER', ''];
+
 export async function POST() {
   try {
-    const ghostVariants = [
-      'ANONYMOUS', 'Anonymous', 'anonymous',
-      'ANONYMOUS:', 'Anonymous:', 'anonymous:',
-    ];
-
-    // All 6 leaderboard sorted-set keys
     const dailyId = getDailyId();
     const keys = [
       'apex_global_alltime',
@@ -21,38 +18,56 @@ export async function POST() {
       'leaderboard_clears',
     ];
 
-    const results: Record<string, number> = {};
+    const results: Record<string, { removed: number; entries: string[] }> = {};
 
     for (const key of keys) {
-      let removed = 0;
-      // Fetch all members and remove any that start with ANONYMOUS
+      const toRemove: string[] = [];
+
+      // Fetch ALL members from the sorted set
       const allMembers = await kv.zrange(key, 0, -1);
       if (allMembers && Array.isArray(allMembers)) {
-        const toRemove: string[] = [];
         for (const member of allMembers) {
-          const memberStr = typeof member === 'object' && member !== null && 'member' in member
-            ? String((member as any).member) : String(member);
-          
-          const name = memberStr.split(':')[0];
-          if (ghostVariants.includes(name) || name.toUpperCase() === 'ANONYMOUS') {
+          // Handle both object format {member: "...", score: N} and plain string format
+          let memberStr: string;
+          if (typeof member === 'object' && member !== null && 'member' in member) {
+            memberStr = String((member as any).member);
+          } else {
+            memberStr = String(member);
+          }
+
+          const name = memberStr.split(':')[0].trim();
+          if (BLOCKED_NAMES.includes(name.toUpperCase()) || name === '') {
             toRemove.push(memberStr);
           }
         }
-        if (toRemove.length > 0) {
-          removed = await kv.zrem(key, ...toRemove) as number;
-        }
       }
-      results[key] = removed;
+
+      let removed = 0;
+      if (toRemove.length > 0) {
+        removed = await kv.zrem(key, ...toRemove) as number;
+      }
+      results[key] = { removed, entries: toRemove };
     }
 
-    // Also scrub from the daily wins hash
-    const allWins = await kv.hgetall('apex_user_daily_wins') as Record<string, any> | null;
+    // Also scrub from the daily wins hash and player names hash
     let hashScrubbed = 0;
+    const allWins = await kv.hgetall('apex_user_daily_wins') as Record<string, any> | null;
     if (allWins) {
       for (const pid of Object.keys(allWins)) {
-        if (pid.toUpperCase() === 'ANONYMOUS' || pid === '') {
+        if (BLOCKED_NAMES.includes(pid.toUpperCase()) || pid === '') {
           await kv.hdel('apex_user_daily_wins', pid);
           hashScrubbed++;
+        }
+      }
+    }
+
+    const allNames = await kv.hgetall('apex_player_names') as Record<string, any> | null;
+    let namesScrubbed = 0;
+    if (allNames) {
+      for (const [pid, name] of Object.entries(allNames)) {
+        if (typeof name === 'string' && BLOCKED_NAMES.includes(name.toUpperCase())) {
+          await kv.hdel('apex_player_names', pid);
+          namesScrubbed++;
         }
       }
     }
@@ -61,7 +76,8 @@ export async function POST() {
       success: true, 
       message: 'Ghost scrub complete',
       scrubbed: results,
-      hashScrubbed
+      hashScrubbed,
+      namesScrubbed,
     });
   } catch (err) {
     console.error('Scrub error:', err);

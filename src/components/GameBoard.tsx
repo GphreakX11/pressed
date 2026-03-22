@@ -450,25 +450,27 @@ export default function GameBoard() {
     }
 
     // Leaderboard Qualification Check
-    // Only show the Top 10 popup if the score is a genuine new personal best
-    const currentHigh = loadStats().highScore || 0;
-    if (finalScore > 0 && finalScore > currentHigh) {
+    if (finalScore > 0) {
       if (isDailyMode) {
         // Daily Trial participants ALWAYS get to verify/submit their rank
         setQualifiesForLeaderboard(true);
       } else {
-        setDailyLeaderboard(currentLb => {
-          if (currentLb.length < 10 || finalScore >= currentLb[currentLb.length - 1].score) {
-            setQualifiesForLeaderboard(true);
-          }
-          return currentLb;
-        });
-        setAllTimeLeaderboard(currentLb => {
-          if (currentLb.length < 10 || finalScore >= currentLb[currentLb.length - 1].score) {
-            setQualifiesForLeaderboard(true);
-          }
-          return currentLb;
-        });
+        // Standard games: only show Top 10 popup on genuine new personal bests
+        const currentHigh = loadStats().highScore || 0;
+        if (finalScore > currentHigh) {
+          setDailyLeaderboard(currentLb => {
+            if (currentLb.length < 10 || finalScore >= currentLb[currentLb.length - 1].score) {
+              setQualifiesForLeaderboard(true);
+            }
+            return currentLb;
+          });
+          setAllTimeLeaderboard(currentLb => {
+            if (currentLb.length < 10 || finalScore >= currentLb[currentLb.length - 1].score) {
+              setQualifiesForLeaderboard(true);
+            }
+            return currentLb;
+          });
+        }
       }
     }
   }, []);
@@ -808,17 +810,17 @@ export default function GameBoard() {
     return `${m}:${s.toString().padStart(2, "0")}`;
   };
 
-  const handleLetterClick = (char: string, index: number, e?: React.PointerEvent) => {
+  const handleLetterClick = useCallback((char: string, index: number, e?: React.PointerEvent) => {
     if (e) {
       e.preventDefault();
-      // stop propagation if needed to prevent ghost clicks
+      e.stopPropagation();
     }
-    if (gameOver) return;
+    if (gameOverRef.current) return;
+    
+    playSound('pop');
     
     // If user types while success animation is happening, abort success display instantly
-    if (successAnim.active) {
-       setSuccessAnim({ active: false, word: [], type: 'base' });
-    }
+    setSuccessAnim(prev => prev.active ? { active: false, word: [], type: 'base' } : prev);
 
     setInputState(prev => {
       const newSlots = [...prev.availableSlots];
@@ -828,7 +830,7 @@ export default function GameBoard() {
         availableSlots: newSlots
       };
     });
-  };
+  }, [playSound]);
 
   const handleUndo = (e?: React.PointerEvent) => {
     if (e) e.preventDefault();
@@ -1793,7 +1795,7 @@ export default function GameBoard() {
         </div>
 
         {/* Bottom Input Area */}
-         <div className="w-full mt-auto pb-8 pt-4 px-4 flex flex-col items-center gap-6 border-t border-pink-200 select-none touch-none bg-pink-50 relative">
+         <div className="w-full mt-auto pb-8 pt-4 px-4 flex flex-col items-center gap-6 border-t border-pink-200 select-none bg-pink-50 relative">
           
           {overdriveToast && !gameOver && (
             <div className="absolute -top-8 left-1/2 -translate-x-1/2 text-[10px] sm:text-xs font-black italic tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-purple-500 to-indigo-600 animate-floatUpFade pointer-events-none whitespace-nowrap z-50">

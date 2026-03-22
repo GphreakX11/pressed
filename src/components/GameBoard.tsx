@@ -1477,10 +1477,16 @@ export default function GameBoard() {
 
             {/* Ready Room Confirmation Modal */}
             {pendingGameMode && (
-              <div className="absolute inset-0 z-[300] bg-black/70 backdrop-blur-md flex items-center justify-center p-6 animate-[fadeIn_0.15s_ease-out]">
-                <div className="w-full max-w-xs bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-700 rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-5 animate-[slideUp_0.2s_ease-out]">
+              <div 
+                className="fixed inset-0 z-[300] bg-black/70 backdrop-blur-md flex items-center justify-center p-6 animate-[fadeIn_0.15s_ease-out]"
+                onClick={(e) => { e.stopPropagation(); setPendingGameMode(null); }}
+              >
+                <div 
+                  className="w-full max-w-xs bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-700 rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-5 animate-[slideUp_0.2s_ease-out] relative"
+                  onClick={(e) => e.stopPropagation()}
+                >
                   <button
-                    onPointerDown={() => setPendingGameMode(null)}
+                    onClick={(e) => { e.stopPropagation(); setPendingGameMode(null); }}
                     className="absolute top-3 right-3 text-slate-500 font-bold text-sm w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center active:bg-slate-700 transition-colors touch-manipulation"
                   >✕</button>
                   
@@ -1503,7 +1509,8 @@ export default function GameBoard() {
                   </h3>
                   
                   <button
-                    onPointerDown={(e) => {
+                    onClick={(e) => {
+                      e.stopPropagation();
                       e.preventDefault();
                       const mode = pendingGameMode;
                       setPendingGameMode(null);
@@ -1525,7 +1532,7 @@ export default function GameBoard() {
                   </button>
                   
                   <button
-                    onPointerDown={() => setPendingGameMode(null)}
+                    onClick={(e) => { e.stopPropagation(); setPendingGameMode(null); }}
                     className="text-slate-500 text-xs font-bold uppercase tracking-widest active:text-slate-300 transition-colors touch-manipulation"
                   >Cancel</button>
                 </div>

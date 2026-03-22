@@ -28,6 +28,8 @@ export default function GameBoard() {
   useEffect(() => { puzzleRef.current = puzzle; }, [puzzle]);
   const [difficulty, setDifficulty] = useState<Difficulty>('normal');
   const [isDailyMode, setIsDailyMode] = useState(false);
+  const isDailyModeRef = useRef(false);
+  useEffect(() => { isDailyModeRef.current = isDailyMode; }, [isDailyMode]);
   const [stats, setStats] = useState<PlayerStats | null>(null);
   const [showWelcome, setShowWelcome] = useState(true);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
@@ -451,7 +453,7 @@ export default function GameBoard() {
 
     // Leaderboard Qualification Check
     if (finalScore > 0) {
-      if (isDailyMode) {
+      if (isDailyModeRef.current) {
         // Daily Trial participants ALWAYS get to verify/submit their rank
         setQualifiesForLeaderboard(true);
       } else {
@@ -957,11 +959,22 @@ export default function GameBoard() {
             if (fw.includes(word)) return fw; // Strict mode prevention
             const next = [...fw, word];
             if (next.length === puzzle.validWords.length) {
-              setGameOver(true);
-              const remTime = Math.max(0, Math.floor((endTime! - Date.now()) / 1000));
-              const tBonus = remTime * 10;
-              setTimeBonus(tBonus);
-              setTimeout(() => endGame(true, tBonus), 600);
+              if (isTournamentModeRef.current) {
+                // Tournament: board clear = round passed, advance immediately
+                const remTime = Math.max(0, Math.floor((endTime! - Date.now()) / 1000));
+                const tBonus = remTime * 10;
+                setTimeBonus(tBonus);
+                setScore(s => s + tBonus);
+                isTransitioningRef.current = true;
+                setIsTransitioning(true);
+                setTimeout(() => handleTournamentRoundPassed(), 600);
+              } else {
+                setGameOver(true);
+                const remTime = Math.max(0, Math.floor((endTime! - Date.now()) / 1000));
+                const tBonus = remTime * 10;
+                setTimeBonus(tBonus);
+                setTimeout(() => endGame(true, tBonus), 600);
+              }
             }
             return next;
           });

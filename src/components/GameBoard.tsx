@@ -1952,28 +1952,6 @@ export default function GameBoard() {
                   </div>
                 )}
 
-                {/* Rare Finds Section (Non-Daily) */}
-                {!isDailyMode && Object.keys(wordRarities).length > 0 && (
-                  <div className="w-full flex flex-col gap-2 bg-purple-50 p-3 rounded-lg border border-purple-100 mt-1">
-                    <span className="text-[10px] font-black text-purple-700 uppercase tracking-widest text-center">Notable Performance</span>
-                    <div className="flex flex-wrap justify-center gap-2">
-                       {Object.entries(wordRarities)
-                         .filter(([_, r]) => r < 0.10)
-                         .map(([word, r]) => (
-                           <div key={word} className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-purple-200 shadow-sm">
-                             <span className="text-xs font-bold text-purple-900 uppercase">{word}</span>
-                             <span className={`text-[8px] px-1 rounded-sm text-white font-black ${r < 0.05 ? 'bg-purple-500 animate-pulse' : 'bg-indigo-500'}`}>
-                               {r < 0.05 ? 'APEX' : 'RARE'}
-                             </span>
-                           </div>
-                         ))
-                       }
-                       {Object.entries(wordRarities).filter(([_, r]) => r < 0.10).length === 0 && (
-                         <span className="text-[10px] text-purple-400 font-bold italic">No rare words found this session.</span>
-                       )}
-                    </div>
-                  </div>
-                )}
                 
                 <div className="flex gap-2 w-full mt-2">
                   <button 

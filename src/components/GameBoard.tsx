@@ -81,6 +81,7 @@ export default function GameBoard() {
   const [wordRarities, setWordRarities] = useState<Record<string, number>>({});
   const [serverRankResult, setServerRankResult] = useState<{ rankStatus: string, rank: number | null } | null>(null);
   const [userTrophies, setUserTrophies] = useState<{ isGold: boolean, silverWins: number, isSniper?: boolean, isSurvivalist?: boolean, isVeteran?: boolean } | null>(null);
+  const [pendingGameMode, setPendingGameMode] = useState<{ diff: Difficulty, isDaily: boolean, isTournament: boolean, label: string } | null>(null);
 
   useEffect(() => {
     if (playerId) {
@@ -449,7 +450,9 @@ export default function GameBoard() {
     }
 
     // Leaderboard Qualification Check
-    if (finalScore > 0) {
+    // Only show the Top 10 popup if the score is a genuine new personal best
+    const currentHigh = loadStats().highScore || 0;
+    if (finalScore > 0 && finalScore > currentHigh) {
       if (isDailyMode) {
         // Daily Trial participants ALWAYS get to verify/submit their rank
         setQualifiesForLeaderboard(true);
@@ -691,7 +694,7 @@ export default function GameBoard() {
     // The Cut-off: Handled elegantly by the Room-Based Music Logic Effect
     // Safety fallback: if they bypassed the gate somehow, init audio on first game start
     if (!isAudioEnabled) initializeAudio();
-  }, [difficulty, isAudioEnabled, initializeAudio]);
+  }, [difficulty, initializeAudio]);
 
   useEffect(() => {
     const saved = localStorage.getItem('pressedHighScore');
@@ -1447,11 +1450,11 @@ export default function GameBoard() {
               >
                 <span className="text-xl drop-shadow-sm">🏆</span> TROPHY CASE & LEADERBOARDS
               </button>
-              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal', false, true); }} className="bg-slate-800 border-b-4 border-r-2 border-slate-900 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-1">PLAY TOURNAMENT <span className="text-cyan-400 block text-xs tracking-normal mt-1 opacity-90">(Arcade Survival)</span></button>
-              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal', true); }} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-1">DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
-              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('easy'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1">PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m + Hint)</span></button>
-              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('normal'); }} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1">PLAY NORMAL <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
-              <button onPointerDown={(e) => { e.preventDefault(); startNewGame('hard'); }} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1">PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(2m + 1.5x Pts)</span></button>
+              <button onPointerDown={() => setPendingGameMode({ diff: 'normal', isDaily: false, isTournament: true, label: 'TOURNAMENT' })} className="bg-slate-800 border-b-4 border-r-2 border-slate-900 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-1" style={{ touchAction: 'pan-y' }}>PLAY TOURNAMENT <span className="text-cyan-400 block text-xs tracking-normal mt-1 opacity-90">(Arcade Survival)</span></button>
+              <button onPointerDown={() => setPendingGameMode({ diff: 'normal', isDaily: true, isTournament: false, label: 'DAILY CHALLENGE' })} className="bg-purple-500 border-b-4 border-r-2 border-purple-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mt-1" style={{ touchAction: 'pan-y' }}>DAILY CHALLENGE <span className="text-purple-100 block text-xs tracking-normal mt-1 opacity-80">(Everyone plays the same board)</span></button>
+              <button onPointerDown={() => setPendingGameMode({ diff: 'easy', isDaily: false, isTournament: false, label: 'EASY' })} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1" style={{ touchAction: 'pan-y' }}>PLAY EASY <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(3m + Hint)</span></button>
+              <button onPointerDown={() => setPendingGameMode({ diff: 'normal', isDaily: false, isTournament: false, label: 'NORMAL' })} className="bg-gradient-to-r from-yellow-400 via-yellow-200 to-yellow-500 border-b-4 border-r-2 border-yellow-700 font-extrabold text-yellow-900 py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1" style={{ touchAction: 'pan-y' }}>PLAY NORMAL <span className="text-yellow-800 block text-xs tracking-normal mt-1 opacity-80">(2m 30s)</span></button>
+              <button onPointerDown={() => setPendingGameMode({ diff: 'hard', isDaily: false, isTournament: false, label: 'HARD' })} className="bg-red-500 border-b-4 border-r-2 border-red-700 font-extrabold text-white py-3 rounded shadow-sm active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-sm tracking-widest select-none touch-manipulation mb-1" style={{ touchAction: 'pan-y' }}>PLAY HARD <span className="text-red-100 block text-xs tracking-normal mt-1 opacity-80">(2m + 1.5x Pts)</span></button>
               
               <button 
                 id="diagnostics-btn"
@@ -1471,6 +1474,63 @@ export default function GameBoard() {
                 Run Diagnostics
               </button>
             </div>
+
+            {/* Ready Room Confirmation Modal */}
+            {pendingGameMode && (
+              <div className="absolute inset-0 z-[300] bg-black/70 backdrop-blur-md flex items-center justify-center p-6 animate-[fadeIn_0.15s_ease-out]">
+                <div className="w-full max-w-xs bg-gradient-to-br from-slate-900 to-slate-950 border-2 border-slate-700 rounded-2xl p-6 shadow-2xl flex flex-col items-center gap-5 animate-[slideUp_0.2s_ease-out]">
+                  <button
+                    onPointerDown={() => setPendingGameMode(null)}
+                    className="absolute top-3 right-3 text-slate-500 font-bold text-sm w-7 h-7 rounded-full bg-slate-800 flex items-center justify-center active:bg-slate-700 transition-colors touch-manipulation"
+                  >✕</button>
+                  
+                  <div className={`text-4xl drop-shadow-lg ${
+                    pendingGameMode.isTournament ? 'animate-pulse' : ''
+                  }`}>
+                    {pendingGameMode.isTournament ? '⚔️' : pendingGameMode.isDaily ? '📅' : pendingGameMode.diff === 'easy' ? '🌿' : pendingGameMode.diff === 'hard' ? '🔥' : '⭐'}
+                  </div>
+                  
+                  <h3 className="text-white font-black text-lg tracking-tight text-center leading-snug">
+                    Ready to play a<br/>
+                    <span className={`text-2xl ${
+                      pendingGameMode.isTournament ? 'text-emerald-400'
+                      : pendingGameMode.isDaily ? 'text-purple-400'
+                      : pendingGameMode.diff === 'easy' ? 'text-green-400'
+                      : pendingGameMode.diff === 'hard' ? 'text-red-400'
+                      : 'text-orange-400'
+                    }`}>{pendingGameMode.label}</span>
+                    <br/>game?
+                  </h3>
+                  
+                  <button
+                    onPointerDown={(e) => {
+                      e.preventDefault();
+                      const mode = pendingGameMode;
+                      setPendingGameMode(null);
+                      startNewGame(mode.diff, mode.isDaily, mode.isTournament);
+                    }}
+                    className={`w-full font-black text-white text-xl py-4 rounded-xl shadow-lg active:translate-y-1 transition-all tracking-widest select-none touch-manipulation border-b-4 ${
+                      pendingGameMode.isTournament
+                        ? 'bg-gradient-to-r from-emerald-600 to-emerald-500 border-emerald-800'
+                        : pendingGameMode.isDaily
+                          ? 'bg-gradient-to-r from-purple-600 to-purple-500 border-purple-800'
+                          : pendingGameMode.diff === 'easy'
+                            ? 'bg-gradient-to-r from-green-600 to-green-500 border-green-800'
+                            : pendingGameMode.diff === 'hard'
+                              ? 'bg-gradient-to-r from-red-600 to-red-500 border-red-800'
+                              : 'bg-gradient-to-r from-orange-500 to-yellow-500 border-orange-700'
+                    }`}
+                  >
+                    {pendingGameMode.isTournament ? '⚔️ FIGHT' : '▶ START GAME'}
+                  </button>
+                  
+                  <button
+                    onPointerDown={() => setPendingGameMode(null)}
+                    className="text-slate-500 text-xs font-bold uppercase tracking-widest active:text-slate-300 transition-colors touch-manipulation"
+                  >Cancel</button>
+                </div>
+              </div>
+            )}
           </div>
         )}
 
@@ -1607,7 +1667,28 @@ export default function GameBoard() {
           </div>
 
           <div className="flex flex-col items-center pb-2 relative">
-            {isTournamentModeRef.current && (
+            {/* Game Mode Indicator */}
+            <div className="mb-1">
+              <span className={`text-[10px] font-black uppercase tracking-[0.2em] px-3 py-0.5 rounded-full border shadow-sm ${
+                isTournamentModeRef.current
+                  ? 'bg-gradient-to-r from-emerald-900 to-emerald-800 text-emerald-300 border-emerald-600'
+                  : isDailyMode
+                    ? 'bg-gradient-to-r from-purple-900 to-purple-800 text-purple-300 border-purple-600'
+                    : difficulty === 'easy'
+                      ? 'bg-gradient-to-r from-green-900 to-green-800 text-green-300 border-green-600'
+                      : difficulty === 'hard'
+                        ? 'bg-gradient-to-r from-red-900 to-red-800 text-red-300 border-red-600'
+                        : 'bg-gradient-to-r from-orange-900 to-orange-800 text-orange-300 border-orange-600'
+              }`}>
+                {isTournamentModeRef.current
+                  ? `TOURNAMENT | TARGET: ${targetScoreRef.current}`
+                  : isDailyMode ? 'DAILY CHALLENGE'
+                  : difficulty === 'easy' ? 'EASY'
+                  : difficulty === 'hard' ? 'HARD'
+                  : 'NORMAL'}
+              </span>
+            </div>
+            {isTournamentModeRef.current && false && (
               <div className="absolute -top-6 text-center w-full">
                 <span className="text-[10px] text-pink-500 font-bold uppercase tracking-widest leading-none">Target: <span className="text-[#d4af37] text-xs font-black">{targetScoreRef.current}</span></span>
               </div>

@@ -1,4 +1,4 @@
-import fetch from 'node-fetch';
+// Using global fetch (standard in Node 18+ and Next.js)
 
 async function triggerScrub() {
   const url = 'http://localhost:3000/api/scrub-ghosts'; // Assuming local dev

@@ -46,16 +46,19 @@ async function getUserHighScore(key: string, playerId: string): Promise<number> 
 /**
  * NEW: Core logic to award the Silver Daily Champion (🥈) for a specific date
  */
-export async function awardDailyWinner(targetDate: string) {
+export async function awardDailyWinner(targetDate: string, force: boolean = false) {
   try {
     const awardedKey = `apex_daily_awarded_${targetDate}`;
     
     // Lock effectively prevents multiple simultaneous executions
     const setSuccess = await kv.set(awardedKey, 'true', { nx: true, ex: 604800 });
-    if (!setSuccess) {
+    if (!setSuccess && !force) {
       console.log(`[awardDailyWinner] Already awarded for ${targetDate}. Skipping.`);
       return { success: false, error: 'Already awarded' };
     }
+
+    // Even if forced, ensure the lock is present for consistency
+    if (force) await kv.set(awardedKey, 'true', { ex: 604800 });
 
     const dailyKey = `apex_global_daily_${targetDate}`;
     const topEntry = await kv.zrange(dailyKey, 0, 0, { rev: true, withScores: true });
@@ -141,22 +144,39 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'sniper' | 'survi
       if (results && !Array.isArray(results)) results = [results] as any;
 
       const entries: LeaderboardEntry[] = [];
-      for (let i = 0; i < (results?.length || 0); i += 2) {
-        const member = results![i] as string;
-        const score = Number(results![i+1]);
-        const parts = member.split(':');
-        entries.push({
-          rank: (i / 2) + 1,
-          name: parts[0] || 'PLAYER',
-          playerId: parts[1] || '',
-          score: score,
-          date: Date.now(),
-          silverWins: score,
-          isGold: false,
-          isSniper: false,
-          isSurvivalist: false,
-          isVeteran: false
-        });
+      if (results) {
+        for (let i = 0; i < results.length; i++) {
+          const item = results[i];
+          let memberStr = '';
+          let score = 0;
+
+          if (typeof item === 'object' && item !== null && 'member' in item) {
+             memberStr = (item as any).member;
+             score = Number((item as any).score);
+          } else if (typeof item === 'string') {
+             memberStr = item;
+             if (i + 1 < results.length) {
+               score = Number(results[i + 1]);
+               i++;
+             }
+          }
+
+          if (!memberStr) continue;
+          const parts = memberStr.split(':');
+          
+          entries.push({
+            rank: entries.length + 1,
+            name: parts[0] || 'PLAYER',
+            playerId: parts[1] || '',
+            score: score,
+            date: Date.now(),
+            silverWins: score,
+            isGold: false,
+            isSniper: false,
+            isSurvivalist: false,
+            isVeteran: false
+          });
+        }
       }
       return entries;
     }

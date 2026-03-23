@@ -17,8 +17,8 @@ export async function GET(request: Request) {
       targetDate = d.toISOString().split('T')[0];
     }
 
-    console.log(`[Admin API] Triggering rollover for date: ${targetDate}`);
-    const result = await awardDailyWinner(targetDate);
+    console.log(`[Admin API] Triggering rollover for date: ${targetDate} (FORCED)`);
+    const result = await awardDailyWinner(targetDate, true);
 
     if (result.success) {
       return NextResponse.json({ 

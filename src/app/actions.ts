@@ -569,6 +569,8 @@ export async function submitGameStats(
   highScore: number = 0
 ) {
   try {
+    console.log(`[submitGameStats] PROXY SYNC for ${name} (${playerId}). Score: ${highScore}`);
+    
     // 1. Plausibility Check
     if (highScore > 5000) {
       console.error(`[submitGameStats] REJECTED: Score ${highScore} exceeds plausibility threshold.`);
@@ -584,69 +586,95 @@ export async function submitGameStats(
 
     const cleanName = name.trim().substring(0, 12);
     const safeName = cleanName.replace(/:/g, '');
-    const memberId = `${safeName}:${playerId}`;
+    const currentBaseIdent = `${safeName}:${playerId}`;
+
+    // Get old handle to prevent duplication if name changed
+    const oldName = await kv.hget('apex_player_names', playerId) as string | null;
+    const oldBaseIdent = oldName ? `${oldName.replace(/:/g, '')}:${playerId}` : currentBaseIdent;
 
     await kv.hset('apex_player_names', { [playerId]: safeName });
 
     const pipeline = kv.pipeline();
 
-    // 2. High-Water Mark Resolution via ZADD GT (Greater Than)
-    // Sniper (Accuracy) - Only if 25+ games
+    // Accuracy / Sniper
     if (accuracyStats.gamesWon >= 25 && accuracyStats.gamesWithWordData > 0) {
        const accuracy = Math.round(accuracyStats.totalAccuracySum / accuracyStats.gamesWithWordData);
-       // @ts-ignore - Vercel KV supports GT/NX in options object
-       pipeline.zadd('apex_leaderboard_accuracy', { score: accuracy, member: memberId }, { gt: true });
+       pipeline.zadd('apex_leaderboard_accuracy', { gt: true }, { score: accuracy, member: currentBaseIdent });
     }
 
-    // Veteran (Clears)
+    // Veteran / Clears
     if (accuracyStats.gamesWon > 0) {
-      // @ts-ignore
-      pipeline.zadd('leaderboard_clears', { score: accuracyStats.gamesWon, member: memberId }, { gt: true });
+      pipeline.zadd('leaderboard_clears', { gt: true }, { score: accuracyStats.gamesWon, member: currentBaseIdent });
     }
 
-    // Survivalist (Tourney)
+    // Survivalist / Tourney
     if (highestTournamentRound > 0) {
-       // @ts-ignore
-       pipeline.zadd('leaderboard_survivalist', { score: highestTournamentRound, member: memberId }, { gt: true });
+       pipeline.zadd('leaderboard_survivalist', { gt: true }, { score: highestTournamentRound, member: currentBaseIdent });
     }
 
-    // All-Time Hall of Fame
+    // ── Hall of Fame (All-Time) Reconciliation ──
     if (highScore > 0) {
-      // Note: for Hall of Fame, the member ID includes the difficulty. 
-      // Background sync uses 'N' (Normal) as a safe fallback if we don't know the original mode.
-      const allTimeMemberId = `${safeName}:${playerId}:N`; 
-      // @ts-ignore
-      pipeline.zadd(LEADERBOARD_ALLTIME_KEY, { score: highScore, member: allTimeMemberId }, { gt: true });
+      // Find all current variants (old and new name)
+      const membersToMatch = [
+        `${currentBaseIdent}:E`, `${currentBaseIdent}:N`, `${currentBaseIdent}:H`, `${currentBaseIdent}:D`,
+        `${oldBaseIdent}:E`, `${oldBaseIdent}:N`, `${oldBaseIdent}:H`, `${oldBaseIdent}:D`
+      ];
+      const uniqueVariants = Array.from(new Set(membersToMatch));
+      
+      const serverScores = await kv.zmscore(LEADERBOARD_ALLTIME_KEY, uniqueVariants);
+      
+      let serverMax = 0;
+      let bestSuffix = 'N';
+      if (serverScores) {
+        serverScores.forEach((s, idx) => {
+          if (s !== null && s > serverMax) {
+            serverMax = s;
+            bestSuffix = uniqueVariants[idx].split(':').pop() || 'N';
+          }
+        });
+      }
+
+      const absoluteMax = Math.max(highScore, serverMax);
+      // If synced score is the new max, we'll label it 'N' (Normal/Synced)
+      // Otherwise keep the server's best suffix
+      const finalSuffix = highScore >= serverMax ? 'N' : bestSuffix;
+      const finalMemberId = `${safeName}:${playerId}:${finalSuffix}`;
+
+      // Wipe old entries and insert the absolute high-water-mark
+      pipeline.zrem(LEADERBOARD_ALLTIME_KEY, ...uniqueVariants);
+      pipeline.zadd(LEADERBOARD_ALLTIME_KEY, { score: absoluteMax, member: finalMemberId });
     }
 
     await pipeline.exec();
+    console.log(`[submitGameStats] SUCCESS for ${name}.`);
     return { success: true };
   } catch (err) {
-    console.error('Failed to submit game stats:', err);
+    console.error('Failed to sync game stats:', err);
     return { success: false };
   }
 }
 
 /**
- * NEW: Reconciliation helper to get current server-side stats for a player
+ * Reconciliation helper to get current server-side stats for a player
  */
 export async function getUserServerStats(playerId: string) {
   try {
     const name = await kv.hget('apex_player_names', playerId) as string || 'PLAYER';
     const safeName = name.replace(/:/g, '');
+    const baseIdent = `${safeName}:${playerId}`;
     
     // Check All-Time (we try all common difficulty suffixes)
     const variants = [
-      `${safeName}:${playerId}:E`,
-      `${safeName}:${playerId}:N`,
-      `${safeName}:${playerId}:H`,
-      `${safeName}:${playerId}:D`
+      `${baseIdent}:E`,
+      `${baseIdent}:N`,
+      `${baseIdent}:H`,
+      `${baseIdent}:D`
     ];
     
     const [allTimeScores, veteranScore, survivalistScore] = await Promise.all([
       kv.zmscore(LEADERBOARD_ALLTIME_KEY, variants),
-      kv.zscore('leaderboard_clears', `${safeName}:${playerId}`),
-      kv.zscore('leaderboard_survivalist', `${safeName}:${playerId}`)
+      kv.zscore('leaderboard_clears', baseIdent),
+      kv.zscore('leaderboard_survivalist', baseIdent)
     ]);
 
     const highScore = allTimeScores ? Math.max(0, ...allTimeScores.filter((s): s is number => s !== null)) : 0;

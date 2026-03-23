@@ -135,6 +135,14 @@ export default function GameBoard() {
           localStats.gamesWon > serverStats.gamesWon ||
           (localStats.highestTournamentRound || 0) > serverStats.highestTournamentRound;
 
+        console.log('[SilentSync] Comparison:', {
+          isDirty: !!localStats.isScoreDirty,
+          localHS: localStats.highScore, serverHS: serverStats.highScore,
+          localClears: localStats.gamesWon, serverClears: serverStats.gamesWon,
+          localTourney: localStats.highestTournamentRound, serverTourney: serverStats.highestTournamentRound,
+          needsSync
+        });
+
         if (needsSync) {
           console.log('[SilentSync] Local data is more recent or dirty. Reconciling...');
           const res = await fetch('/api/sync-stats', {

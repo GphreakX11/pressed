@@ -565,9 +565,16 @@ export async function submitGameStats(
   playerId: string, 
   name: string, 
   accuracyStats: { gamesWon: number, totalAccuracySum: number, gamesWithWordData: number }, 
-  highestTournamentRound: number
+  highestTournamentRound: number,
+  highScore: number = 0
 ) {
   try {
+    // 1. Plausibility Check
+    if (highScore > 5000) {
+      console.error(`[submitGameStats] REJECTED: Score ${highScore} exceeds plausibility threshold.`);
+      return { success: false, error: 'Plausibility check failed' };
+    }
+
     // Ghost Clone Deadbolt: reject empty/anonymous/player handles
     const trimmedName = name?.trim() || '';
     if (!trimmedName || trimmedName.toUpperCase() === 'ANONYMOUS' || trimmedName.toUpperCase() === 'PLAYER') {
@@ -583,17 +590,33 @@ export async function submitGameStats(
 
     const pipeline = kv.pipeline();
 
+    // 2. High-Water Mark Resolution via ZADD GT (Greater Than)
+    // Sniper (Accuracy) - Only if 25+ games
     if (accuracyStats.gamesWon >= 25 && accuracyStats.gamesWithWordData > 0) {
        const accuracy = Math.round(accuracyStats.totalAccuracySum / accuracyStats.gamesWithWordData);
-       pipeline.zadd('apex_leaderboard_accuracy', { score: accuracy, member: memberId });
+       // @ts-ignore - Vercel KV supports GT/NX in options object
+       pipeline.zadd('apex_leaderboard_accuracy', { score: accuracy, member: memberId }, { gt: true });
     }
 
+    // Veteran (Clears)
     if (accuracyStats.gamesWon > 0) {
-      pipeline.zadd('leaderboard_clears', { score: accuracyStats.gamesWon, member: memberId });
+      // @ts-ignore
+      pipeline.zadd('leaderboard_clears', { score: accuracyStats.gamesWon, member: memberId }, { gt: true });
     }
 
+    // Survivalist (Tourney)
     if (highestTournamentRound > 0) {
-       pipeline.zadd('leaderboard_survivalist', { score: highestTournamentRound, member: memberId });
+       // @ts-ignore
+       pipeline.zadd('leaderboard_survivalist', { score: highestTournamentRound, member: memberId }, { gt: true });
+    }
+
+    // All-Time Hall of Fame
+    if (highScore > 0) {
+      // Note: for Hall of Fame, the member ID includes the difficulty. 
+      // Background sync uses 'N' (Normal) as a safe fallback if we don't know the original mode.
+      const allTimeMemberId = `${safeName}:${playerId}:N`; 
+      // @ts-ignore
+      pipeline.zadd(LEADERBOARD_ALLTIME_KEY, { score: highScore, member: allTimeMemberId }, { gt: true });
     }
 
     await pipeline.exec();
@@ -601,5 +624,40 @@ export async function submitGameStats(
   } catch (err) {
     console.error('Failed to submit game stats:', err);
     return { success: false };
+  }
+}
+
+/**
+ * NEW: Reconciliation helper to get current server-side stats for a player
+ */
+export async function getUserServerStats(playerId: string) {
+  try {
+    const name = await kv.hget('apex_player_names', playerId) as string || 'PLAYER';
+    const safeName = name.replace(/:/g, '');
+    
+    // Check All-Time (we try all common difficulty suffixes)
+    const variants = [
+      `${safeName}:${playerId}:E`,
+      `${safeName}:${playerId}:N`,
+      `${safeName}:${playerId}:H`,
+      `${safeName}:${playerId}:D`
+    ];
+    
+    const [allTimeScores, veteranScore, survivalistScore] = await Promise.all([
+      kv.zmscore(LEADERBOARD_ALLTIME_KEY, variants),
+      kv.zscore('leaderboard_clears', `${safeName}:${playerId}`),
+      kv.zscore('leaderboard_survivalist', `${safeName}:${playerId}`)
+    ]);
+
+    const highScore = allTimeScores ? Math.max(0, ...allTimeScores.filter((s): s is number => s !== null)) : 0;
+
+    return {
+      highScore,
+      gamesWon: Number(veteranScore || 0),
+      highestTournamentRound: Number(survivalistScore || 0)
+    };
+  } catch (err) {
+    console.error('Failed to fetch server stats:', err);
+    return { highScore: 0, gamesWon: 0, highestTournamentRound: 0 };
   }
 }

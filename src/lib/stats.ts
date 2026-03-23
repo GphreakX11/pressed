@@ -14,6 +14,7 @@ export interface PlayerStats {
   totalAccuracySum?: number;
   gamesWithWordData?: number;
   highestTournamentRound?: number;
+  isScoreDirty?: boolean;
 }
 
 const DEFAULT_STATS: PlayerStats = {
@@ -28,6 +29,7 @@ const DEFAULT_STATS: PlayerStats = {
   totalWordsFoundLifetime: 0,
   totalGridBoxesSeen: 0,
   totalGridBoxesFilled: 0,
+  isScoreDirty: false,
 };
 
 const STATS_KEY = 'pressedPlayerStats';
@@ -51,6 +53,7 @@ export function loadStats(): PlayerStats {
     if (stats.totalAccuracySum === undefined) stats.totalAccuracySum = 0;
     if (stats.gamesWithWordData === undefined) stats.gamesWithWordData = 0;
     if (stats.highestTournamentRound === undefined) stats.highestTournamentRound = 0;
+    if (stats.isScoreDirty === undefined) stats.isScoreDirty = false;
     
     const now = new Date();
     

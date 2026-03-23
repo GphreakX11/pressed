@@ -4,7 +4,7 @@ import { submitGameStats } from '@/app/actions';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { playerId, name, accuracyStats, highestTournamentRound } = body;
+    const { playerId, name, accuracyStats, highestTournamentRound, highScore } = body;
     
     if (!playerId || !name) {
       return NextResponse.json({ success: false, error: 'Missing credentials' }, { status: 400 });
@@ -19,7 +19,8 @@ export async function POST(req: Request) {
       playerId, 
       name, 
       accuracyStats || { gamesWon: 0, totalAccuracySum: 0, gamesWithWordData: 0 }, 
-      highestTournamentRound || 0
+      highestTournamentRound || 0,
+      highScore || 0
     );
     
     return NextResponse.json(res);

@@ -2,8 +2,8 @@
 
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { Puzzle, Difficulty, getRandomPuzzle, getDailyPuzzle } from "@/lib/puzzles";
-import { PlayerStats, loadStats, recordGameResult } from "@/lib/stats";
-import { submitScore, submitGameStats, recordWordStats, getWordRarity, getGamePuzzle, getDailyGamePuzzle, getUserTrophies, getTournamentPuzzle, recordTournamentRound, type LeaderboardEntry } from '@/app/actions';
+import { PlayerStats, loadStats, saveStats, recordGameResult } from "@/lib/stats";
+import { submitScore, submitGameStats, getUserServerStats, recordWordStats, getWordRarity, getGamePuzzle, getDailyGamePuzzle, getUserTrophies, getTournamentPuzzle, recordTournamentRound, type LeaderboardEntry } from '@/app/actions';
 import Sparkles from './Sparkles';
 
 // Retro font via Next/Google fonts is possible but for simplicity and guaranteeing zero-config, we'll use system fonts that look digital
@@ -98,6 +98,7 @@ export default function GameBoard() {
        localStorage.setItem('apexPlayerId', id);
     }
     setPlayerId(id);
+    setStats(loadStats());
 
     // Pre-populate the player name — try last_used_handle first, then fall back to pending_score
     const savedHandle = localStorage.getItem('last_used_handle');
@@ -117,6 +118,58 @@ export default function GameBoard() {
       setHasPendingSubmission(true);
     }
   }, []);
+
+  // Eventual Consistency: Silent Sync / Reconciliation
+  useEffect(() => {
+    const performSilentSync = async () => {
+      if (!navigator.onLine || !playerId || !playerName) return;
+
+      try {
+        const localStats = loadStats();
+        // Fetch source of truth from server
+        const serverStats = await getUserServerStats(playerId);
+
+        const needsSync = 
+          localStats.isScoreDirty || 
+          (localStats.highScore || 0) > serverStats.highScore ||
+          localStats.gamesWon > serverStats.gamesWon ||
+          (localStats.highestTournamentRound || 0) > serverStats.highestTournamentRound;
+
+        if (needsSync) {
+          console.log('[SilentSync] Local data is more recent or dirty. Reconciling...');
+          const res = await fetch('/api/sync-stats', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              playerId,
+              name: playerName,
+              accuracyStats: {
+                gamesWon: localStats.gamesWon,
+                totalAccuracySum: localStats.totalAccuracySum || 0,
+                gamesWithWordData: localStats.gamesWithWordData || 0
+              },
+              highestTournamentRound: localStats.highestTournamentRound || 0,
+              highScore: localStats.highScore || 0
+            })
+          });
+
+          if (res.ok) {
+            console.log('[SilentSync] Reconciliation Successful.');
+            const updatedStats = { ...localStats, isScoreDirty: false };
+            saveStats(updatedStats);
+            setStats(updatedStats);
+          }
+        }
+      } catch (err) {
+        console.error('[SilentSync] Error during reconciliation:', err);
+      }
+    };
+
+    performSilentSync();
+    
+    window.addEventListener('online', performSilentSync);
+    return () => window.removeEventListener('online', performSilentSync);
+  }, [playerId, playerName, showWelcome]);
 
   const lastWordTime = useRef<number>(0);
   const [comboCount, setComboCount] = useState(0);
@@ -531,6 +584,13 @@ export default function GameBoard() {
     } catch (err: any) {
       console.error('Submission failed:', err);
       setHasSubmissionError(true);
+      
+      // Mark local score as dirty so it reconciles later
+      const s = loadStats();
+      s.isScoreDirty = true;
+      saveStats(s);
+      setStats(s);
+
       if (err.message === 'TIMEOUT') {
         setToastMessage("Server is slow. Don't worry, your score is saved locally. Try hitting submit again or refresh.");
       } else {

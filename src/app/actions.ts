@@ -249,11 +249,22 @@ export async function submitScore(name: string, playerId: string, score: number,
     const uniqueMembers = Array.from(new Set(membersToMatch));
 
     const existingScores = await kv.zmscore(key, uniqueMembers);
-    console.log('[submitScore] Existing scores for variants:', uniqueMembers.map((m, i) => `${m}=${existingScores?.[i]}`).join(', '));
+    
+    let currentMax = 0;
+    let bestDifficultyStr = difficultyLabel;
+    
+    if (existingScores) {
+      existingScores.forEach((s, idx) => {
+        if (s !== null && s > currentMax) {
+          currentMax = s;
+          // Extract the difficulty tag from the variant that held the high score
+          bestDifficultyStr = uniqueMembers[idx].split(':')[2] || difficultyLabel;
+        }
+      });
+    }
 
-    const currentMax = existingScores ? Math.max(0, ...existingScores.filter((s): s is number => s !== null)) : 0;
     const isPersonalBest = score > currentMax;
-    console.log('[submitScore] currentMax:', currentMax, '| newScore:', score, '| isPersonalBest:', isPersonalBest);
+    console.log('[submitScore] currentMax:', currentMax, '| newScore:', score, '| isPersonalBest:', isPersonalBest, '| bestDiff:', bestDifficultyStr);
 
     // Get current top 2 leaders BEFORE we add the new score (to see if they conquer them)
     let currentLeaders = await kv.zrange(key, 0, 1, { rev: true, withScores: true });
@@ -290,21 +301,50 @@ export async function submitScore(name: string, playerId: string, score: number,
     
     // Insert the score — use the HIGHER of newScore vs currentMax
     const scoreToInsert = Math.max(score, currentMax);
-    console.log('[submitScore] ZADD key:', key, '| member:', memberId, '| score:', scoreToInsert);
-    await kv.zadd(key, { score: scoreToInsert, member: memberId });
+    // If the new score is higher, use the current game's diff. If not, preserve the diff of the high score mode.
+    const finalMemberIdToInsert = score >= currentMax ? memberId : `${safeName}:${playerId}:${bestDifficultyStr}`;
+    
+    console.log('[submitScore] ZADD key:', key, '| member:', finalMemberIdToInsert, '| score:', scoreToInsert);
+    await kv.zadd(key, { score: scoreToInsert, member: finalMemberIdToInsert });
     
     if (isDaily) {
       await kv.expire(key, 172800); 
       const countDaily = await kv.zcard(key);
       if (countDaily > 25) await kv.zremrangebyrank(key, 0, -26);
+      
+      // Daily scores must ALSO be represented on the All-Time Hall of Fame
+      // We do this synchronously to ensure the write completes before the function returns
+      try {
+        const alltimeExisting = await kv.zmscore(LEADERBOARD_ALLTIME_KEY, uniqueMembers);
+        let alltimeMax = 0;
+        let alltimeBestDiff = difficultyLabel;
+        if (alltimeExisting) {
+          alltimeExisting.forEach((s, idx) => {
+            if (s !== null && s > alltimeMax) {
+              alltimeMax = s;
+              alltimeBestDiff = uniqueMembers[idx].split(':')[2] || difficultyLabel;
+            }
+          });
+        }
+        const scoreToInsertAlltime = Math.max(score, alltimeMax);
+        const finalAlltimeMemberId = score >= alltimeMax ? memberId : `${safeName}:${playerId}:${alltimeBestDiff}`;
+        
+        console.log('[submitScore] Syncing Daily score to All-Time Hall of Fame:', { scoreToInsertAlltime, finalAlltimeMemberId });
+        await kv.zrem(LEADERBOARD_ALLTIME_KEY, ...uniqueMembers);
+        await kv.zadd(LEADERBOARD_ALLTIME_KEY, { score: scoreToInsertAlltime, member: finalAlltimeMemberId });
+        const countAllTime = await kv.zcard(LEADERBOARD_ALLTIME_KEY);
+        if (countAllTime > 100) await kv.zremrangebyrank(LEADERBOARD_ALLTIME_KEY, 0, -101);
+      } catch (e) {
+        console.error('[submitScore] All-time sync failed:', e);
+      }
     } else {
       const countAllTime = await kv.zcard(key);
       if (countAllTime > 100) await kv.zremrangebyrank(key, 0, -101);
     }
 
     // ── True Rank Resolution ──
-    // We just inserted memberId, so query it directly
-    const verifiedRank = await kv.zrevrank(key, memberId);
+    // We just inserted finalMemberIdToInsert, so query it directly
+    const verifiedRank = await kv.zrevrank(key, finalMemberIdToInsert);
     const isTopTen = verifiedRank !== null && verifiedRank <= 9;
     const humanRank = verifiedRank !== null ? verifiedRank + 1 : null;
     console.log('[submitScore] ZREVRANK result:', verifiedRank, '→ humanRank:', humanRank, '| isTopTen:', isTopTen);

@@ -5,6 +5,7 @@ import { kv } from '@vercel/kv';
 export type LeaderboardEntry = {
   rank: number;
   name: string;
+  playerId: string;
   score: number;
   date: number;
   difficulty?: string;
@@ -42,31 +43,65 @@ async function getUserHighScore(key: string, playerId: string): Promise<number> 
   }
 }
 
-export async function resolvePastDailyWinners() {
+/**
+ * NEW: Core logic to award the Silver Daily Champion (🥈) for a specific date
+ */
+export async function awardDailyWinner(targetDate: string) {
   try {
-    const today = getDailyId();
+    const awardedKey = `apex_daily_awarded_${targetDate}`;
     
-    // Calculate yesterday's date string
-    const d = new Date(today + 'T12:00:00Z');
-    d.setDate(d.getDate() - 1);
-    const yesterday = d.toISOString().split('T')[0];
-    
-    const awardedKey = `apex_daily_awarded_${yesterday}`;
     // Lock effectively prevents multiple simultaneous executions
     const setSuccess = await kv.set(awardedKey, 'true', { nx: true, ex: 604800 });
+    if (!setSuccess) {
+      console.log(`[awardDailyWinner] Already awarded for ${targetDate}. Skipping.`);
+      return { success: false, error: 'Already awarded' };
+    }
+
+    const dailyKey = `apex_global_daily_${targetDate}`;
+    const topEntry = await kv.zrange(dailyKey, 0, 0, { rev: true, withScores: true });
     
-    if (setSuccess) {
-      const dailyKey = `apex_global_daily_${yesterday}`;
-      const topEntry = await kv.zrange(dailyKey, 0, 0, { rev: true });
-      if (topEntry && topEntry.length > 0) {
-        const memberStr = topEntry[0] as string;
-        const parts = memberStr.split(':');
-        const playerId = parts[1];
-        if (playerId) {
-          await kv.hincrby('apex_user_daily_wins', playerId, 1);
-        }
+    if (topEntry && topEntry.length > 0) {
+      // Logic: parse name and ID from member string (format: "NAME:ID:DIFF")
+      let memberStr = '';
+      if (typeof topEntry[0] === 'object' && topEntry[0] !== null && 'member' in topEntry[0]) {
+        memberStr = (topEntry[0] as any).member;
+      } else {
+        memberStr = topEntry[0] as string;
+      }
+
+      const parts = memberStr.split(':');
+      const name = parts[0] || 'PLAYER';
+      const playerId = parts[1];
+
+      if (playerId) {
+        console.log(`[awardDailyWinner] AWARDING: ${name} (${playerId}) for ${targetDate}`);
+        
+        // 1. Maintain existing hash (for badges/UI)
+        await kv.hincrby('apex_user_daily_wins', playerId, 1);
+        
+        // 2. Added sorted set as explicitly requested: ZINCRBY leaderboard_champions 1 [winner_handle]
+        // Note: we use "NAME:ID" to ensure uniqueness in the sorted set
+        await kv.zincrby('leaderboard_champions', 1, `${name.replace(/:/g, '')}:${playerId}`);
+        
+        return { success: true, winner: name };
       }
     }
+    return { success: false, error: 'No daily entries found' };
+  } catch (err) {
+    console.error(`[awardDailyWinner] Error for ${targetDate}:`, err);
+    return { success: false, error: String(err) };
+  }
+}
+
+export async function resolvePastDailyWinners() {
+  try {
+    const todayStr = getDailyId();
+    // Calculate yesterday's date string correctly
+    const d = new Date(todayStr + 'T12:00:00Z');
+    d.setUTCDate(d.getUTCDate() - 1);
+    const yesterday = d.toISOString().split('T')[0];
+    
+    await awardDailyWinner(yesterday);
   } catch (err) {
     console.error('Failed to resolve past daily winners:', err);
   }
@@ -101,32 +136,29 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'sniper' | 'survi
     if (type === 'daily') await resolvePastDailyWinners();
 
     if (type === 'champions') {
-      const allWins = await kv.hgetall('apex_user_daily_wins') as Record<string, string | number>;
-      if (!allWins) return [];
-      
-      const arr = Object.keys(allWins).map(k => ({
-         playerId: k,
-         wins: Number(allWins[k])
-      })).filter(x => x.wins > 0).sort((a, b) => b.wins - a.wins).slice(0, 10);
-      
-      const playerIds = arr.map(a => a.playerId);
-      let names: (string | null)[] = [];
-      if (playerIds.length > 0) {
-        names = await kv.hmget('apex_player_names', ...playerIds) as unknown as (string | null)[];
-      }
+      const redisKey = 'leaderboard_champions';
+      let results = await kv.zrange(redisKey, 0, 9, { rev: true, withScores: true });
+      if (results && !Array.isArray(results)) results = [results] as any;
 
-      return arr.map((x, i) => ({
-         rank: i + 1,
-         name: names[i] || 'PLAYER',
-         score: x.wins,
-         date: Date.now(),
-         difficulty: undefined,
-         silverWins: x.wins,
-         isGold: false,
-         isSniper: false,
-         isSurvivalist: false,
-         isVeteran: false
-      }));
+      const entries: LeaderboardEntry[] = [];
+      for (let i = 0; i < (results?.length || 0); i += 2) {
+        const member = results![i] as string;
+        const score = Number(results![i+1]);
+        const parts = member.split(':');
+        entries.push({
+          rank: (i / 2) + 1,
+          name: parts[0] || 'PLAYER',
+          playerId: parts[1] || '',
+          score: score,
+          date: Date.now(),
+          silverWins: score,
+          isGold: false,
+          isSniper: false,
+          isSurvivalist: false,
+          isVeteran: false
+        });
+      }
+      return entries;
     }
 
     let key = LEADERBOARD_ALLTIME_KEY;
@@ -186,6 +218,7 @@ export async function getTopScores(type: 'daily' | 'alltime' | 'sniper' | 'survi
       entries.push({
         rank: entries.length + 1,
         name,
+        playerId,
         score,
         date: Date.now(), // No longer parsed from string
         difficulty: type === 'sniper' || type === 'survivalist' || type === 'veteran' ? undefined : difficulty,

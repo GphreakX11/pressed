@@ -180,6 +180,10 @@ export default function GameBoard() {
   }, [playerId, playerName, showWelcome]);
 
   const lastWordTime = useRef<number>(0);
+  const [isDaily, setIsDaily] = useState(false);
+  const [isAdminRollingOver, setIsAdminRollingOver] = useState(false);
+  const [adminMessage, setAdminMessage] = useState<string | null>(null);
+
   const [comboCount, setComboCount] = useState(0);
   const [timeBonus, setTimeBonus] = useState(0);
 
@@ -1548,14 +1552,50 @@ export default function GameBoard() {
                     const res = await submitScore('TestUser', playerId, 9999, 'N', false, 0);
                     console.log('Diagnostic Server Response:', res);
                   } catch (err) {
-                    console.error('Diagnostic Error:', err);
+                    console.error('Diagnostic Failed:', err);
                   }
-                }} 
-                className="hidden"
-                style={{ display: 'none' }}
+                }}
+                className="opacity-0 w-full h-2 mt-4 cursor-default"
               >
-                Run Diagnostics
+                DIAGNOSTICS
               </button>
+
+              {/* Admin Rollover Trigger (Visible to JAKE) */}
+              {(playerName?.toUpperCase() === 'JAKE') && (
+                <div className="w-full flex flex-col gap-2 mt-2 p-3 bg-slate-100 border border-slate-200 rounded-lg animate-pulse">
+                  <div className="flex justify-between items-center">
+                    <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Admin Daily Rollover</span>
+                    {adminMessage && <span className="text-[9px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">{adminMessage}</span>}
+                  </div>
+                  <button 
+                    disabled={isAdminRollingOver}
+                    onPointerDown={async (e) => {
+                      e.preventDefault();
+                      setIsAdminRollingOver(true);
+                      setAdminMessage('Processing...');
+                      try {
+                        const res = await fetch('/api/admin/rollover', { method: 'POST' });
+                        const data = await res.json();
+                        if (data.success) {
+                          setAdminMessage('Success!');
+                        } else {
+                          setAdminMessage(`Err: ${data.error || 'Unknown'}`);
+                        }
+                      } catch (err) {
+                        setAdminMessage('Fetch Failed');
+                      } finally {
+                        setIsAdminRollingOver(false);
+                        setTimeout(() => setAdminMessage(null), 5000);
+                      }
+                    }}
+                    className={`w-full py-2 rounded font-black text-xs uppercase tracking-widest transition-all shadow-sm active:translate-y-[1px] ${
+                      isAdminRollingOver ? 'bg-slate-300 text-slate-500' : 'bg-slate-800 text-white hover:bg-slate-700'
+                    }`}
+                  >
+                    {isAdminRollingOver ? 'AWARDING...' : '🏆 ROLLOVER YESTERDAY'}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Ready Room Confirmation Modal */}

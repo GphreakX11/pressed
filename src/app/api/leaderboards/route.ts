@@ -118,42 +118,24 @@ export async function GET(request: Request) {
       await resolvePastDailyWinners();
     }
 
-    // ── Champions: uses a hash, not a sorted set ──
+    // ── Champions: uses a sorted set now ──
     if (category === 'champions') {
       try {
-        const allWins = (await kv.hgetall('apex_user_daily_wins')) as Record<string, string | number> | null;
-        if (!allWins) return json([]);
+        const redisKey = 'leaderboard_champions';
+        let results = await kv.zrange(redisKey, 0, 9, { rev: true, withScores: true });
+        if (results && !Array.isArray(results)) results = [results] as any;
 
-        const sorted = Object.entries(allWins)
-          .map(([pid, wins]) => ({ pid, wins: Number(wins) }))
-          .filter((x) => x.wins > 0)
-          .sort((a, b) => b.wins - a.wins)
-          .slice(0, 10);
+        const parsed = parseZrangeResults(results || []);
+        const entries = await enrichWithBadges(toLeaderboardEntries(parsed));
 
-        const pids = sorted.map((s) => s.pid);
-        let names: (string | null)[] = [];
-        if (pids.length > 0) {
-          names = (await kv.hmget('apex_player_names', ...pids)) as unknown as (string | null)[];
-        }
+        // Ensure silverWins is populated from the score
+        const finalEntries = entries.map(e => ({
+          ...e,
+          silverWins: e.score
+        }));
 
-        const entries = sorted
-          .map((x, i) => ({
-            rank: i + 1,
-            name: names[i] || '',
-            playerId: x.pid,
-            score: x.wins,
-            date: Date.now(),
-            silverWins: x.wins,
-            isGold: false,
-            isSniper: false,
-            isSurvivalist: false,
-            isVeteran: false,
-          }))
-          .filter(e => e.name && !GHOST_NAMES.includes(e.name.toUpperCase()))
-          .map((e, i) => ({ ...e, rank: i + 1 }));
-
-        console.log('[Leaderboard API] champions results:', entries.length);
-        return json(entries);
+        console.log('[Leaderboard API] champions (sorted-set) results:', finalEntries.length);
+        return json(finalEntries);
       } catch (err) {
         console.error('[Leaderboard API] champions error:', err);
         return json([]);

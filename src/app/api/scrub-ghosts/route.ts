@@ -5,7 +5,9 @@ import { getDailyId } from '@/lib/puzzles';
 export const dynamic = 'force-dynamic';
 
 // Blocklist: names that should NEVER appear on leaderboards
-const BLOCKED_NAMES = ['ANONYMOUS', 'PLAYER', ''];
+const BLOCKED_NAMES = ['ANONYMOUS', 'PLAYER', 'TESTUSER', ''];
+
+export async function GET() { return POST(); }
 
 export async function POST() {
   try {

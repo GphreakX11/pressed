@@ -1570,15 +1570,9 @@ export default function GameBoard() {
               
               <button 
                 id="diagnostics-btn"
-                onPointerDown={async (e) => { 
+                onPointerDown={(e) => { 
                   e.preventDefault(); 
-                  console.log('Running Pretend Play Diagnostics...');
-                  try {
-                    const res = await submitScore('TestUser', playerId, 9999, 'N', false, 0);
-                    console.log('Diagnostic Server Response:', res);
-                  } catch (err) {
-                    console.error('Diagnostic Failed:', err);
-                  }
+                  console.log('Diagnostics currently disabled by Admin.');
                 }}
                 className="opacity-0 w-full h-2 mt-4 cursor-default"
               >

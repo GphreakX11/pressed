@@ -183,9 +183,34 @@ export default function GameBoard() {
   const [isDaily, setIsDaily] = useState(false);
   const [isAdminRollingOver, setIsAdminRollingOver] = useState(false);
   const [adminMessage, setAdminMessage] = useState<string | null>(null);
+  const [adminMetrics, setAdminMetrics] = useState<{ totalUnique: number, dailyActive: number } | null>(null);
+  const [isRefreshingMetrics, setIsRefreshingMetrics] = useState(false);
 
   const [comboCount, setComboCount] = useState(0);
   const [timeBonus, setTimeBonus] = useState(0);
+
+  const fetchAdminMetrics = useCallback(async () => {
+    if (playerName?.toUpperCase() !== 'JAKE' || !navigator.onLine) return;
+    setIsRefreshingMetrics(true);
+    try {
+      const res = await fetch('/api/admin/metrics');
+      const data = await res.json();
+      if (data.success) {
+        setAdminMetrics({ totalUnique: data.totalUnique, dailyActive: data.dailyActive });
+      }
+    } catch (err) {
+      console.error('[Admin] Failed to fetch metrics:', err);
+    } finally {
+      setIsRefreshingMetrics(false);
+    }
+  }, [playerName]);
+
+  // Auto-fetch metrics for JAKE on mount
+  useEffect(() => {
+    if (playerName?.toUpperCase() === 'JAKE') {
+      fetchAdminMetrics();
+    }
+  }, [playerName, fetchAdminMetrics]);
 
   const foundWordsRef = useRef<string[]>([]);
   useEffect(() => { foundWordsRef.current = foundWords; }, [foundWords]);
@@ -1594,6 +1619,30 @@ export default function GameBoard() {
                   >
                     {isAdminRollingOver ? 'AWARDING...' : '🏆 ROLLOVER YESTERDAY'}
                   </button>
+
+                  <div className="w-full mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4">
+                    <div className="flex justify-between items-center px-1">
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-tighter">Server Stats (True Unique)</span>
+                      <button 
+                        onPointerDown={(e) => { e.preventDefault(); fetchAdminMetrics(); }}
+                        disabled={isRefreshingMetrics}
+                        className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded border border-slate-300 active:scale-95 transition-all ${isRefreshingMetrics ? 'opacity-50' : 'hover:bg-slate-200'}`}
+                      >
+                        {isRefreshingMetrics ? 'Syncing...' : 'Refresh Metrics'}
+                      </button>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                       <div className="bg-white border border-slate-200 rounded p-2 flex flex-col items-center">
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Total Apex Players</span>
+                          <span className="text-xl font-black text-slate-800 leading-none">{adminMetrics ? adminMetrics.totalUnique : '--'}</span>
+                       </div>
+                       <div className="bg-white border border-slate-200 rounded p-2 flex flex-col items-center">
+                          <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Active Today (DAU)</span>
+                          <span className="text-xl font-black text-emerald-600 leading-none">{adminMetrics ? adminMetrics.dailyActive : '--'}</span>
+                       </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

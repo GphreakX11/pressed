@@ -81,17 +81,23 @@ async function enrichWithBadges(entries: ReturnType<typeof toLeaderboardEntries>
 
     // Fetch daily win counts for all players in the result set
     const playerIds = entries.map(e => e.playerId).filter(Boolean);
-    let winCounts: (string | null)[] = [];
+    const winMap = new Map<string, number>();
+    
     if (playerIds.length > 0) {
-      winCounts = (await kv.hmget('apex_user_daily_wins', ...playerIds)) as unknown as (string | null)[];
+      const winCounts = (await kv.hmget('apex_user_daily_wins', ...playerIds)) as unknown as (string | number | null)[];
+      playerIds.forEach((id, idx) => {
+        if (id) winMap.set(id, Number(winCounts[idx] || 0));
+      });
     }
 
-    entries.forEach((e, i) => {
+    entries.forEach((e) => {
       e.isGold = goldId === e.playerId;
       e.isSniper = sniperId === e.playerId;
       e.isSurvivalist = survId === e.playerId;
       e.isVeteran = vetId === e.playerId;
-      e.silverWins = Number(winCounts[i] || 0);
+      if (e.playerId) {
+        e.silverWins = winMap.get(e.playerId) || 0;
+      }
     });
   } catch (err) {
     console.error('[Leaderboard API] badge enrichment failed (non-fatal):', err);

@@ -8,7 +8,7 @@ export async function GET() {
   try {
     const todayId = getDailyId();
     const dailyKey = `apex_global_daily_${todayId}`;
-    const allKey = 'leaderboard_clears';
+    const allKey = 'apex_global_alltime';
 
     // Helper to get true unique count (excluding ANONYMOUS and PLAYER)
     const getTrueCount = async (key: string, suffix: string = '') => {

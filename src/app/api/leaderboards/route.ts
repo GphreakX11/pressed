@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { kv } from '@vercel/kv';
 import { getDailyId } from '@/lib/puzzles';
+import { resolvePastDailyWinners } from '@/app/actions';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
@@ -111,6 +112,11 @@ export async function GET(request: Request) {
     const category = searchParams.get('category') || 'alltime';
 
     console.log('[Leaderboard API] category =>', category);
+
+    // Lazily resolve past daily winners (idempotent, uses Redis lock inside)
+    if (category === 'champions' || category === 'daily') {
+      await resolvePastDailyWinners();
+    }
 
     // ── Champions: uses a hash, not a sorted set ──
     if (category === 'champions') {

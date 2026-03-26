@@ -1576,7 +1576,7 @@ export default function GameBoard({ onLaunchSynapse }: { onLaunchSynapse?: () =>
               </button>
               {onLaunchSynapse && (
                 <button 
-                  onPointerDown={() => setPendingGameMode({ diff: 'normal', isDaily: false, isTournament: false, isSynapse: true, label: 'APEX SYNAPSE' })}
+                  onClick={() => setPendingGameMode({ diff: 'normal', isDaily: false, isTournament: false, isSynapse: true, label: 'APEX SYNAPSE' })}
                   className="w-full bg-gradient-to-r from-cyan-600 to-blue-700 border-b-4 border-r-2 border-blue-900 font-extrabold text-white py-4 rounded-xl shadow-lg active:border-0 active:translate-y-[4px] active:translate-x-[2px] transition-all text-lg tracking-widest select-none touch-manipulation mt-1 mb-1"
                 >
                   PLAY SYNAPSE ⚡ <span className="text-cyan-200 block text-xs tracking-normal mt-1 opacity-90">(High-Speed Letter Link)</span>

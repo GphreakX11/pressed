@@ -742,3 +742,25 @@ export async function getUserServerStats(playerId: string) {
     return { highScore: 0, gamesWon: 0, highestTournamentRound: 0 };
   }
 }
+
+/**
+ * Submit a Synapse game score to both the all-time and daily Synapse leaderboards.
+ */
+export async function submitSynapseScore(name: string, playerId: string, score: number) {
+  try {
+    const safeName = (name || 'PLAYER').replace(/[^A-Za-z0-9_ ]/g, '').substring(0, 12).toUpperCase();
+    const member = `${safeName}:${playerId}`;
+    const dailyId = getDailyId();
+
+    await Promise.all([
+      kv.zadd('leaderboard_synapse_alltime', { score, member }),
+      kv.zadd(`leaderboard_synapse_daily_${dailyId}`, { score, member }),
+    ]);
+
+    console.log(`[Synapse] Score submitted: ${safeName} → ${score}`);
+    return { success: true };
+  } catch (err) {
+    console.error('[Synapse] Score submission error:', err);
+    return { success: false };
+  }
+}

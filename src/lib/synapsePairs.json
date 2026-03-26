@@ -1,0 +1,5002 @@
+[
+  {
+    "wordA": "WORSE",
+    "wordB": "HAWK",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "WORSE",
+    "wordB": "ONION",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "WORSE",
+    "wordB": "APART",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "WORSE",
+    "wordB": "SMALL",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "WORSE",
+    "wordB": "THEME",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "FAULT",
+    "wordB": "BEFORE",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "FAULT",
+    "wordB": "MAKING",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "FAULT",
+    "wordB": "BOUND",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "FAULT",
+    "wordB": "ROLE",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "FAULT",
+    "wordB": "CITIES",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "STUCK",
+    "wordB": "SEMI",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "STUCK",
+    "wordB": "MINT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "STUCK",
+    "wordB": "BURY",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "STUCK",
+    "wordB": "RACING",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "STUCK",
+    "wordB": "LIKED",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "THIRTY",
+    "wordB": "BEAT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "THIRTY",
+    "wordB": "ENOUGH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "THIRTY",
+    "wordB": "COUSIN",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "THIRTY",
+    "wordB": "BRAND",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "THIRTY",
+    "wordB": "KEYS",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "CLICKS",
+    "wordB": "CARTER",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "CLICKS",
+    "wordB": "FLYER",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "CLICKS",
+    "wordB": "WINE",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "CLICKS",
+    "wordB": "WORKED",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "CLICKS",
+    "wordB": "EUROS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "FACT",
+    "wordB": "FRIDGE",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "FACT",
+    "wordB": "RALLY",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "FACT",
+    "wordB": "COLUMN",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "FACT",
+    "wordB": "BENT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "FEAR",
+    "wordB": "FLOPPY",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "FEAR",
+    "wordB": "EVOLVE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "FEAR",
+    "wordB": "HACK",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "FEAR",
+    "wordB": "CRISIS",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "LOCALE",
+    "wordB": "BLINK",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "LOCALE",
+    "wordB": "WORD",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "LOCALE",
+    "wordB": "PICNIC",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "LOCALE",
+    "wordB": "VISA",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "LOCALE",
+    "wordB": "TRIES",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "APPEAL",
+    "wordB": "AMAZON",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "APPEAL",
+    "wordB": "SCRIPT",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "APPEAL",
+    "wordB": "EDITED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "APPEAL",
+    "wordB": "LOOKS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "NICK",
+    "wordB": "NEWS",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "NICK",
+    "wordB": "PETITE",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "NICK",
+    "wordB": "MUCH",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "NICK",
+    "wordB": "BROKER",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "SINCE",
+    "wordB": "LOGS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SINCE",
+    "wordB": "VALID",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "SINCE",
+    "wordB": "FUNK",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "SINCE",
+    "wordB": "COPY",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "SINCE",
+    "wordB": "THEE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "PRICES",
+    "wordB": "ADAPT",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PRICES",
+    "wordB": "ROUGH",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "PRICES",
+    "wordB": "KITTY",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "PRICES",
+    "wordB": "CAUGHT",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "PRICES",
+    "wordB": "LEAD",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "PRICES",
+    "wordB": "STAY",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "TWENTY",
+    "wordB": "AUGUST",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TWENTY",
+    "wordB": "FOLLOW",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "TWENTY",
+    "wordB": "SEALED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "TWENTY",
+    "wordB": "AUBURN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "TWENTY",
+    "wordB": "LADY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "ROOTS",
+    "wordB": "MURPHY",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "ROOTS",
+    "wordB": "LOCK",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "ROOTS",
+    "wordB": "UPDATE",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "ROOTS",
+    "wordB": "CHICKS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "MASON",
+    "wordB": "MYTH",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "MASON",
+    "wordB": "BETA",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "MASON",
+    "wordB": "KISS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "MASON",
+    "wordB": "LOVER",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "MASON",
+    "wordB": "TEND",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "WITH",
+    "wordB": "DAWN",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "WITH",
+    "wordB": "EASIER",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "WITH",
+    "wordB": "STOPS",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "WITH",
+    "wordB": "CHAR",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "WASHER",
+    "wordB": "FOLLOW",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "WASHER",
+    "wordB": "FLAG",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "WASHER",
+    "wordB": "GOODS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "WASHER",
+    "wordB": "YOUTH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "WASHER",
+    "wordB": "TELL",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "WASHER",
+    "wordB": "RULING",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "WISHES",
+    "wordB": "WOMAN",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "WISHES",
+    "wordB": "AMINO",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "WISHES",
+    "wordB": "VAST",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "WISHES",
+    "wordB": "LUNCH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "WISHES",
+    "wordB": "TUNER",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EDGES",
+    "wordB": "PEPPER",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EDGES",
+    "wordB": "RANDOM",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "EDGES",
+    "wordB": "LOVING",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "EDGES",
+    "wordB": "WORKS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SUITS",
+    "wordB": "SEEMS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SUITS",
+    "wordB": "FUNK",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "SUITS",
+    "wordB": "ADVICE",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "SUITS",
+    "wordB": "DELETE",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TRULY",
+    "wordB": "STAFF",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TRULY",
+    "wordB": "RAGE",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "TRULY",
+    "wordB": "BACKUP",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "TRULY",
+    "wordB": "LOVED",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "TRULY",
+    "wordB": "PAYING",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "INPUTS",
+    "wordB": "HIGHER",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "INPUTS",
+    "wordB": "LOGAN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "INPUTS",
+    "wordB": "PARA",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "INPUTS",
+    "wordB": "BUREAU",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "INPUTS",
+    "wordB": "REALTY",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "INPUTS",
+    "wordB": "CLOSED",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "HERB",
+    "wordB": "CHICKS",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "HERB",
+    "wordB": "SUITES",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "HERB",
+    "wordB": "PROUD",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "HERB",
+    "wordB": "LABS",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "POLE",
+    "wordB": "GRAPHS",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "POLE",
+    "wordB": "ANCHOR",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "POLE",
+    "wordB": "CLICKS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "POLE",
+    "wordB": "TEND",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "NAILS",
+    "wordB": "NEON",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "NAILS",
+    "wordB": "WAGE",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "NAILS",
+    "wordB": "MICRO",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "NAILS",
+    "wordB": "LOOP",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "NAILS",
+    "wordB": "MUST",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "BUTTON",
+    "wordB": "BESIDE",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BUTTON",
+    "wordB": "SURF",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "BUTTON",
+    "wordB": "TREES",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "BUTTON",
+    "wordB": "CODE",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "BUTTON",
+    "wordB": "CHANGE",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "LOVING",
+    "wordB": "BUBBLE",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "LOVING",
+    "wordB": "AUTHOR",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "LOVING",
+    "wordB": "VARY",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "LOVING",
+    "wordB": "BASIS",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "LOVING",
+    "wordB": "HANDY",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "LOVING",
+    "wordB": "AUGUST",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "TACTIC",
+    "wordB": "STORM",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TACTIC",
+    "wordB": "ALLOY",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "TACTIC",
+    "wordB": "SPEC",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "TACTIC",
+    "wordB": "PILE",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "RUSH",
+    "wordB": "TOWARD",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RUSH",
+    "wordB": "ALBUM",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "RUSH",
+    "wordB": "BOOST",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "RUSH",
+    "wordB": "HINT",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "EARN",
+    "wordB": "CITED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EARN",
+    "wordB": "WALK",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "EARN",
+    "wordB": "GROUP",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "EARN",
+    "wordB": "JOIN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "KNIGHT",
+    "wordB": "WEEK",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "KNIGHT",
+    "wordB": "UNLESS",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "KNIGHT",
+    "wordB": "SPIES",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "KNIGHT",
+    "wordB": "EAGLE",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "KNIGHT",
+    "wordB": "CACHED",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "KNIGHT",
+    "wordB": "TOPS",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "WATTS",
+    "wordB": "WINNER",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "WATTS",
+    "wordB": "BEAR",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "WATTS",
+    "wordB": "BOTHER",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "WATTS",
+    "wordB": "SIGNS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "CIAO",
+    "wordB": "RESCUE",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "CIAO",
+    "wordB": "RIDES",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "CIAO",
+    "wordB": "ASSESS",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "CIAO",
+    "wordB": "BELOW",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "IDLE",
+    "wordB": "SKINS",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "IDLE",
+    "wordB": "AWARD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "IDLE",
+    "wordB": "ALPHA",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "IDLE",
+    "wordB": "EXCESS",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "BUNDLE",
+    "wordB": "COWBOY",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BUNDLE",
+    "wordB": "TUMOR",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "BUNDLE",
+    "wordB": "SONIC",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "BUNDLE",
+    "wordB": "DROP",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "BUNDLE",
+    "wordB": "GALAXY",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "BUNDLE",
+    "wordB": "PRAISE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "PICK",
+    "wordB": "JEEP",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PICK",
+    "wordB": "SWIM",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "PICK",
+    "wordB": "ACRE",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "PICK",
+    "wordB": "SEEK",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "HELPS",
+    "wordB": "BRIGHT",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "HELPS",
+    "wordB": "CAFE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "HELPS",
+    "wordB": "LONG",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "HELPS",
+    "wordB": "POTATO",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "HELPS",
+    "wordB": "COUNTS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "LIVING",
+    "wordB": "STEEL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "LIVING",
+    "wordB": "DESIRE",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "LIVING",
+    "wordB": "VOTE",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "LIVING",
+    "wordB": "SAND",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "LIVING",
+    "wordB": "GATE",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "AXIS",
+    "wordB": "FRAMED",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "AXIS",
+    "wordB": "FLUX",
+    "sharedLetter": "X"
+  },
+  {
+    "wordA": "AXIS",
+    "wordB": "EQUITY",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "AXIS",
+    "wordB": "ROSE",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "GRAPHS",
+    "wordB": "LOVING",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "GRAPHS",
+    "wordB": "FORK",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "GRAPHS",
+    "wordB": "INFANT",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "GRAPHS",
+    "wordB": "PULLED",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "GRAPHS",
+    "wordB": "LUNCH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "GRAPHS",
+    "wordB": "TENNIS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "HALF",
+    "wordB": "HINTS",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "HALF",
+    "wordB": "BEAN",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "HALF",
+    "wordB": "LOWER",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "HALF",
+    "wordB": "GIFTS",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "HEALTH",
+    "wordB": "HYBRID",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "HEALTH",
+    "wordB": "NOSE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "HEALTH",
+    "wordB": "CABIN",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "HEALTH",
+    "wordB": "DOLL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "HEALTH",
+    "wordB": "SOFT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "SHELL",
+    "wordB": "SCOUT",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SHELL",
+    "wordB": "BUNCH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "SHELL",
+    "wordB": "PENNY",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "SHELL",
+    "wordB": "FOCAL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "WELLS",
+    "wordB": "WHOM",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "WELLS",
+    "wordB": "ANNEX",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "WELLS",
+    "wordB": "CANAL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "WELLS",
+    "wordB": "VISION",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "CHECKS",
+    "wordB": "TOXIC",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "CHECKS",
+    "wordB": "HOLY",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "CHECKS",
+    "wordB": "QUEUE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "CHECKS",
+    "wordB": "KING",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "CHECKS",
+    "wordB": "SYMBOL",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "RAID",
+    "wordB": "MOVERS",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RAID",
+    "wordB": "TABLE",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "RAID",
+    "wordB": "TWIST",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "RAID",
+    "wordB": "DOLL",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "PRAYER",
+    "wordB": "PUBLIC",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PRAYER",
+    "wordB": "TRIO",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "PRAYER",
+    "wordB": "ANALOG",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "PRAYER",
+    "wordB": "MODIFY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "PRAYER",
+    "wordB": "FILED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "BEFORE",
+    "wordB": "DUMB",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BEFORE",
+    "wordB": "SETS",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "BEFORE",
+    "wordB": "FALL",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "BEFORE",
+    "wordB": "POLLS",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "BEFORE",
+    "wordB": "SHIRTS",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "GULF",
+    "wordB": "GATE",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "GULF",
+    "wordB": "HUMAN",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "GULF",
+    "wordB": "PEARL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "GULF",
+    "wordB": "CAFE",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "CENSUS",
+    "wordB": "CLAY",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "CENSUS",
+    "wordB": "MAKER",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "CENSUS",
+    "wordB": "WING",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "CENSUS",
+    "wordB": "TRAILS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "CENSUS",
+    "wordB": "ABOUT",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "NODE",
+    "wordB": "TWIN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "NODE",
+    "wordB": "OUTPUT",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "NODE",
+    "wordB": "DAILY",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "NODE",
+    "wordB": "IMAGE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EITHER",
+    "wordB": "COVE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EITHER",
+    "wordB": "SOIL",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "EITHER",
+    "wordB": "AUTO",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "EITHER",
+    "wordB": "JOHNS",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "EITHER",
+    "wordB": "GROUP",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "COVER",
+    "wordB": "ATTACK",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "COVER",
+    "wordB": "POSTS",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "COVER",
+    "wordB": "VINYL",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "COVER",
+    "wordB": "ASSUME",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "COVER",
+    "wordB": "MARSH",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "AGENTS",
+    "wordB": "MARCH",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "AGENTS",
+    "wordB": "HIGH",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "AGENTS",
+    "wordB": "FIXED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "AGENTS",
+    "wordB": "WOUND",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "AGENTS",
+    "wordB": "FORTH",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "AGENTS",
+    "wordB": "FILMS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "RETAIL",
+    "wordB": "ROUNDS",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RETAIL",
+    "wordB": "SPOKEN",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "RETAIL",
+    "wordB": "BOUGHT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "RETAIL",
+    "wordB": "SOMA",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "RETAIL",
+    "wordB": "CODING",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "RETAIL",
+    "wordB": "LOGO",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "GLOVES",
+    "wordB": "HUNGRY",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "GLOVES",
+    "wordB": "ALAN",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "GLOVES",
+    "wordB": "ROOM",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "GLOVES",
+    "wordB": "TRIVIA",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "GLOVES",
+    "wordB": "FREE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "GLOVES",
+    "wordB": "BIRDS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "GROUPS",
+    "wordB": "WEIGHT",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "GROUPS",
+    "wordB": "CARD",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "GROUPS",
+    "wordB": "ENJOY",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "GROUPS",
+    "wordB": "UNITED",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "GROUPS",
+    "wordB": "APPLE",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "GROUPS",
+    "wordB": "BITS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "TOLD",
+    "wordB": "MEANT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TOLD",
+    "wordB": "WORKS",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "TOLD",
+    "wordB": "CLEAN",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "TOLD",
+    "wordB": "KIDS",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "SCOPE",
+    "wordB": "TRUST",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SCOPE",
+    "wordB": "FACIAL",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "SCOPE",
+    "wordB": "FOLK",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "SCOPE",
+    "wordB": "PRAY",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "SCOPE",
+    "wordB": "TREK",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "HYBRID",
+    "wordB": "HASH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "HYBRID",
+    "wordB": "STYLE",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "HYBRID",
+    "wordB": "BABES",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "HYBRID",
+    "wordB": "REFUSE",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "HYBRID",
+    "wordB": "GAIN",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "HYBRID",
+    "wordB": "MODS",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "SPEEDS",
+    "wordB": "SKIN",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SPEEDS",
+    "wordB": "PARTY",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "SPEEDS",
+    "wordB": "TIRE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "SPEEDS",
+    "wordB": "BROAD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "RANDOM",
+    "wordB": "HEREBY",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RANDOM",
+    "wordB": "YEAST",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "RANDOM",
+    "wordB": "SENT",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "RANDOM",
+    "wordB": "VIEWED",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "RANDOM",
+    "wordB": "LOGS",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "RANDOM",
+    "wordB": "MEET",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "BINGO",
+    "wordB": "BLUES",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BINGO",
+    "wordB": "KICK",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "BINGO",
+    "wordB": "PLANTS",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "BINGO",
+    "wordB": "GAVE",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "BINGO",
+    "wordB": "PORT",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "SOCKET",
+    "wordB": "SILLY",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SOCKET",
+    "wordB": "GROW",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "SOCKET",
+    "wordB": "BRANCH",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "SOCKET",
+    "wordB": "BLANK",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "SOCKET",
+    "wordB": "WERE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "SOCKET",
+    "wordB": "WAIT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "MILLS",
+    "wordB": "TRAUMA",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "MILLS",
+    "wordB": "VERIFY",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "MILLS",
+    "wordB": "CLUB",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "MILLS",
+    "wordB": "NURSES",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "EFFECT",
+    "wordB": "VIDEO",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EFFECT",
+    "wordB": "FLOPPY",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "EFFECT",
+    "wordB": "ICON",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "EFFECT",
+    "wordB": "TIPS",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "GEAR",
+    "wordB": "NIGHT",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "GEAR",
+    "wordB": "HOPED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "GEAR",
+    "wordB": "CANYON",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "GEAR",
+    "wordB": "ROBOTS",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "COUNTY",
+    "wordB": "CHAD",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "COUNTY",
+    "wordB": "BLOOD",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "COUNTY",
+    "wordB": "USER",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "COUNTY",
+    "wordB": "SENDER",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "COUNTY",
+    "wordB": "WASTE",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "COUNTY",
+    "wordB": "READY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "SAVED",
+    "wordB": "TWIST",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SAVED",
+    "wordB": "ANNUAL",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "SAVED",
+    "wordB": "IVORY",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "SAVED",
+    "wordB": "WIRE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "SAVED",
+    "wordB": "OXFORD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "SHOTS",
+    "wordB": "SEAL",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SHOTS",
+    "wordB": "HARD",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "SHOTS",
+    "wordB": "WORK",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "SHOTS",
+    "wordB": "GENTLE",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "BACK",
+    "wordB": "HERB",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BACK",
+    "wordB": "AFFAIR",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "BACK",
+    "wordB": "COOLER",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "BACK",
+    "wordB": "KNOWN",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "PUPILS",
+    "wordB": "PARKER",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PUPILS",
+    "wordB": "GAUGE",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "PUPILS",
+    "wordB": "VOTING",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "PUPILS",
+    "wordB": "GLOBAL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "PUPILS",
+    "wordB": "SEEMS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "FREEZE",
+    "wordB": "FONTS",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "FREEZE",
+    "wordB": "DROP",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "FREEZE",
+    "wordB": "SOLVE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "FREEZE",
+    "wordB": "ZOOM",
+    "sharedLetter": "Z"
+  },
+  {
+    "wordA": "CAMEL",
+    "wordB": "OCCURS",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "CAMEL",
+    "wordB": "PARIS",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "CAMEL",
+    "wordB": "FORM",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "CAMEL",
+    "wordB": "TONER",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "CAMEL",
+    "wordB": "LOUIS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "BUYERS",
+    "wordB": "BIKINI",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BUYERS",
+    "wordB": "UNIT",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "BUYERS",
+    "wordB": "DYING",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "BUYERS",
+    "wordB": "MOMENT",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "BUYERS",
+    "wordB": "AWARD",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "BUYERS",
+    "wordB": "LOSS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "WASTE",
+    "wordB": "COWBOY",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "WASTE",
+    "wordB": "CLAY",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "WASTE",
+    "wordB": "SOULS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "WASTE",
+    "wordB": "ROBOT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "WASTE",
+    "wordB": "VOICE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "DONNA",
+    "wordB": "DUTY",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "DONNA",
+    "wordB": "MOSS",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "DONNA",
+    "wordB": "BURN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "DONNA",
+    "wordB": "SAFARI",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "ARREST",
+    "wordB": "QUAD",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "ARREST",
+    "wordB": "HOUR",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "ARREST",
+    "wordB": "LEMON",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "ARREST",
+    "wordB": "DISCS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "ARREST",
+    "wordB": "FOUGHT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "EXTRAS",
+    "wordB": "MIDDLE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EXTRAS",
+    "wordB": "BOXING",
+    "sharedLetter": "X"
+  },
+  {
+    "wordA": "EXTRAS",
+    "wordB": "WITHIN",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "EXTRAS",
+    "wordB": "BRING",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "EXTRAS",
+    "wordB": "DIALOG",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "EXTRAS",
+    "wordB": "CLUBS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "BILLS",
+    "wordB": "HERB",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BILLS",
+    "wordB": "VARIED",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "BILLS",
+    "wordB": "HELPED",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "BILLS",
+    "wordB": "READS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "CUBE",
+    "wordB": "DISCS",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "CUBE",
+    "wordB": "UGLY",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "CUBE",
+    "wordB": "BANDS",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "CUBE",
+    "wordB": "SEIZE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "MANY",
+    "wordB": "MUST",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "MANY",
+    "wordB": "FATAL",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "MANY",
+    "wordB": "FENCE",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "MANY",
+    "wordB": "FUZZY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "TITLED",
+    "wordB": "PARTS",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TITLED",
+    "wordB": "MAKING",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "TITLED",
+    "wordB": "FLUX",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "TITLED",
+    "wordB": "ROPE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "TITLED",
+    "wordB": "FOUND",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "BOTTOM",
+    "wordB": "BUCKS",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BOTTOM",
+    "wordB": "COPPER",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "BOTTOM",
+    "wordB": "STILL",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "BOTTOM",
+    "wordB": "MARCH",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "PUMPS",
+    "wordB": "PAINT",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PUMPS",
+    "wordB": "FUZZY",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "PUMPS",
+    "wordB": "REMARK",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "PUMPS",
+    "wordB": "RISING",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "GOAT",
+    "wordB": "GREEK",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "GOAT",
+    "wordB": "MICRO",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "GOAT",
+    "wordB": "BABY",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "GOAT",
+    "wordB": "CHEST",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TONS",
+    "wordB": "MATH",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TONS",
+    "wordB": "LABOUR",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "TONS",
+    "wordB": "FRANK",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "TONS",
+    "wordB": "MUSCLE",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "COLONY",
+    "wordB": "ATTACK",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "COLONY",
+    "wordB": "ATOM",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "COLONY",
+    "wordB": "SALES",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "COLONY",
+    "wordB": "PRINTS",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "COLONY",
+    "wordB": "SPRAY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "DISKS",
+    "wordB": "CLOUDY",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "DISKS",
+    "wordB": "LIABLE",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "DISKS",
+    "wordB": "STORES",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "DISKS",
+    "wordB": "TRUCK",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "MODULE",
+    "wordB": "TRIM",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "MODULE",
+    "wordB": "SONIC",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "MODULE",
+    "wordB": "DIVING",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "MODULE",
+    "wordB": "QUIT",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "MODULE",
+    "wordB": "CLICKS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "MODULE",
+    "wordB": "PINE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "REMEDY",
+    "wordB": "HAIR",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "REMEDY",
+    "wordB": "PILE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "REMEDY",
+    "wordB": "MILLS",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "REMEDY",
+    "wordB": "GLAD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "REMEDY",
+    "wordB": "SUNNY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "BRAIN",
+    "wordB": "BOBBY",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BRAIN",
+    "wordB": "ROOT",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "BRAIN",
+    "wordB": "CAKES",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "BRAIN",
+    "wordB": "SEMI",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "BRAIN",
+    "wordB": "JUNK",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "EXPAND",
+    "wordB": "LIVER",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EXPAND",
+    "wordB": "FLUX",
+    "sharedLetter": "X"
+  },
+  {
+    "wordA": "EXPAND",
+    "wordB": "SCRIPT",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "EXPAND",
+    "wordB": "MARRY",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "EXPAND",
+    "wordB": "NOTIFY",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "EXPAND",
+    "wordB": "CROWD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "TEXT",
+    "wordB": "ATOM",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TEXT",
+    "wordB": "ENGINE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "TEXT",
+    "wordB": "AXIS",
+    "sharedLetter": "X"
+  },
+  {
+    "wordA": "THEM",
+    "wordB": "TALL",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "THEM",
+    "wordB": "BRANCH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "THEM",
+    "wordB": "SELF",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "THEM",
+    "wordB": "DOMAIN",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "SPORTS",
+    "wordB": "HIGHS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SPORTS",
+    "wordB": "PAYING",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "SPORTS",
+    "wordB": "COLONY",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "SPORTS",
+    "wordB": "WIRED",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "SPORTS",
+    "wordB": "QUIET",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "PASTE",
+    "wordB": "PUPPY",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PASTE",
+    "wordB": "VIRAL",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "PASTE",
+    "wordB": "MODS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "PASTE",
+    "wordB": "RHYTHM",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "PASTE",
+    "wordB": "DODGE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "CIRCUS",
+    "wordB": "BACON",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "CIRCUS",
+    "wordB": "KNIGHT",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "CIRCUS",
+    "wordB": "WEAR",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "CIRCUS",
+    "wordB": "AVENUE",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "CIRCUS",
+    "wordB": "LOST",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "IVORY",
+    "wordB": "AGING",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "IVORY",
+    "wordB": "VAULT",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "IVORY",
+    "wordB": "COOK",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "IVORY",
+    "wordB": "RANGER",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "IVORY",
+    "wordB": "EASY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "DEPTH",
+    "wordB": "RADIUS",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "DEPTH",
+    "wordB": "SNAKE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "DEPTH",
+    "wordB": "PACK",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "DEPTH",
+    "wordB": "STUCK",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "DEPTH",
+    "wordB": "LAUGH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "ADULT",
+    "wordB": "RANGER",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "ADULT",
+    "wordB": "BIND",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "ADULT",
+    "wordB": "SURGE",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "ADULT",
+    "wordB": "SHELL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "ADULT",
+    "wordB": "CENTER",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TRADE",
+    "wordB": "POINTS",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TRADE",
+    "wordB": "RULING",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "TRADE",
+    "wordB": "NOVA",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "TRADE",
+    "wordB": "WOOD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "TRADE",
+    "wordB": "HOME",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "HATE",
+    "wordB": "HORN",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "HATE",
+    "wordB": "CAPS",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "HATE",
+    "wordB": "TOOK",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "HATE",
+    "wordB": "SENDS",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "DEBUT",
+    "wordB": "DISC",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "DEBUT",
+    "wordB": "HERO",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "DEBUT",
+    "wordB": "BARN",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "DEBUT",
+    "wordB": "FLUX",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "DEBUT",
+    "wordB": "ANTI",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "STARTS",
+    "wordB": "SPOKEN",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "STARTS",
+    "wordB": "WHITE",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "STARTS",
+    "wordB": "HEADED",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "STARTS",
+    "wordB": "FORK",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "ANNA",
+    "wordB": "TAIL",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "ANNA",
+    "wordB": "HUNG",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "GOTHIC",
+    "wordB": "ENGAGE",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "GOTHIC",
+    "wordB": "ROUND",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "GOTHIC",
+    "wordB": "SEATS",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "GOTHIC",
+    "wordB": "HEEL",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "GOTHIC",
+    "wordB": "PUPILS",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "GOTHIC",
+    "wordB": "CARDS",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "BLUE",
+    "wordB": "BONDS",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BLUE",
+    "wordB": "TALK",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "BLUE",
+    "wordB": "SUNNY",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "BLUE",
+    "wordB": "MEAN",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "MERE",
+    "wordB": "DUMP",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "MERE",
+    "wordB": "JONES",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "MERE",
+    "wordB": "CORK",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "FIST",
+    "wordB": "FADE",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "FIST",
+    "wordB": "CHILE",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "FIST",
+    "wordB": "GRAMS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "FIST",
+    "wordB": "MATH",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "LIMIT",
+    "wordB": "BLANK",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "LIMIT",
+    "wordB": "GUIDED",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "LIMIT",
+    "wordB": "DREAMS",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "LIMIT",
+    "wordB": "SEAT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "RAYS",
+    "wordB": "INTER",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RAYS",
+    "wordB": "MANAGE",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "RAYS",
+    "wordB": "YELLOW",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "RAYS",
+    "wordB": "FOCUS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "HANDY",
+    "wordB": "HOLLOW",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "HANDY",
+    "wordB": "GRAB",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "HANDY",
+    "wordB": "TURN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "HANDY",
+    "wordB": "SEEDS",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "HANDY",
+    "wordB": "BOOTY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "MILES",
+    "wordB": "PANAMA",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "MILES",
+    "wordB": "NOTIFY",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "MILES",
+    "wordB": "LOAD",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "MILES",
+    "wordB": "DEVOTE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "MILES",
+    "wordB": "ROBOTS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "BELL",
+    "wordB": "CARBON",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BELL",
+    "wordB": "PICKED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "BELL",
+    "wordB": "TRIALS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "ARMED",
+    "wordB": "SNAP",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "ARMED",
+    "wordB": "BURTON",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "ARMED",
+    "wordB": "SIMPLY",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "ARMED",
+    "wordB": "EXCEL",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "ARMED",
+    "wordB": "COLD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "BREAK",
+    "wordB": "BOSS",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BREAK",
+    "wordB": "TRIPS",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "BREAK",
+    "wordB": "USES",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "BREAK",
+    "wordB": "TAUGHT",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "BREAK",
+    "wordB": "HIKING",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "MUST",
+    "wordB": "FARM",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "MUST",
+    "wordB": "NULL",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "MUST",
+    "wordB": "PILLS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "MUST",
+    "wordB": "NOTICE",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "ITEMS",
+    "wordB": "GOING",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "ITEMS",
+    "wordB": "PATH",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "ITEMS",
+    "wordB": "REAL",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "ITEMS",
+    "wordB": "NORMAL",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "ITEMS",
+    "wordB": "GUNS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "GREEK",
+    "wordB": "LIGHTS",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "GREEK",
+    "wordB": "AFFORD",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "GREEK",
+    "wordB": "DEFEAT",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "GREEK",
+    "wordB": "FOLK",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "CHAD",
+    "wordB": "CISCO",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "CHAD",
+    "wordB": "THEE",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "CHAD",
+    "wordB": "TRAP",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "CHAD",
+    "wordB": "IDOL",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "VINYL",
+    "wordB": "AVATAR",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "VINYL",
+    "wordB": "SAFARI",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "VINYL",
+    "wordB": "BENT",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "VINYL",
+    "wordB": "MURPHY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "VINYL",
+    "wordB": "JEWEL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "ALERTS",
+    "wordB": "BAKING",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "ALERTS",
+    "wordB": "BOLD",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "ALERTS",
+    "wordB": "OPENED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "ALERTS",
+    "wordB": "DRUG",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "ALERTS",
+    "wordB": "BOUGHT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "ALERTS",
+    "wordB": "BUSY",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "NONE",
+    "wordB": "MARGIN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "NONE",
+    "wordB": "SOUP",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "NONE",
+    "wordB": "PUSHED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "PIXEL",
+    "wordB": "APART",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PIXEL",
+    "wordB": "CIVIC",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "PIXEL",
+    "wordB": "OXFORD",
+    "sharedLetter": "X"
+  },
+  {
+    "wordA": "PIXEL",
+    "wordB": "KEYS",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "PIXEL",
+    "wordB": "CLOCKS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "POLAR",
+    "wordB": "TYPES",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "POLAR",
+    "wordB": "TOUGH",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "POLAR",
+    "wordB": "WHILE",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "POLAR",
+    "wordB": "GENEVA",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "POLAR",
+    "wordB": "RIDES",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "PLAN",
+    "wordB": "TOPIC",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PLAN",
+    "wordB": "SYMBOL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "PLAN",
+    "wordB": "COATED",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "PLAN",
+    "wordB": "CENTRE",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "USEFUL",
+    "wordB": "CUBIC",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "USEFUL",
+    "wordB": "BRANDS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "USEFUL",
+    "wordB": "DIRECT",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "USEFUL",
+    "wordB": "FORM",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "USEFUL",
+    "wordB": "MILD",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "LOVELY",
+    "wordB": "WILD",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "LOVELY",
+    "wordB": "DROP",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "LOVELY",
+    "wordB": "VACUUM",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "LOVELY",
+    "wordB": "HEREIN",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "LOVELY",
+    "wordB": "HARRY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "FLOUR",
+    "wordB": "FEED",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "FLOUR",
+    "wordB": "ELECT",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "FLOUR",
+    "wordB": "NOTE",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "FLOUR",
+    "wordB": "GUIDES",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "FLOUR",
+    "wordB": "SCARY",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RESCUE",
+    "wordB": "HONOR",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RESCUE",
+    "wordB": "FILE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "RESCUE",
+    "wordB": "STATS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "RESCUE",
+    "wordB": "CLIMB",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "RESCUE",
+    "wordB": "FUNK",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "AGAIN",
+    "wordB": "BUREAU",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "AGAIN",
+    "wordB": "GORE",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "AGAIN",
+    "wordB": "CIVIC",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "AGAIN",
+    "wordB": "SCREEN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "GLAD",
+    "wordB": "GUESTS",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "GLAD",
+    "wordB": "HELP",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "GLAD",
+    "wordB": "BRAVE",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "GLAD",
+    "wordB": "DUDE",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "TEACH",
+    "wordB": "TOLL",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TEACH",
+    "wordB": "FELL",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "TEACH",
+    "wordB": "PIZZA",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "TEACH",
+    "wordB": "COOL",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "TEACH",
+    "wordB": "PUSH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "QUERY",
+    "wordB": "SOUP",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "QUERY",
+    "wordB": "SLEEPS",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "QUERY",
+    "wordB": "WRONG",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "QUERY",
+    "wordB": "CITY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "BILLY",
+    "wordB": "BEST",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BILLY",
+    "wordB": "ACTION",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "BILLY",
+    "wordB": "CLONE",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "BILLY",
+    "wordB": "NANCY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "SIGHT",
+    "wordB": "SLOW",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SIGHT",
+    "wordB": "WEIRD",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "SIGHT",
+    "wordB": "GURU",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "SIGHT",
+    "wordB": "LUNCH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "SIGHT",
+    "wordB": "NEXT",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "ROCKS",
+    "wordB": "HIRING",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "ROCKS",
+    "wordB": "NOTED",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "ROCKS",
+    "wordB": "CLIMB",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "ROCKS",
+    "wordB": "MIKE",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "ROCKS",
+    "wordB": "WINGS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "QUAD",
+    "wordB": "TURNER",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "QUAD",
+    "wordB": "SMART",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "QUAD",
+    "wordB": "BORED",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "DECOR",
+    "wordB": "BANDS",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "DECOR",
+    "wordB": "JEEP",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "DECOR",
+    "wordB": "YACHT",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "DECOR",
+    "wordB": "ANALOG",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "DECOR",
+    "wordB": "STRIP",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "BROWSE",
+    "wordB": "BILL",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BROWSE",
+    "wordB": "TRIVIA",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "BROWSE",
+    "wordB": "THOUGH",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "BROWSE",
+    "wordB": "ANYWAY",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "BROWSE",
+    "wordB": "AXIS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "BROWSE",
+    "wordB": "NEEDLE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "UNIONS",
+    "wordB": "DUTCH",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "UNIONS",
+    "wordB": "KNEE",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "UNIONS",
+    "wordB": "VIRAL",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "UNIONS",
+    "wordB": "HOLLY",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "UNIONS",
+    "wordB": "SAMBA",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "YOUR",
+    "wordB": "MYTH",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "YOUR",
+    "wordB": "CASINO",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "YOUR",
+    "wordB": "PLUS",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "YOUR",
+    "wordB": "RANKED",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "LOAN",
+    "wordB": "SURELY",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "LOAN",
+    "wordB": "STORED",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "LOAN",
+    "wordB": "WAKE",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "LOAN",
+    "wordB": "SPRING",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "STUFF",
+    "wordB": "BROOKS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "STUFF",
+    "wordB": "HART",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "STUFF",
+    "wordB": "UNABLE",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "STUFF",
+    "wordB": "PREFIX",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "DUTY",
+    "wordB": "HEAD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "DUTY",
+    "wordB": "COLUMN",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "DUTY",
+    "wordB": "CENTS",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "DUTY",
+    "wordB": "LEVY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "GOODS",
+    "wordB": "GURU",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "GOODS",
+    "wordB": "FROM",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "GOODS",
+    "wordB": "DIRT",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "GOODS",
+    "wordB": "BASICS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "BEDS",
+    "wordB": "BACKUP",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BEDS",
+    "wordB": "POCKET",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "BEDS",
+    "wordB": "VOID",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "BEDS",
+    "wordB": "CUPS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "NORTH",
+    "wordB": "FIND",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "NORTH",
+    "wordB": "JOKE",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "NORTH",
+    "wordB": "FARM",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "NORTH",
+    "wordB": "LATE",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "NORTH",
+    "wordB": "HASH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "VOTING",
+    "wordB": "WAVES",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "VOTING",
+    "wordB": "ALSO",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "VOTING",
+    "wordB": "SYSTEM",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "VOTING",
+    "wordB": "PRIDE",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "VOTING",
+    "wordB": "BANNED",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "VOTING",
+    "wordB": "GAME",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "IMPACT",
+    "wordB": "WEIRD",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "IMPACT",
+    "wordB": "MOUSE",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "IMPACT",
+    "wordB": "PROVE",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "IMPACT",
+    "wordB": "RAGE",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "IMPACT",
+    "wordB": "SCORE",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "IMPACT",
+    "wordB": "SWEET",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "PLEDGE",
+    "wordB": "PRISON",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PLEDGE",
+    "wordB": "VINYL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "PLEDGE",
+    "wordB": "ACRES",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "PLEDGE",
+    "wordB": "HONDA",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "PLEDGE",
+    "wordB": "GIFT",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "REALM",
+    "wordB": "RIDING",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "REALM",
+    "wordB": "KNEE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "REALM",
+    "wordB": "PAID",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "REALM",
+    "wordB": "PLUS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "REALM",
+    "wordB": "MOTION",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "THROWN",
+    "wordB": "METAL",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "THROWN",
+    "wordB": "CHEVY",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "THROWN",
+    "wordB": "RALLY",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "THROWN",
+    "wordB": "LOUD",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "THROWN",
+    "wordB": "SWAP",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "THROWN",
+    "wordB": "DEAN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "SEEMED",
+    "wordB": "ACTS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SEEMED",
+    "wordB": "CENTER",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "SEEMED",
+    "wordB": "AMOUNT",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "SEEMED",
+    "wordB": "CHAD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "TOILET",
+    "wordB": "STAYS",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TOILET",
+    "wordB": "YAHOO",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "TOILET",
+    "wordB": "FIRM",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "TOILET",
+    "wordB": "LACK",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "TOILET",
+    "wordB": "SAVES",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EMPLOY",
+    "wordB": "DRIED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EMPLOY",
+    "wordB": "MUCH",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "EMPLOY",
+    "wordB": "WRAP",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "EMPLOY",
+    "wordB": "GIRLS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "EMPLOY",
+    "wordB": "THOUGH",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "EMPLOY",
+    "wordB": "GRANNY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "FLIP",
+    "wordB": "REFUSE",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "FLIP",
+    "wordB": "LENS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "FLIP",
+    "wordB": "ETHICS",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "FLIP",
+    "wordB": "PARENT",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "OVER",
+    "wordB": "TOYS",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "OVER",
+    "wordB": "NAVAL",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "OVER",
+    "wordB": "ACNE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "OVER",
+    "wordB": "TRIM",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "YIELDS",
+    "wordB": "JURY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "YIELDS",
+    "wordB": "PROFIT",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "YIELDS",
+    "wordB": "GNOME",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "YIELDS",
+    "wordB": "CLUB",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "YIELDS",
+    "wordB": "BRAND",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "YIELDS",
+    "wordB": "SNOW",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "WALES",
+    "wordB": "GROWN",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "WALES",
+    "wordB": "ARCH",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "WALES",
+    "wordB": "ROLL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "WALES",
+    "wordB": "TREK",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "WALES",
+    "wordB": "ODDS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "ANNEX",
+    "wordB": "SOFA",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "ANNEX",
+    "wordB": "COLUMN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "ANNEX",
+    "wordB": "JEWS",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "ANNEX",
+    "wordB": "TOXIC",
+    "sharedLetter": "X"
+  },
+  {
+    "wordA": "LADEN",
+    "wordB": "CLICK",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "LADEN",
+    "wordB": "MATT",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "LADEN",
+    "wordB": "DROPS",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "LADEN",
+    "wordB": "PETER",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "LADEN",
+    "wordB": "SING",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "HAPPY",
+    "wordB": "WIDTH",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "HAPPY",
+    "wordB": "FORMAL",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "HAPPY",
+    "wordB": "PRIDE",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "HAPPY",
+    "wordB": "BODY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "READY",
+    "wordB": "FROST",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "READY",
+    "wordB": "PIECE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "READY",
+    "wordB": "ALBUM",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "READY",
+    "wordB": "DISK",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "READY",
+    "wordB": "PUPPY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "BASIN",
+    "wordB": "BOLD",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BASIN",
+    "wordB": "VALLEY",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "BASIN",
+    "wordB": "CUTS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "BASIN",
+    "wordB": "TILL",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "BASIN",
+    "wordB": "JENNY",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "EAGER",
+    "wordB": "FIXED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EAGER",
+    "wordB": "SAND",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "EAGER",
+    "wordB": "LOVING",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "EAGER",
+    "wordB": "SPORTS",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "BREED",
+    "wordB": "SCUBA",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BREED",
+    "wordB": "KIRK",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "BREED",
+    "wordB": "THEE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "BREED",
+    "wordB": "DONNA",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "DEEP",
+    "wordB": "HARD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "DEEP",
+    "wordB": "SEVEN",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "DEEP",
+    "wordB": "PUNK",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "NATION",
+    "wordB": "RUNS",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "NATION",
+    "wordB": "CASA",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "NATION",
+    "wordB": "STYLE",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "NATION",
+    "wordB": "SPICE",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "NATION",
+    "wordB": "BROKER",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "BIKINI",
+    "wordB": "LAMB",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BIKINI",
+    "wordB": "RADIOS",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "BIKINI",
+    "wordB": "ROCKS",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "BIKINI",
+    "wordB": "GRANT",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "DEMAND",
+    "wordB": "CORD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "DEMAND",
+    "wordB": "JOSEPH",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "DEMAND",
+    "wordB": "SWIM",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "DEMAND",
+    "wordB": "JAIL",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "DEMAND",
+    "wordB": "PICNIC",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "FINGER",
+    "wordB": "WOLF",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "FINGER",
+    "wordB": "BILL",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "FINGER",
+    "wordB": "SONS",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "FINGER",
+    "wordB": "OUGHT",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "FINGER",
+    "wordB": "CAKE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "FINGER",
+    "wordB": "CORAL",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "ESTATE",
+    "wordB": "COOLER",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "ESTATE",
+    "wordB": "FORMS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "ESTATE",
+    "wordB": "VICTOR",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "ESTATE",
+    "wordB": "JAPAN",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "RECALL",
+    "wordB": "FORK",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RECALL",
+    "wordB": "INKJET",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "RECALL",
+    "wordB": "PUNCH",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "RECALL",
+    "wordB": "GIANTS",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "RECALL",
+    "wordB": "QUILT",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "STRESS",
+    "wordB": "GAYS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "STRESS",
+    "wordB": "FIFTY",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "STRESS",
+    "wordB": "RAPID",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "STRESS",
+    "wordB": "GENEVA",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "RADIOS",
+    "wordB": "TERM",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RADIOS",
+    "wordB": "APPLE",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "RADIOS",
+    "wordB": "DELUXE",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "RADIOS",
+    "wordB": "MIGHT",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "RADIOS",
+    "wordB": "ENJOY",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "RADIOS",
+    "wordB": "FEES",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SEVEN",
+    "wordB": "FRUITS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SEVEN",
+    "wordB": "HEATH",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "SEVEN",
+    "wordB": "VILLA",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "SEVEN",
+    "wordB": "THING",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "PAGE",
+    "wordB": "PINK",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PAGE",
+    "wordB": "BASIS",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "PAGE",
+    "wordB": "TOUGH",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "PAGE",
+    "wordB": "TIMES",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "MISS",
+    "wordB": "DAMAGE",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "MISS",
+    "wordB": "CHOIR",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "MISS",
+    "wordB": "SCALE",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "ONES",
+    "wordB": "GROW",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "ONES",
+    "wordB": "THAN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "ONES",
+    "wordB": "REPEAT",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "ONES",
+    "wordB": "SPAS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "LATE",
+    "wordB": "POOLS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "LATE",
+    "wordB": "MANOR",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "LATE",
+    "wordB": "VICTOR",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "LATE",
+    "wordB": "OXIDE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "SAYS",
+    "wordB": "FEEDS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SAYS",
+    "wordB": "ARGUE",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "SAYS",
+    "wordB": "LYING",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "POUNDS",
+    "wordB": "PEER",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "POUNDS",
+    "wordB": "LOCATE",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "POUNDS",
+    "wordB": "CURVE",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "POUNDS",
+    "wordB": "CHAIN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "POUNDS",
+    "wordB": "ALLIED",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "POUNDS",
+    "wordB": "LIGHTS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "WAGES",
+    "wordB": "TWIN",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "WAGES",
+    "wordB": "ACID",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "WAGES",
+    "wordB": "GRILL",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "WAGES",
+    "wordB": "COVE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "WAGES",
+    "wordB": "SHOUT",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "HEATH",
+    "wordB": "CHORUS",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "HEATH",
+    "wordB": "ZERO",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "HEATH",
+    "wordB": "GRAY",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "HEATH",
+    "wordB": "LOTUS",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TRYING",
+    "wordB": "DELETE",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TRYING",
+    "wordB": "CURSOR",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "TRYING",
+    "wordB": "BUDDY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "TRYING",
+    "wordB": "DEVICE",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "TRYING",
+    "wordB": "SECOND",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "TRYING",
+    "wordB": "GUESS",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "CENTER",
+    "wordB": "CHIP",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "CENTER",
+    "wordB": "EYED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "CENTER",
+    "wordB": "NAIL",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "CENTER",
+    "wordB": "LAST",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "CENTER",
+    "wordB": "RURAL",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "JAKE",
+    "wordB": "JOINS",
+    "sharedLetter": "J"
+  },
+  {
+    "wordA": "JAKE",
+    "wordB": "DIALOG",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "JAKE",
+    "wordB": "DRINKS",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "JAKE",
+    "wordB": "FIRES",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "HUNT",
+    "wordB": "SHAPE",
+    "sharedLetter": "H"
+  },
+  {
+    "wordA": "HUNT",
+    "wordB": "BUREAU",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "HUNT",
+    "wordB": "BORN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "HUNT",
+    "wordB": "CASTLE",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "ROWS",
+    "wordB": "AREA",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "ROWS",
+    "wordB": "FOUND",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "ROWS",
+    "wordB": "TWICE",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "ROWS",
+    "wordB": "BYTES",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "PLANTS",
+    "wordB": "JUMP",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PLANTS",
+    "wordB": "BLOOM",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "PLANTS",
+    "wordB": "AFFORD",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "PLANTS",
+    "wordB": "DRINK",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "PLANTS",
+    "wordB": "KITTY",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "PLANTS",
+    "wordB": "JUDGES",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "JACK",
+    "wordB": "JOINS",
+    "sharedLetter": "J"
+  },
+  {
+    "wordA": "JACK",
+    "wordB": "WHEAT",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "JACK",
+    "wordB": "EFFECT",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "JACK",
+    "wordB": "MIKE",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "AWAY",
+    "wordB": "BANNED",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "AWAY",
+    "wordB": "WRITE",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "AWAY",
+    "wordB": "SYNC",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "FIELDS",
+    "wordB": "FORTH",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "FIELDS",
+    "wordB": "UNITY",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "FIELDS",
+    "wordB": "NEVER",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "FIELDS",
+    "wordB": "RALPH",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "FIELDS",
+    "wordB": "HAZARD",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "FIELDS",
+    "wordB": "TASKS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "FROZEN",
+    "wordB": "FILL",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "FROZEN",
+    "wordB": "TRULY",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "FROZEN",
+    "wordB": "MOMS",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "FROZEN",
+    "wordB": "JAZZ",
+    "sharedLetter": "Z"
+  },
+  {
+    "wordA": "FROZEN",
+    "wordB": "DIVIDE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "FROZEN",
+    "wordB": "KNIGHT",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "VALUED",
+    "wordB": "VIKING",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "VALUED",
+    "wordB": "ASSIST",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "VALUED",
+    "wordB": "SIMPLY",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "VALUED",
+    "wordB": "QUIT",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "VALUED",
+    "wordB": "POCKET",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "VALUED",
+    "wordB": "DOWN",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "SIZES",
+    "wordB": "GLASS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "SIZES",
+    "wordB": "AFRAID",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "SIZES",
+    "wordB": "CRAZY",
+    "sharedLetter": "Z"
+  },
+  {
+    "wordA": "SIZES",
+    "wordB": "DECK",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "RELAY",
+    "wordB": "PORTS",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RELAY",
+    "wordB": "NOTED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "RELAY",
+    "wordB": "CIVIL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "RELAY",
+    "wordB": "MATS",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "RELAY",
+    "wordB": "NOTIFY",
+    "sharedLetter": "Y"
+  },
+  {
+    "wordA": "STICKS",
+    "wordB": "SURREY",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "STICKS",
+    "wordB": "BETTER",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "STICKS",
+    "wordB": "FILING",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "STICKS",
+    "wordB": "ACNE",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "STICKS",
+    "wordB": "JAKE",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "TRAVEL",
+    "wordB": "TOOTH",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "TRAVEL",
+    "wordB": "DRINKS",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "TRAVEL",
+    "wordB": "CHAIN",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "TRAVEL",
+    "wordB": "CIVIC",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "TRAVEL",
+    "wordB": "MOUSE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "TRAVEL",
+    "wordB": "FLOWS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "NELSON",
+    "wordB": "ANYWAY",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "NELSON",
+    "wordB": "MARKED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "NELSON",
+    "wordB": "MAIL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "NELSON",
+    "wordB": "TAGS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "NELSON",
+    "wordB": "ATOMIC",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "RIDING",
+    "wordB": "ERRORS",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RIDING",
+    "wordB": "HIST",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "RIDING",
+    "wordB": "DEBATE",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "RIDING",
+    "wordB": "KENO",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "RIDING",
+    "wordB": "GAVE",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "PIECE",
+    "wordB": "APOLLO",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PIECE",
+    "wordB": "SING",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "PIECE",
+    "wordB": "WHEN",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "PIECE",
+    "wordB": "COAT",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "RIBBON",
+    "wordB": "STAR",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "RIBBON",
+    "wordB": "CHICKS",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "RIBBON",
+    "wordB": "BUZZ",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "RIBBON",
+    "wordB": "QUOTED",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "RIBBON",
+    "wordB": "EVENT",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "PENCIL",
+    "wordB": "PROMO",
+    "sharedLetter": "P"
+  },
+  {
+    "wordA": "PENCIL",
+    "wordB": "DATED",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "PENCIL",
+    "wordB": "DRAWN",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "PENCIL",
+    "wordB": "COACH",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "PENCIL",
+    "wordB": "DIRTY",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "PENCIL",
+    "wordB": "HOLDS",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "FACED",
+    "wordB": "FILMS",
+    "sharedLetter": "F"
+  },
+  {
+    "wordA": "FACED",
+    "wordB": "ROTARY",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "FACED",
+    "wordB": "SOCKS",
+    "sharedLetter": "C"
+  },
+  {
+    "wordA": "FACED",
+    "wordB": "POPE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "FACED",
+    "wordB": "DISKS",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "EVENTS",
+    "wordB": "DARE",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "EVENTS",
+    "wordB": "FAVOR",
+    "sharedLetter": "V"
+  },
+  {
+    "wordA": "EVENTS",
+    "wordB": "FUNNY",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "EVENTS",
+    "wordB": "WIDTH",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "EVENTS",
+    "wordB": "BOOKS",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "BROOKS",
+    "wordB": "ABLE",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BROOKS",
+    "wordB": "PALMER",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "BROOKS",
+    "wordB": "HOLD",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "BROOKS",
+    "wordB": "FUNK",
+    "sharedLetter": "K"
+  },
+  {
+    "wordA": "BROOKS",
+    "wordB": "TILES",
+    "sharedLetter": "S"
+  },
+  {
+    "wordA": "LEGAL",
+    "wordB": "FLUX",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "LEGAL",
+    "wordB": "DERBY",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "LEGAL",
+    "wordB": "GOODS",
+    "sharedLetter": "G"
+  },
+  {
+    "wordA": "LEGAL",
+    "wordB": "YARDS",
+    "sharedLetter": "A"
+  },
+  {
+    "wordA": "MINE",
+    "wordB": "MARCH",
+    "sharedLetter": "M"
+  },
+  {
+    "wordA": "MINE",
+    "wordB": "BIOS",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "MINE",
+    "wordB": "HUNT",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "MINE",
+    "wordB": "REJECT",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "BENT",
+    "wordB": "BALD",
+    "sharedLetter": "B"
+  },
+  {
+    "wordA": "BENT",
+    "wordB": "CHAPEL",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "BENT",
+    "wordB": "KINGS",
+    "sharedLetter": "N"
+  },
+  {
+    "wordA": "BENT",
+    "wordB": "PHOTOS",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "QUIET",
+    "wordB": "BUDDY",
+    "sharedLetter": "U"
+  },
+  {
+    "wordA": "QUIET",
+    "wordB": "DAILY",
+    "sharedLetter": "I"
+  },
+  {
+    "wordA": "QUIET",
+    "wordB": "KEEPS",
+    "sharedLetter": "E"
+  },
+  {
+    "wordA": "QUIET",
+    "wordB": "PORTAL",
+    "sharedLetter": "T"
+  },
+  {
+    "wordA": "WORLD",
+    "wordB": "WAGES",
+    "sharedLetter": "W"
+  },
+  {
+    "wordA": "WORLD",
+    "wordB": "TOKEN",
+    "sharedLetter": "O"
+  },
+  {
+    "wordA": "WORLD",
+    "wordB": "BRICK",
+    "sharedLetter": "R"
+  },
+  {
+    "wordA": "WORLD",
+    "wordB": "KILL",
+    "sharedLetter": "L"
+  },
+  {
+    "wordA": "WORLD",
+    "wordB": "DISH",
+    "sharedLetter": "D"
+  },
+  {
+    "wordA": "WAKE",
+    "wordB": "GROWN",
+    "sharedLetter": "W"
+  }
+]

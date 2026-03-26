@@ -117,6 +117,8 @@ const REDIS_KEYS: Record<string, string> = {
   sniper: 'apex_leaderboard_accuracy',
   survivalist: 'leaderboard_survivalist',
   veteran: 'leaderboard_clears',
+  synapse_alltime: 'leaderboard_synapse_alltime',
+  synapse_daily: 'leaderboard_synapse_daily', // Will be appended with daily ID
 };
 
 export async function GET(request: Request) {
@@ -176,10 +178,15 @@ export async function GET(request: Request) {
       }
     }
 
-    // ── Standard sorted-set categories: alltime, sniper, survivalist, veteran ──
-    const redisKey = REDIS_KEYS[category];
+    // ── Standard sorted-set categories ──
+    let redisKey = REDIS_KEYS[category];
     if (!redisKey) {
       return NextResponse.json({ error: 'Invalid category' }, { status: 400 });
+    }
+    
+    // Synapse daily needs the date suffix
+    if (category === 'synapse_daily') {
+      redisKey = `${redisKey}_${getDailyId()}`;
     }
 
     try {

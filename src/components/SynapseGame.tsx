@@ -208,13 +208,13 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
 
           <div className="flex gap-2 w-full mt-2">
             <button
-              onPointerDown={onCancel}
+              onClick={onCancel}
               className="flex-1 bg-gray-400 border-b-4 border-gray-500 text-white font-black py-3 rounded-xl text-sm tracking-widest active:border-0 active:translate-y-1 transition-all touch-manipulation"
             >
               LOBBY
             </button>
             <button
-              onPointerDown={() => {
+              onClick={() => {
                 gameOverRef.current = false;
                 setGameOver(false);
                 macroRef.current = MACRO_TIME;
@@ -251,7 +251,7 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
       {word.split("").map((ch, i) => (
         <button
           key={`${ch}-${i}`}
-          onPointerDown={() => handleTap(ch)}
+          onClick={() => handleTap(ch)}
           className={`w-14 h-16 sm:w-16 sm:h-[72px] border-2 rounded-lg flex items-center justify-center text-3xl sm:text-4xl font-black shadow-sm select-none touch-manipulation transition-all duration-75
             ${tappedLetter === ch && ch === currentPair.sharedLetter
               ? "bg-green-100 border-green-400 text-green-700 scale-105"
@@ -286,13 +286,13 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
             <p className="text-pink-800 mb-6 text-sm">Your current score will be lost.</p>
             <div className="flex gap-4 w-full">
               <button
-                onPointerDown={(e) => { e.stopPropagation(); setShowQuit(false); }}
+                onClick={(e) => { e.stopPropagation(); setShowQuit(false); }}
                 className="flex-1 bg-gray-400 border-b-4 border-gray-500 text-white font-bold py-3 rounded active:border-0 active:translate-y-1 transition-all touch-manipulation"
               >
                 CANCEL
               </button>
               <button
-                onPointerDown={(e) => { e.stopPropagation(); handleQuit(); }}
+                onClick={(e) => { e.stopPropagation(); handleQuit(); }}
                 className="flex-1 bg-red-500 border-b-4 border-red-700 text-white font-bold py-3 rounded active:border-0 active:translate-y-1 transition-all touch-manipulation"
               >
                 QUIT
@@ -305,7 +305,7 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
       {/* Top Bar */}
       <div className="w-full max-w-md px-4 pt-10 pb-2 flex justify-between items-end relative">
         <button
-          onPointerDown={() => setShowQuit(true)}
+          onClick={() => setShowQuit(true)}
           className="absolute top-3 left-4 text-pink-500 text-[10px] font-bold tracking-widest bg-pink-100 px-2 py-1 rounded border border-pink-200 active:bg-pink-200 touch-manipulation"
         >
           <span className="text-red-400 font-extrabold">✖</span> ABANDON

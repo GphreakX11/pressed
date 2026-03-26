@@ -66,7 +66,8 @@ export default function GameBoard({ onLaunchSynapse }: { onLaunchSynapse?: () =>
   const [accuracyLeaderboard, setAccuracyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [tourneyLeaderboard, setTourneyLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [veteranLeaderboard, setVeteranLeaderboard] = useState<LeaderboardEntry[]>([]);
-  const [leaderboardTab, setLeaderboardTab] = useState<'daily'|'champions'|'alltime'|'accuracy'|'tourney'|'veteran'>('daily');
+  const [synapseLeaderboard, setSynapseLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [leaderboardTab, setLeaderboardTab] = useState<'daily'|'champions'|'alltime'|'accuracy'|'tourney'|'veteran'|'synapse'>('daily');
   const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
   const [showTrophyCase, setShowTrophyCase] = useState(false);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
@@ -837,7 +838,8 @@ export default function GameBoard({ onLaunchSynapse }: { onLaunchSynapse?: () =>
         "alltime": "alltime",
         "accuracy": "sniper",
         "tourney": "survivalist",
-        "veteran": "veteran"
+        "veteran": "veteran",
+        "synapse": "synapse_alltime"
       };
       
       const apiCategory = categoryMap[leaderboardTab];
@@ -852,6 +854,7 @@ export default function GameBoard({ onLaunchSynapse }: { onLaunchSynapse?: () =>
             else if (leaderboardTab === 'accuracy') setAccuracyLeaderboard(data);
             else if (leaderboardTab === 'tourney') setTourneyLeaderboard(data);
             else if (leaderboardTab === 'veteran') setVeteranLeaderboard(data);
+            else if (leaderboardTab === 'synapse') setSynapseLeaderboard(data);
           }
         })
         .catch(console.error)
@@ -1317,7 +1320,8 @@ export default function GameBoard({ onLaunchSynapse }: { onLaunchSynapse?: () =>
                 <div className="bg-white p-3 rounded-xl border border-pink-200 shadow-sm">
                   <span className="font-extrabold text-pink-700 block mb-1">🕹️ Game Modes:</span>
                   <strong>Standard:</strong> Find as many anagrams as possible before time runs out. Easy: 3:00. Normal: 2:30. Hard: 2:00.<br/>
-                  <strong>Tournament:</strong> Arcade Survival. Reach the target score before time runs out. The target increases by 100 points every round!
+                  <strong>Tournament:</strong> Arcade Survival. Reach the target score before time runs out. The target increases by 100 points every round!<br/>
+                  <strong>Synapse:</strong> High-speed letter linking. Tap the shared letter between two words. 10 correct taps gives a +5s Neural Boost!
                 </div>
                 
                 <div className="bg-orange-50 p-3 rounded-xl border border-orange-200 shadow-sm">
@@ -1399,6 +1403,13 @@ export default function GameBoard({ onLaunchSynapse }: { onLaunchSynapse?: () =>
                    <span className="text-lg mb-1 leading-none drop-shadow-md">🎖️</span>
                    Veterans
                  </button>
+                 <button 
+                    onPointerDown={() => setLeaderboardTab('synapse')}
+                    className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'synapse' ? 'bg-gradient-to-b from-pink-600 to-pink-800 text-white shadow-inner border border-pink-500' : 'text-slate-400 opacity-70'}`}
+                 >
+                   <span className="text-lg mb-1 leading-none drop-shadow-md">⚡</span>
+                   Synapse
+                 </button>
               </div>
 
               <div className="flex-1 overflow-y-auto w-full px-2 py-1 flex flex-col gap-2 min-h-[150px]">
@@ -1415,8 +1426,9 @@ export default function GameBoard({ onLaunchSynapse }: { onLaunchSynapse?: () =>
                     {leaderboardTab === 'accuracy' && accuracyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Sniper's Nest.</p>}
                     {leaderboardTab === 'tourney' && tourneyLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Survivalists.</p>}
                     {leaderboardTab === 'veteran' && veteranLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Veterans.</p>}
+                    {leaderboardTab === 'synapse' && synapseLeaderboard.length === 0 && <p className="text-center text-slate-500 font-bold py-8 text-xs animate-[fadeIn_0.2s_ease-out]">No records found for Synapse.</p>}
                 
-                {(leaderboardTab === 'daily' ? dailyLeaderboard : leaderboardTab === 'champions' ? championsLeaderboard : leaderboardTab === 'accuracy' ? accuracyLeaderboard : leaderboardTab === 'tourney' ? tourneyLeaderboard : leaderboardTab === 'veteran' ? veteranLeaderboard : allTimeLeaderboard)
+                {(leaderboardTab === 'daily' ? dailyLeaderboard : leaderboardTab === 'champions' ? championsLeaderboard : leaderboardTab === 'accuracy' ? accuracyLeaderboard : leaderboardTab === 'tourney' ? tourneyLeaderboard : leaderboardTab === 'veteran' ? veteranLeaderboard : leaderboardTab === 'synapse' ? synapseLeaderboard : allTimeLeaderboard)
                   .filter(entry => entry.name && entry.name.toUpperCase() !== 'ANONYMOUS' && entry.name.toUpperCase() !== 'PLAYER')
                   .map((entry, idx) => (
                   <div key={idx} className="grid grid-cols-[auto_1fr_auto] gap-3 items-center py-2 border-b border-slate-800 last:border-0 w-full animate-[fadeIn_0.2s_ease-out]">

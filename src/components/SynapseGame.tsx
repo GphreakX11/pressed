@@ -4,7 +4,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import synapsePairs from "@/lib/synapsePairs.json";
 
 type SynapsePair = { wordA: string; wordB: string; sharedLetter: string };
-type LeaderboardEntry = { rank: number; name: string; score: number };
 
 interface SynapseGameProps {
   onEnd: (score: number, maxStreak: number) => void;
@@ -39,12 +38,6 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
   const [showQuit, setShowQuit] = useState(false);
   const [tappedLetter, setTappedLetter] = useState<string | null>(null);
 
-  // ── Leaderboard State ──
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [leaderboardTab, setLeaderboardTab] = useState<'daily' | 'alltime'>('alltime');
-  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
-  const [isLeaderboardLoading, setIsLeaderboardLoading] = useState(false);
-
   // ── Game Loop Refs ──
   const macroRef = useRef(MACRO_TIME);
   const microRef = useRef(MICRO_TIME);
@@ -60,26 +53,6 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
     const pair = getRandomPair();
     setCurrentPair(pair);
   }, []);
-
-  // ── Fetch leaderboard ──
-  useEffect(() => {
-    if (!showLeaderboard) return;
-    setIsLeaderboardLoading(true);
-    const category = leaderboardTab === 'daily' ? 'synapse_daily' : 'synapse_alltime';
-    fetch(`/api/leaderboards?category=${category}`)
-      .then(r => r.json())
-      .then(data => {
-        if (Array.isArray(data)) {
-          setLeaderboardData(data.map((e: any, i: number) => ({
-            rank: i + 1,
-            name: e.name || 'PLAYER',
-            score: e.score || 0,
-          })));
-        }
-      })
-      .catch(console.error)
-      .finally(() => setIsLeaderboardLoading(false));
-  }, [showLeaderboard, leaderboardTab]);
 
   // ── Advance to next pair ──
   const nextPair = useCallback(() => {
@@ -146,7 +119,7 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
     };
   }, [currentPair, handleFail, endGame]);
 
-  // ── Handle letter tap (on word letters directly) ──
+  // ── Handle letter tap ──
   const handleTap = useCallback((letter: string) => {
     if (gameOverRef.current || !currentPair) return;
 
@@ -209,61 +182,6 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
     );
   }
 
-  // ── Leaderboard Overlay ──
-  if (showLeaderboard) {
-    return (
-      <div className="fixed inset-0 bg-pink-50 flex flex-col items-center font-sans p-4 pt-10">
-        <div className="w-full max-w-sm flex flex-col items-center gap-4">
-          <h2 className="text-2xl font-black text-pink-900 tracking-tighter uppercase">⚡ Synapse Leaderboard</h2>
-
-          <div className="flex bg-pink-100 border border-pink-200 p-1 rounded-xl w-full gap-1">
-            <button
-              onPointerDown={() => setLeaderboardTab('alltime')}
-              className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'alltime' ? 'bg-white text-pink-900 shadow-sm border border-pink-200' : 'text-pink-400'}`}
-            >
-              All-Time
-            </button>
-            <button
-              onPointerDown={() => setLeaderboardTab('daily')}
-              className={`flex-1 py-2 text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'daily' ? 'bg-white text-pink-900 shadow-sm border border-pink-200' : 'text-pink-400'}`}
-            >
-              Today
-            </button>
-          </div>
-
-          <div className="w-full bg-white rounded-xl border border-pink-200 shadow-sm p-3 min-h-[200px]">
-            {isLeaderboardLoading ? (
-              <p className="text-center text-pink-400 font-bold py-8 text-sm animate-pulse">Loading...</p>
-            ) : leaderboardData.length === 0 ? (
-              <p className="text-center text-pink-400 font-bold py-8 text-sm">No scores yet. Be the first!</p>
-            ) : (
-              <div className="flex flex-col gap-2">
-                {leaderboardData.map((entry, idx) => (
-                  <div key={idx} className="flex items-center justify-between py-2 px-2 border-b border-pink-100 last:border-0">
-                    <div className="flex items-center gap-3">
-                      <span className={`font-mono font-black text-sm w-6 text-center ${idx === 0 ? 'text-[#d4af37]' : idx === 1 ? 'text-slate-400' : idx === 2 ? 'text-orange-600' : 'text-pink-400'}`}>
-                        #{entry.rank}
-                      </span>
-                      <span className="font-extrabold text-pink-900 text-xs uppercase tracking-wider">{entry.name}</span>
-                    </div>
-                    <span className="font-mono font-black text-pink-700 text-sm">{entry.score}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <button
-            onPointerDown={() => setShowLeaderboard(false)}
-            className="w-full bg-pink-100 border border-pink-200 text-pink-700 font-black py-3 rounded-xl text-sm tracking-widest active:bg-pink-200 transition-all touch-manipulation"
-          >
-            BACK
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   // ── Game Over Screen ──
   if (gameOver) {
     return (
@@ -284,43 +202,39 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
             </div>
           </div>
 
-          <div className="flex flex-col gap-2 w-full mt-2">
+          <p className="text-pink-400 text-xs font-bold text-center">
+            Score posted! View it in the Trophy Case.
+          </p>
+
+          <div className="flex gap-2 w-full mt-2">
             <button
-              onPointerDown={() => setShowLeaderboard(true)}
-              className="w-full bg-white border-2 border-[#d4af37] text-yellow-700 font-extrabold py-3 rounded-xl shadow-sm active:bg-yellow-50 transition-all text-sm tracking-widest select-none touch-manipulation flex items-center justify-center gap-2"
+              onPointerDown={onCancel}
+              className="flex-1 bg-gray-400 border-b-4 border-gray-500 text-white font-black py-3 rounded-xl text-sm tracking-widest active:border-0 active:translate-y-1 transition-all touch-manipulation"
             >
-              <span className="text-xl drop-shadow-sm">🏆</span> SYNAPSE LEADERBOARD
+              LOBBY
             </button>
-            <div className="flex gap-2 w-full">
-              <button
-                onPointerDown={onCancel}
-                className="flex-1 bg-gray-400 border-b-4 border-gray-500 text-white font-black py-3 rounded-xl text-sm tracking-widest active:border-0 active:translate-y-1 transition-all touch-manipulation"
-              >
-                MENU
-              </button>
-              <button
-                onPointerDown={() => {
-                  gameOverRef.current = false;
-                  setGameOver(false);
-                  macroRef.current = MACRO_TIME;
-                  microRef.current = MICRO_TIME;
-                  scoreRef.current = 0;
-                  streakRef.current = 0;
-                  maxStreakRef.current = 0;
-                  tickCounterRef.current = 0;
-                  setDisplayMacro(MACRO_TIME);
-                  setDisplayMicro(MICRO_TIME);
-                  setDisplayScore(0);
-                  setDisplayStreak(0);
-                  setDisplayMaxStreak(0);
-                  setTappedLetter(null);
-                  nextPair();
-                }}
-                className="flex-1 bg-pink-500 border-b-4 border-pink-700 text-white font-black py-3 rounded-xl text-sm tracking-widest active:border-0 active:translate-y-1 transition-all touch-manipulation"
-              >
-                RETRY
-              </button>
-            </div>
+            <button
+              onPointerDown={() => {
+                gameOverRef.current = false;
+                setGameOver(false);
+                macroRef.current = MACRO_TIME;
+                microRef.current = MICRO_TIME;
+                scoreRef.current = 0;
+                streakRef.current = 0;
+                maxStreakRef.current = 0;
+                tickCounterRef.current = 0;
+                setDisplayMacro(MACRO_TIME);
+                setDisplayMicro(MICRO_TIME);
+                setDisplayScore(0);
+                setDisplayStreak(0);
+                setDisplayMaxStreak(0);
+                setTappedLetter(null);
+                nextPair();
+              }}
+              className="flex-1 bg-pink-500 border-b-4 border-pink-700 text-white font-black py-3 rounded-xl text-sm tracking-widest active:border-0 active:translate-y-1 transition-all touch-manipulation"
+            >
+              RETRY
+            </button>
           </div>
         </div>
       </div>
@@ -397,7 +311,6 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
           <span className="text-red-400 font-extrabold">✖</span> ABANDON
         </button>
 
-        {/* Score */}
         <div className="flex flex-col items-center">
           <span className="text-pink-400 text-[9px] font-bold uppercase tracking-widest">Score</span>
           <div className="bg-white border border-pink-200 shadow-sm rounded px-2 py-1 min-w-[50px] text-center">
@@ -405,7 +318,6 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
           </div>
         </div>
 
-        {/* Macro Timer */}
         <div className="flex flex-col items-center">
           <span className="text-pink-400 text-[9px] font-bold uppercase tracking-widest">Time</span>
           <div className="bg-white border border-pink-200 shadow-sm rounded-md px-3 py-1">
@@ -420,7 +332,6 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
           </div>
         </div>
 
-        {/* Streak */}
         <div className="flex flex-col items-center">
           <span className="text-pink-400 text-[9px] font-bold uppercase tracking-widest">Streak</span>
           <div className="bg-white border border-pink-200 shadow-sm rounded px-2 py-1 min-w-[50px] text-center">
@@ -439,7 +350,7 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
         </div>
       </div>
 
-      {/* Word Cards — Letters are tappable */}
+      {/* Word Cards */}
       <div className="flex-1 w-full max-w-md flex flex-col items-center justify-center gap-5 px-4">
         <div className="w-full bg-white border-2 border-pink-200 rounded-2xl p-5 flex flex-col items-center shadow-sm">
           {renderWord(currentPair.wordA)}
@@ -454,7 +365,6 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
         </div>
       </div>
 
-      {/* Bottom info */}
       <div className="w-full max-w-md px-4 pb-8 pt-2 flex justify-center">
         <span className="text-pink-300 text-[10px] font-bold uppercase tracking-[0.3em]">
           ⚡ Apex Synapse

@@ -1569,7 +1569,7 @@ export default function GameBoard({ onLaunchSynapse }: { onLaunchSynapse?: () =>
           </div>
             <div className="flex flex-col gap-2 w-full mt-1">
               <button 
-                onPointerDown={() => setShowTrophyCase(true)} 
+                onClick={() => setShowTrophyCase(true)} 
                 className="w-full bg-white border-2 border-[#d4af37] text-yellow-700 font-extrabold py-3 rounded-xl shadow-sm active:bg-yellow-50 transition-all text-sm tracking-widest select-none touch-manipulation flex items-center justify-center gap-2 mb-1"
               >
                 <span className="text-xl drop-shadow-sm">🏆</span> TROPHY CASE & LEADERBOARDS

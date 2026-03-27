@@ -13,10 +13,18 @@ interface SynapseGameProps {
 }
 
 const MACRO_TIME = 45;
-const MICRO_TIME = 3.0;
+const MICRO_START = 5.0;
+const MICRO_MIN = 2.0;
 const TICK_MS = 100;
 const STREAK_BONUS_INTERVAL = 10;
 const TIME_EXTENSION = 5;
+
+function getMicroLimit(streak: number): number {
+  // First 5 correct: stay at 5s. After that, reduce by 0.5s per correct answer, floor 2s.
+  if (streak < 5) return MICRO_START;
+  const reduction = (streak - 5) * 0.5;
+  return Math.max(MICRO_MIN, MICRO_START - reduction);
+}
 
 function getRandomPair(): SynapsePair {
   const pool = synapsePairs as SynapsePair[];
@@ -26,7 +34,7 @@ function getRandomPair(): SynapsePair {
 export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: SynapseGameProps) {
   // ── Display State ──
   const [displayMacro, setDisplayMacro] = useState(MACRO_TIME);
-  const [displayMicro, setDisplayMicro] = useState(MICRO_TIME);
+  const [displayMicro, setDisplayMicro] = useState(MICRO_START);
   const [displayScore, setDisplayScore] = useState(0);
   const [displayStreak, setDisplayStreak] = useState(0);
   const [displayMaxStreak, setDisplayMaxStreak] = useState(0);
@@ -40,7 +48,8 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
 
   // ── Game Loop Refs ──
   const macroRef = useRef(MACRO_TIME);
-  const microRef = useRef(MICRO_TIME);
+  const microRef = useRef(MICRO_START);
+  const microLimitRef = useRef(MICRO_START);
   const scoreRef = useRef(0);
   const streakRef = useRef(0);
   const maxStreakRef = useRef(0);
@@ -58,8 +67,8 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
   const nextPair = useCallback(() => {
     const pair = getRandomPair();
     setCurrentPair(pair);
-    microRef.current = MICRO_TIME;
-    setDisplayMicro(MICRO_TIME);
+    microRef.current = microLimitRef.current;
+    setDisplayMicro(microLimitRef.current);
     setTappedLetter(null);
   }, []);
 
@@ -79,6 +88,8 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
   const handleFail = useCallback(() => {
     streakRef.current = 0;
     setDisplayStreak(0);
+    // Reset speed back to starting pace
+    microLimitRef.current = MICRO_START;
     setRedFlash(true);
     setTimeout(() => setRedFlash(false), 300);
     if ("vibrate" in navigator) navigator.vibrate([80, 40, 80]);
@@ -133,6 +144,9 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
         maxStreakRef.current = newStreak;
         setDisplayMaxStreak(newStreak);
       }
+
+      // Adaptive speed: ramp up after 5 correct in a row
+      microLimitRef.current = getMicroLimit(newStreak);
 
       const multiplier = 1 + Math.floor(newStreak / 5);
       const points = 10 * multiplier;
@@ -218,13 +232,14 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
                 gameOverRef.current = false;
                 setGameOver(false);
                 macroRef.current = MACRO_TIME;
-                microRef.current = MICRO_TIME;
+                microRef.current = MICRO_START;
+                microLimitRef.current = MICRO_START;
                 scoreRef.current = 0;
                 streakRef.current = 0;
                 maxStreakRef.current = 0;
                 tickCounterRef.current = 0;
                 setDisplayMacro(MACRO_TIME);
-                setDisplayMicro(MICRO_TIME);
+                setDisplayMicro(MICRO_START);
                 setDisplayScore(0);
                 setDisplayStreak(0);
                 setDisplayMaxStreak(0);
@@ -242,7 +257,7 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
   }
 
   // ── Micro-timer bar ──
-  const microPct = (displayMicro / MICRO_TIME) * 100;
+  const microPct = (displayMicro / microLimitRef.current) * 100;
   const microColor = microPct > 60 ? "bg-pink-400" : microPct > 30 ? "bg-yellow-400" : "bg-red-500";
 
   // ── Renders a word as a row of tappable letters ──

@@ -1357,54 +1357,54 @@ export default function GameBoard({ onLaunchSynapse }: { onLaunchSynapse?: () =>
                 <h2 className="text-xl sm:text-2xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600 tracking-tighter uppercase flex items-center gap-2">
                   <span className="text-3xl font-normal drop-shadow-sm">🏆</span> TROPHY CASE
                 </h2>
-                <button onPointerDown={() => setShowTrophyCase(false)} className="text-yellow-600 font-black text-xl w-8 h-8 rounded-full bg-yellow-900/40 flex items-center justify-center active:bg-yellow-800 transition-colors touch-manipulation pb-1">✕</button>
+                <button onClick={() => setShowTrophyCase(false)} className="text-yellow-600 font-black text-xl w-8 h-8 rounded-full bg-yellow-900/40 flex items-center justify-center active:bg-yellow-800 transition-colors touch-manipulation pb-1">✕</button>
               </div>
               
               <div className="flex bg-slate-800 border border-slate-700 p-1 rounded-xl mb-4 gap-1 overflow-x-auto hide-scrollbar">
                  <button 
-                   onPointerDown={() => setLeaderboardTab('daily')}
+                   onClick={() => setLeaderboardTab('daily')}
                    className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'daily' ? 'bg-gradient-to-b from-slate-600 to-slate-700 text-white shadow-inner border border-slate-500' : 'text-slate-400 opacity-70'}`}
                  >
                    <span className="text-lg mb-1 leading-none drop-shadow-md">⏱️</span>
                    Today's
                  </button>
                  <button 
-                   onPointerDown={() => setLeaderboardTab('champions')}
+                   onClick={() => setLeaderboardTab('champions')}
                    className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'champions' ? 'bg-gradient-to-b from-slate-600 to-slate-700 text-white shadow-inner border border-slate-500' : 'text-slate-400 opacity-70'}`}
                  >
                    <span className="text-lg mb-1 leading-none drop-shadow-md">🥈</span>
                    Champions
                  </button>
                  <button 
-                   onPointerDown={() => setLeaderboardTab('alltime')}
+                   onClick={() => setLeaderboardTab('alltime')}
                    className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'alltime' ? 'bg-gradient-to-b from-yellow-700 to-yellow-900 text-white shadow-inner border border-yellow-600' : 'text-slate-400 opacity-70'}`}
                  >
                    <span className="text-lg mb-1 leading-none drop-shadow-md">🏆</span>
                    Hall of Fame
                  </button>
                  <button 
-                   onPointerDown={() => setLeaderboardTab('accuracy')}
+                   onClick={() => setLeaderboardTab('accuracy')}
                    className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'accuracy' ? 'bg-gradient-to-b from-blue-700 to-blue-900 text-white shadow-inner border border-blue-600' : 'text-slate-400 opacity-70'}`}
                  >
                    <span className="text-lg mb-1 leading-none drop-shadow-md">🎯</span>
                    Sniper
                  </button>
                  <button 
-                   onPointerDown={() => setLeaderboardTab('tourney')}
+                   onClick={() => setLeaderboardTab('tourney')}
                    className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[9px] sm:text-[10px] font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'tourney' ? 'bg-gradient-to-b from-emerald-700 to-emerald-900 text-white shadow-inner border border-emerald-600' : 'text-slate-400 opacity-70'}`}
                  >
                    <span className="text-lg mb-1 leading-none drop-shadow-md">🛡️</span>
                    Survivalist
                  </button>
                  <button 
-                   onPointerDown={() => setLeaderboardTab('veteran')}
+                   onClick={() => setLeaderboardTab('veteran')}
                    className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'veteran' ? 'bg-gradient-to-b from-purple-700 to-purple-900 text-white shadow-inner border border-purple-600' : 'text-slate-400 opacity-70'}`}
                  >
                    <span className="text-lg mb-1 leading-none drop-shadow-md">🎖️</span>
                    Veterans
                  </button>
                  <button 
-                    onPointerDown={() => setLeaderboardTab('synapse')}
+                    onClick={() => setLeaderboardTab('synapse')}
                     className={`flex-none w-[70px] sm:flex-1 flex flex-col items-center py-2 text-[10px] sm:text-xs font-black uppercase tracking-widest rounded-lg transition-all touch-manipulation ${leaderboardTab === 'synapse' ? 'bg-gradient-to-b from-pink-600 to-pink-800 text-white shadow-inner border border-pink-500' : 'text-slate-400 opacity-70'}`}
                  >
                    <span className="text-lg mb-1 leading-none drop-shadow-md">⚡</span>

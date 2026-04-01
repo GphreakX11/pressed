@@ -284,14 +284,6 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
   return (
     <div className={`fixed inset-0 bg-pink-50 flex flex-col items-center select-none font-sans overflow-hidden transition-colors duration-150 ${redFlash ? "!bg-red-200" : ""} ${greenFlash ? "!bg-emerald-100" : ""}`}>
       
-      {/* Neural Boost Overlay */}
-      {showBoost && (
-        <div className="absolute inset-0 z-[200] pointer-events-none flex items-center justify-center animate-[fadeIn_0.1s]">
-          <span className="text-5xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-pink-400 to-pink-700 drop-shadow-[0_0_20px_rgba(236,72,153,0.6)] animate-bounce">
-            +{TIME_EXTENSION}s NEURAL BOOST!
-          </span>
-        </div>
-      )}
 
       {/* Quit Confirmation */}
       {showQuit && (
@@ -356,13 +348,22 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
       </div>
 
       {/* Micro-timer bar */}
-      <div className="w-full max-w-md px-6 mt-2">
+      <div className="w-full max-w-md px-6 mt-2 relative">
         <div className="w-full h-2 bg-pink-100 rounded-full overflow-hidden border border-pink-200">
           <div
             className={`h-full ${microColor} transition-all duration-100 rounded-full`}
             style={{ width: `${microPct}%` }}
           />
         </div>
+
+        {/* Neural Boost Banner — floats below the timer bar, above word cards */}
+        {showBoost && (
+          <div className="absolute left-0 right-0 top-full mt-2 z-[200] pointer-events-none flex justify-center animate-[fadeIn_0.1s]">
+            <span className="text-2xl sm:text-3xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-b from-pink-400 to-pink-700 drop-shadow-[0_0_20px_rgba(236,72,153,0.6)] animate-bounce">
+              +{TIME_EXTENSION}s NEURAL BOOST!
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Word Cards */}

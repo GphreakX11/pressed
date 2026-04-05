@@ -18,6 +18,82 @@ export type Puzzle = {
 const VOWELS = new Set(['A','E','I','O','U']);
 const POWER_LETTERS = new Set(['Q','X','Z','J','K']);
 
+// Words that should never appear on any game board.
+// Carefully curated: blocks words that are PRIMARILY proper nouns, tech jargon,
+// or obscure/archaic. Keeps dual-use words with strong common meanings
+// (e.g. GRACE, LANCE, RUBY, BOOT, CHIP, CLAY, CODE, DEAN, DUKE, EARL, etc.)
+const BLOCKED_WORDS = new Set([
+  // ── 3-LETTER: Names-only (no strong common word meaning) ──
+  'TOM','MON','BEN','BOB','CAM','DAN','DOM','DON','GUY','JAY','KEN',
+  'NAN','ROB','ROD','SAL','LOU','LEN','JOE','TED','ANN','SUE','LEE',
+  'IAN','MAC','GIL','HAL','JAN','JIM','JON','MEL','NED','PAM','PEG',
+  'SID','TIM','VIC','ABE','ADA','AMY','BEA','DEE','ELI','FAY','IDA',
+  'KAT','KAY','MAE','MEG','MIA','ORA','VIV','ZOE',
+  // ── 3-LETTER: Tech-only / abbreviations ──
+  'VAR','DEL','SRI','ALT','AMP','COM','ERR','APP','SQL','PHP','API',
+  'CSS','XML','FTP','SSH','DNS','CPU','GPU','USB','VPN','PDF','GIF',
+  'PNG','JPG','DOS','LAN','FAQ','RSS','ISP','HTM','GNU','ISM',
+  'RAM','ROM','NAM','REG','ENG','GEN','TEL','SEC','LAS','LAT','MOD',
+  // ── 3-LETTER: Archaic / obscure ──
+  'THY','ASP','HOB','HOD','NIB','NUB','OAF','PAP','SOT','SOP','FOB',
+  'FOP','DUN','IRK','AWL','COX',
+  // ── 4-LETTER: Names-only ──
+  'ALAN','ALEX','BRAD','CARL','CHAD','COLE','CURT','DAVE','DREW','ERIC',
+  'EVAN','FINN','FRED','GARY','GENE','GLEN','GREG','HANS','HANK','HUGO',
+  'IVAN','JACK','JAKE','JANE','JEAN','JEFF','JILL','JOAN','JOEL','JOHN',
+  'JOSH','JUAN','JUDY','KANE','KARL','KATE','KENT','KIRK','KURT','KYLE',
+  'LARS','LENA','LEON','LILY','LISA','LOIS','LORI','LUCA','LUCY','LUKE',
+  'LYNN','MARC','MARK','MARY','MATT','MIKE','MILO','MONA','NEAL','NEIL',
+  'NICK','NINA','NOAH','NOEL','NORA','OLGA','OTTO','OWEN','PAUL','PETE',
+  'PHIL','RENE','RICK','RITA','ROLF','ROSA','ROSS','RUDY','RUSS','RUTH',
+  'RYAN','SARA','SEAN','SETH','STAN','TARA','THEO','TODD','TONY','TROY',
+  'VERA','WADE','WALT',
+  // ── 4-LETTER: Tech-only (no common word meaning) ──
+  'AJAX','ALGO','APPS','BASH','BLOB','BLOG','BYTE','CTRL','EXEC','FUNC',
+  'GREP','HREF','HTML','HTTP','INIT','JAVA','JPEG','JSON','LIBS','LINT',
+  'MIDI','NANO','NODE','NULL','PERL','PING','PROC','REPO','SMTP','SPEC',
+  'SUDO','SYNC','UNIX','WGET','WIKI','YARN',
+  // ── 4-LETTER: Archaic / obscure ──
+  'CIAO','THEE','THOU','HATH','DOTH','UNTO',
+  // ── 5-LETTER: Names-only ──
+  'AARON','ALLEN','BARRY','BLAKE','BOBBY','BORIS','BRADY','BRETT','BRIAN',
+  'BRUCE','CASEY','CLARK','CRAIG','DANNY','DAVIS','DEREK','DIANA','DONNA',
+  'EDGAR','ELLEN','EMILY','FELIX','FLOYD','FRANK','GARRY','GLENN',
+  'HARRY','HAZEL','HEIDI','HELEN','HENRY','HOMER','IRENE','JACOB','JAMES',
+  'JANET','JASON','JENNY','JERRY','JIMMY','JOYCE','JULES','KAREN','KEITH',
+  'KELLY','KENNY','KERRY','KEVIN','LANCE','LARRY','LAURA','LEWIS','LINDA',
+  'LLOYD','LOGAN','MARIA','MASON','NANCY','NIGEL','NORMA','OSCAR','PEARL',
+  'PERRY','PETER','POLLY','QUINN','RALPH','REESE','ROGER','ROCKY','SALLY',
+  'SARAH','SIMON','SUSAN','TANYA','TERRY','TRENT','TYLER','VICKY','WAYNE',
+  'WANDA','WENDY','WILMA',
+  // ── 5-LETTER: Tech-only ──
+  'ADMIN','ADDON','ARRAY','ASCII','CACHE','CLICK','CODEC','DEBUG','EMAIL',
+  'FETCH','FLOAT','LINUX','MACRO','MERGE','MODEM','MYSQL','OMEGA','PARSE',
+  'PIXEL','POPUP','PROXY','QUERY','QUEUE','REGEX','ROUTE','SCOPE','SETUP',
+  'SLASH','STACK','SWIFT','TOKEN','ULTRA','VIRUS',
+  // ── 5-LETTER: Obscure ──
+  'AMINO','ASSAY','PROTO',
+  // ── 6-LETTER: Names-only ──
+  'AMAZON','CARTER','MURPHY','MURRAY','PALMER','PARKER','TRAVIS','MORGAN',
+  'JORDAN','TAYLOR','AUSTIN','DENVER','HUDSON','HUNTER','SUMMER','ARCHER',
+  'BROOKS','SKYLER','TUCKER','WALKER','CALVIN',
+  // ── 6-LETTER: Tech-only ──
+  'ANALOG','APACHE','APPEND','BACKUP','BITMAP','BUFFER','BUNDLE','BUTTON',
+  'CACHED','CHROME','CLICKS','CODING','COLUMN','CONFIG','COOKIE','CURSOR',
+  'CUSTOM','DAEMON','DEBIAN','DEVICE','DIALOG','DIGEST','DIGITS','DOCKER',
+  'DOMAIN','DRIVER','ENABLE','ENCODE','ENGINE','EVOLVE','EXPORT','FLOPPY',
+  'FORMAT','FORUMS','FRAMES','GITHUB','GLOBAL','GOOGLE','GRATIS','GRAPHS',
+  'HANDLE','HEADER','HELPER','HIDDEN','HYBRID','IMPORT','INSERT','KERNEL',
+  'LAYOUT','LENGTH','LINEAR','LINKED','LOCALE','LOOKUP','MARKUP','MATRIX',
+  'METHOD','MOBILE','MODULE','OBJECT','OFFSET','ONLINE','OPTION','OUTPUT',
+  'PASSWD','PLAYER','PLUGIN','PORTAL','PREFIX','RANDOM','README','REBOOT',
+  'REDUCE','RENDER','RESEND','ROUTER','SCHEMA','SCRIPT','SCROLL','SENSOR',
+  'SERVER','SIGNAL','SIGNED','SLIDER','SOCKET','SOURCE','STATIC','STATUS',
+  'STORED','STREAM','STRING','STRIPE','SUBMIT','SUITES','SWITCH','SYMBOL',
+  'SYNTAX','SYSTEM','TABLET','TARGET','THREAD','TOGGLE','TUNING','TYPING',
+  'UPLOAD','VENDOR','VERIFY','WIDGET','WINDOW','WIZARD','BUREAU','REALTY',
+]);
+
 function countVowels(word: string): number {
   return word.split('').filter(c => VOWELS.has(c.toUpperCase())).length;
 }
@@ -78,6 +154,9 @@ export const GRID_CAP: Record<Difficulty, number> = {
 export function isValidAnagram(word: string, sourceLetters: string[]): boolean {
   // Length Guard: Ensure words are at least 3 letters long.
   if (word.length < 3 || word.length > 6) return false;
+
+  // Block words that shouldn't appear in the game
+  if (BLOCKED_WORDS.has(word.toUpperCase())) return false;
   
   const sourceCounts: Record<string, number> = {};
   for (const char of sourceLetters) {

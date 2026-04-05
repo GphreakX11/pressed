@@ -26,9 +26,18 @@ function getMicroLimit(streak: number): number {
   return Math.max(MICRO_MIN, MICRO_START - reduction);
 }
 
-function getRandomPair(): SynapsePair {
-  const pool = synapsePairs as SynapsePair[];
-  return pool[Math.floor(Math.random() * pool.length)];
+// ── Shuffled Deck System (no repeats within a session) ──
+function shuffleArray<T>(arr: T[]): T[] {
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function createShuffledDeck(): { deck: SynapsePair[]; index: number } {
+  return { deck: shuffleArray(synapsePairs as SynapsePair[]), index: 0 };
 }
 
 export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: SynapseGameProps) {
@@ -46,6 +55,20 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
   const [showQuit, setShowQuit] = useState(false);
   const [tappedLetter, setTappedLetter] = useState<string | null>(null);
 
+  // ── Shuffled deck ref (draw sequentially, no repeats) ──
+  const deckRef = useRef(createShuffledDeck());
+
+  function drawNextPair(): SynapsePair {
+    const d = deckRef.current;
+    if (d.index >= d.deck.length) {
+      // Reshuffle if we've gone through all pairs
+      deckRef.current = createShuffledDeck();
+    }
+    const pair = deckRef.current.deck[deckRef.current.index];
+    deckRef.current.index++;
+    return pair;
+  }
+
   // ── Game Loop Refs ──
   const macroRef = useRef(MACRO_TIME);
   const microRef = useRef(MICRO_START);
@@ -59,13 +82,13 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
 
   // ── Load first pair ──
   useEffect(() => {
-    const pair = getRandomPair();
+    const pair = drawNextPair();
     setCurrentPair(pair);
   }, []);
 
   // ── Advance to next pair ──
   const nextPair = useCallback(() => {
-    const pair = getRandomPair();
+    const pair = drawNextPair();
     setCurrentPair(pair);
     microRef.current = microLimitRef.current;
     setDisplayMicro(microLimitRef.current);
@@ -244,6 +267,8 @@ export default function SynapseGame({ onEnd, onCancel, playerName, playerId }: S
                 setDisplayStreak(0);
                 setDisplayMaxStreak(0);
                 setTappedLetter(null);
+                // Reset the shuffled deck for a fresh game
+                deckRef.current = createShuffledDeck();
                 nextPair();
               }}
               className="flex-1 bg-pink-500 border-b-4 border-pink-700 text-white font-black py-3 rounded-xl text-sm tracking-widest active:border-0 active:translate-y-1 transition-all touch-manipulation"
